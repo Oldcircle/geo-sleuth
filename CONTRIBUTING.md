@@ -24,4 +24,4 @@ Open an issue with: your own photo (or a description if you would rather not pos
 
 ## Translations
 
-`README.md` is the source of truth. When you change it, the translated READMEs (`README.zh-CN.md`, `README.zh-TW.md`, `README.ja.md`, `README.ko.md`, `README.es.md`, `README.fr.md`, `README.de.md`, `README.ru.md`, `README.pt-BR.md`) should keep the same structure, the same images and the same numbers. A translation that only updates one section is still welcome.
+`README.md` is the source of truth. When you change it, the Chinese README (`README.zh-CN.md`) should keep the same structure, the same images and the same numbers. A translation that only updates one section is still welcome.
