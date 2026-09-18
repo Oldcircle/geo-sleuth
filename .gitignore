@@ -1,0 +1,7 @@
+__pycache__/
+.geo-cache/
+.DS_Store
+*.pyc
+board.json
+intake/
+rev/
