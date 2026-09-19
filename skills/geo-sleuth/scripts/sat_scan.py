@@ -229,7 +229,7 @@ def run(points: dict, args) -> None:
     sc = Scorer(pos, neg)
     scores = sc.score(ims, args.multi_scale)
     t2 = time.time()
-    seeds = json.loads(Path(args.seeds).read_text()) if args.seeds else {}
+    seeds = json.loads(Path(args.seeds).read_text(encoding="utf-8")) if args.seeds else {}
     rows = []
     for i, n in enumerate(names):
         lat, lon = points[n]
@@ -251,10 +251,10 @@ def run(points: dict, args) -> None:
     for r in rows[: min(args.top, 20)]:
         print(f"{r['rank']:>3} {r['score']:>6.3f}  {str(r['cell'])[:18]:<18} {r['lat']:.5f},{r['lon']:.5f}" + (f"  近{r['seed_near']}" if r["seed_near"] else ""))
     if args.out:
-        Path(args.out).write_text(json.dumps([{k: v for k, v in r.items() if k != "_i"} for r in rows], ensure_ascii=False, indent=1))
+        Path(args.out).write_text(json.dumps([{k: v for k, v in r.items() if k != "_i"} for r in rows], ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}")
         pts = {f"#{r['rank']} {r['score']:.2f}": [r["lat"], r["lon"]] for r in rows[: args.top]}
-        Path(args.out).with_suffix(".top.json").write_text(json.dumps(pts, ensure_ascii=False, indent=1))
+        Path(args.out).with_suffix(".top.json").write_text(json.dumps(pts, ensure_ascii=False, indent=1), encoding="utf-8")
     if args.sheet:
         for p in _sheet(rows[: args.top], ims, Path(args.sheet), args.cols, args.size):
             print(f"-> {p}")
@@ -310,9 +310,12 @@ def main() -> None:
         pts = tiles.grid_points(args.bbox, args.zoom, args.size, args.step)
         print(f"网格 {len(pts)} 格（r 行从北往南、c 列从西往东）")
     else:
-        pts = json.loads(Path(args.points).read_text())
+        pts = json.loads(Path(args.points).read_text(encoding="utf-8"))
     run(pts, args)
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

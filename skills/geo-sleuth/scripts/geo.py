@@ -459,7 +459,7 @@ def _spacing_cols(spec: str) -> list[list[float]]:
     每组内部升序排列，组之间按首列排序。"""
     raw = spec
     if raw.startswith("@") or raw.lower().endswith(".json"):
-        with open(raw[1:] if raw.startswith("@") else raw) as fh:
+        with open(raw[1:] if raw.startswith("@") else raw, encoding="utf-8") as fh:
             data = json.load(fh)
         if isinstance(data, dict):
             for key in ("piers", "groups", "cols"):
@@ -502,7 +502,7 @@ def _spacing_line(path: str, name: str | None, index: int):
 
     --line-name 按 properties.name 子串匹配；同名要素（上下行两条股道）用 --line-index 选第几个。
     不给名字时：只有一条线就用它，多条就用最长的那条并打印提示。"""
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         g = json.load(fh)
     feats = g.get("features") if isinstance(g, dict) and g.get("type") == "FeatureCollection" else None
     if feats is None:
@@ -549,7 +549,7 @@ def _spacing_ridge(path: str) -> dict:
     """读 terrain.py ridge 的输出 {"ridge": [[x,y]…], "flat": [x0,x1], "hrow":…, "f0":…}。
 
     也认两种手写格式：{"760": 826, …}（列→山脊行）和裸 [[x,y]…]。"""
-    with open(path) as fh:
+    with open(path, encoding="utf-8") as fh:
         d = json.load(fh)
     out = {"flat": None, "hrow": None, "f0": None}
     if isinstance(d, list):
@@ -864,7 +864,7 @@ def main() -> None:
         if args.at:
             cams = {f"P{i + 1}": list(p) for i, p in enumerate(args.at)}
         elif args.points:
-            with open(args.points) as fh:
+            with open(args.points, encoding="utf-8") as fh:
                 cams = {k: v[:2] for k, v in json.load(fh).items()}
         else:
             cams = _ring_positions(args.ring)
@@ -943,18 +943,18 @@ def main() -> None:
         print(f"\n{len(summary_rows)} 个候选机位里，{len(excl)} 个可以用\"画面里没有某地标\"排除"
               "（前提：照片里确实没有该地标，且近处没有未列出的楼挡住那个方向）")
         if args.out:
-            with open(args.out, "w") as fh:
+            with open(args.out, "w", encoding="utf-8") as fh:
                 json.dump(full, fh, ensure_ascii=False, indent=1)
             excl_pts = {c: cams[c] for c in excl}
             keep_pts = {c: cams[c] for c in cams if c not in excl}
             base = args.out.rsplit(".", 1)[0]
-            with open(base + "_keep.json", "w") as fh:
+            with open(base + "_keep.json", "w", encoding="utf-8") as fh:
                 json.dump(keep_pts, fh, indent=1)
-            with open(base + "_excluded.json", "w") as fh:
+            with open(base + "_excluded.json", "w", encoding="utf-8") as fh:
                 json.dump(excl_pts, fh, indent=1)
             print(f"-> {args.out}（保留的机位 {base}_keep.json，可排除的 {base}_excluded.json，可直接给 tiles.py mark）")
     elif args.cmd == "bearings":
-        with open(args.geojson) as fh:
+        with open(args.geojson, encoding="utf-8") as fh:
             gj = json.load(fh)
         rows = []
         for f in gj.get("features", []):
@@ -1000,7 +1000,7 @@ def main() -> None:
             hits = [r for r in rows if abs(r["d_bearing"]) <= args.tol]
             print(f"方位对上的 {len(hits)} 个" + ("；对不上任何要素时，先怀疑朝向和倍率，再怀疑 OSM 没画" if not hits else "。角宽大的近处大楼会挡住后面的，高的才可能露出来"))
         if args.out:
-            with open(args.out, "w") as fh:
+            with open(args.out, "w", encoding="utf-8") as fh:
                 json.dump({(f"{'*' if args.target is not None and abs(r['d_bearing']) <= args.tol else ''}{r['bearing']:.0f}° {r['name'][:12]}"): r["center"] for r in rows}, fh, ensure_ascii=False, indent=1)
             print(f"-> {args.out}")
     elif args.cmd == "spacing":
@@ -1029,7 +1029,7 @@ def main() -> None:
                 "。只用间距这一条，解是沿视线的一条带；给 --ridge 和天际线联合能收窄（geometry.md 7.7）"
                 if not args.ridge else "。拿最佳解去卫星图上核对桥墩位置，别只看分数"))
         if args.out:
-            with open(args.out, "w") as fh:
+            with open(args.out, "w", encoding="utf-8") as fh:
                 json.dump(out, fh, ensure_ascii=False, indent=1)
             print(f"-> {args.out}")
     elif args.cmd == "fov":
@@ -1045,7 +1045,7 @@ def main() -> None:
             k += 1
         print(f"机位在 near 之外、方位 {brg:.1f}° 的射线上；{k} 个采样点")
         if args.out:
-            with open(args.out, "w") as fh:
+            with open(args.out, "w", encoding="utf-8") as fh:
                 json.dump(pts, fh, indent=1)
             print(f"-> {args.out}")
         else:
@@ -1071,4 +1071,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

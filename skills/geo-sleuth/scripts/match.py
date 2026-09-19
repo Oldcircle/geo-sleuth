@@ -168,7 +168,7 @@ def sift_inliers(a: Image.Image, b: Image.Image, max_side: int = 1024) -> tuple[
 
 def _items_from_panos(args) -> list[dict]:
     import baidu_pano as bp
-    panos = json.loads(Path(args.panos).read_text())
+    panos = json.loads(Path(args.panos).read_text(encoding="utf-8"))
     if args.within:
         wl, wo, wr = (float(v) for v in args.within.split(","))
         panos = {k: v for k, v in panos.items() if geo.distance((wl, wo), tuple(v["wgs"])) <= wr}
@@ -216,7 +216,7 @@ def _load_candidates(args) -> tuple[list[dict], list[Image.Image]]:
         items = [{"id": f.stem, "file": str(f)} for f in files]
         return items, [Image.open(f) for f in files]
     if args.items:
-        items = json.loads(Path(args.items).read_text())
+        items = json.loads(Path(args.items).read_text(encoding="utf-8"))
         if args.spread_headings:
             ds = [float(x) for x in args.spread_headings.split(",")]
             items = [dict(it, heading=(it["heading"] + d) % 360) for it in items for d in ds]
@@ -311,7 +311,7 @@ def cmd_rank(args) -> None:
     if args.refine != "none":
         print(f"内点 ≥{args.min_inliers} 的有 {len(strong)} 张" + ("：优先打开这些比不变特征" if strong else "：不能据此判定都不对——换季、老批次、照片在人行道而街景在路中间时，真值也常只有个位数内点。先打开 --sheet 前 10 张比不变特征，都不对再换朝向（--spread-headings）或扩大范围"))
     if args.out:
-        Path(args.out).write_text(json.dumps([{k: v for k, v in r.items() if k != "id_key"} for r in rows], ensure_ascii=False, indent=1))
+        Path(args.out).write_text(json.dumps([{k: v for k, v in r.items() if k != "id_key"} for r in rows], ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}（全部 {len(rows)} 条）")
     if args.sheet:
         _sheet(out_rows, {r["id_key"]: ims[r["id_key"]] for r in out_rows}, Path(args.sheet))
@@ -378,4 +378,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

@@ -321,7 +321,7 @@ def _cmd_scan(args) -> None:
             sys.exit("--bbox 要 4 个数：s,w,n,e")
         bbox = (min(b[0], b[2]), min(b[1], b[3]), max(b[0], b[2]), max(b[1], b[3]))
 
-    gj = json.loads(Path(args.lines).read_text())
+    gj = json.loads(Path(args.lines).read_text(encoding="utf-8"))
     pts = _line_points(gj, args.step, skip, bbox)
     if not pts:
         sys.exit("采样点为 0：--bbox 圈空了，或 geojson 里没有 LineString")
@@ -397,10 +397,10 @@ def _cmd_scan(args) -> None:
         "n_samples": len(pts), "n_hits": len(hits), "n_clusters": len(clusters),
         "hits": hits, "clusters": clusters,
     }
-    Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=0))
+    Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=0), encoding="utf-8")
     print(f"→ {args.out}", file=sys.stderr)
     if args.clusters_out:
-        Path(args.clusters_out).write_text(json.dumps(clusters, ensure_ascii=False, indent=0))
+        Path(args.clusters_out).write_text(json.dumps(clusters, ensure_ascii=False, indent=0), encoding="utf-8")
         print(f"→ {args.clusters_out}（只有簇列表）", file=sys.stderr)
 
 
@@ -499,7 +499,7 @@ def _cmd_ridge(args) -> None:
         "params": {"x0": args.x0, "x1": args.x1, "step": args.step, "ymin": ymin, "ymax": ymax,
                    "drop": args.drop, "k": args.k, "hold": args.hold, "halfw": args.halfw},
     }
-    Path(args.out).write_text(json.dumps(out, ensure_ascii=False))
+    Path(args.out).write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
     src_txt = {"arg": "--f0", "exif": "EXIF 35mm 等效", "assumed": f"没有 EXIF，按 {f35} mm 等效假设"}[f_src]
     h_txt = {"arg": "--hrow", "flat": f"--flat 列里天空→地面的中位行（{len(flat_rows)} 列）", "center": "没给 --flat，取画面中线"}[h_src]
     print(f"{W}x{H}  山脊 {len(ridge)} 点（缺 {len(missing)} 列）  平地平线列 {flat}  "
@@ -547,7 +547,7 @@ def _load_centers(args) -> list[dict]:
     if args.at:
         lat, lon = map(float, args.at.split(","))
         return [{"lat": lat, "lon": lon, "name": "", "src_idx": 0}]
-    j = json.loads(Path(args.hits).read_text())
+    j = json.loads(Path(args.hits).read_text(encoding="utf-8"))
     items = j["clusters"] if isinstance(j, dict) and "clusters" in j else j
     if not isinstance(items, list):
         sys.exit("--hits 要是 scan 的输出（带 clusters 字段）或簇/点的列表")
@@ -618,7 +618,7 @@ def _fit_sheet(recs: list[dict], ridge: dict, photo: Path | None, out: Path, arg
 def _cmd_fit(args) -> None:
     if bool(args.hits) == bool(args.at):
         sys.exit("--hits 和 --at 二选一")
-    ridge = json.loads(Path(args.ridge).read_text())
+    ridge = json.loads(Path(args.ridge).read_text(encoding="utf-8"))
     RX = np.array([p[0] for p in ridge["ridge"]], float)
     RY = np.array([p[1] for p in ridge["ridge"]], float)
     if RX.size < 3:
@@ -662,7 +662,7 @@ def _cmd_fit(args) -> None:
         lat_c = [c["lat"] for c in centers]
         lon_c = [c["lon"] for c in centers]
         bbox = (min(lat_c) - reach_deg, min(lon_c) - reach_deg * 1.2, max(lat_c) + reach_deg, max(lon_c) + reach_deg * 1.2)
-        gj = json.loads(Path(args.line).read_text())
+        gj = json.loads(Path(args.line).read_text(encoding="utf-8"))
         pts = _line_points(gj, args.line_sample, skip, bbox)
         LP = np.array([[p[0], p[1]] for p in pts], dtype=float) if pts else np.zeros((0, 2))
         print(f"设施采样点 {len(LP)} 个（每 {args.line_sample} m）", file=sys.stderr)
@@ -800,7 +800,7 @@ def _cmd_fit(args) -> None:
         "clusters": clusters_out,
         "cams": recs[:args.keep],
     }
-    Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=0))
+    Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=0), encoding="utf-8")
     print(f"簇 {len(clusters_out)}，机位 {len(recs)}，跳过 {skipped} → {args.out}", file=sys.stderr)
     for x in clusters_out[:min(args.top, 10)]:
         b = x["best"]
@@ -1056,7 +1056,7 @@ total = score + --line-w × line_pen；三个窗里有一个没设施的朝向�
         step = max(1, args.width // 180)
         out = [{"azimuth": round(float(az[i] % 360), 2), "skyline_deg": round(float(runmax[i]), 3), "skyline_dist_m": round(float(far[i]))}
                for i in range(0, args.width, step)]
-        args.out.write_text(json.dumps({"at": [lat, lon], "eye_alt_m": round(eye, 1), "ground_m": round(ground, 1), "profile": out}, indent=1))
+        args.out.write_text(json.dumps({"at": [lat, lon], "eye_alt_m": round(eye, 1), "ground_m": round(ground, 1), "profile": out}, indent=1), encoding="utf-8")
         print(f"地面 {ground:.0f} m，眼高 {eye:.0f} m → {args.out}")
         return
 
@@ -1095,4 +1095,7 @@ total = score + --line-w × line_pen；三个窗里有一个没设施的朝向�
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

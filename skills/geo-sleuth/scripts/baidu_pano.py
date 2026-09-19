@@ -256,7 +256,7 @@ def main() -> None:
             sheet(page, out, cache=args.cache)
             print(out)
         idx = args.out.with_suffix(".index.json")
-        idx.write_text(json.dumps(items, ensure_ascii=False, indent=1))
+        idx.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
         dates = sorted(str(i.get("date") or "")[:4] for i in items)
         print(f"{len(items)} 个点，采集年份 {dates[0]}–{dates[-1]}；index -> {idx}")
         return
@@ -267,20 +267,20 @@ def main() -> None:
     elif args.cmd == "scan":
         lat, lon = map(float, args.center.split(","))
         res = scan(lat, lon, args.radius, args.step)
-        args.out.write_text(json.dumps(res, ensure_ascii=False, indent=1))
+        args.out.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"{len(res)} panos -> {args.out}")
     elif args.cmd == "render":
         render(args.id, args.heading, args.pitch, args.fov, cache=args.cache).save(args.out)
         print(args.out)
     elif args.cmd == "sheet":
         if args.spec:
-            items = json.loads(args.spec.read_text())
+            items = json.loads(args.spec.read_text(encoding="utf-8"))
         else:
             if args.ids:
                 need_pos = bool(args.within or args.toward)
                 panos = {p: (info(p) if need_pos else None) for p in args.ids.split(",")}
             else:
-                panos = json.loads(args.panos.read_text())
+                panos = json.loads(args.panos.read_text(encoding="utf-8"))
             if args.within:
                 wl, wo, wr = map(float, args.within.split(","))
                 panos = {k: v for k, v in panos.items() if geo.distance((wl, wo), v["wgs"]) <= wr}
@@ -315,9 +315,12 @@ def main() -> None:
             print(f"共 {len(pages)} 页：{args.out.name} 以及 {args.out.stem}_2 … _{len(pages)}，每页 {args.limit} 格")
         if len(pages) > 1 or args.spec is None:
             idx = args.out.with_suffix(".index.json")
-            idx.write_text(json.dumps(items, indent=1))
+            idx.write_text(json.dumps(items, indent=1), encoding="utf-8")
             print(f"index -> {idx}")
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

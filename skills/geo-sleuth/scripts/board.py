@@ -79,12 +79,12 @@ def _norm(s: str) -> str:
 def _load(p: Path) -> dict:
     if not p.exists():
         sys.exit(f"没有 {p}：先 `board.py init --photo photo.jpg`")
-    return json.loads(p.read_text())
+    return json.loads(p.read_text(encoding="utf-8"))
 
 
 def _save(p: Path, b: dict) -> None:
     b["updated"] = datetime.now().isoformat(timespec="seconds")
-    p.write_text(json.dumps(b, ensure_ascii=False, indent=1))
+    p.write_text(json.dumps(b, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 def _find(b: dict, name: str) -> str:
@@ -100,6 +100,12 @@ def _find(b: dict, name: str) -> str:
 
 def _log(b: dict, text: str) -> None:
     b.setdefault("log", []).append(f"{datetime.now():%H:%M} {text}")
+
+
+def _run(cmd: list[str]) -> subprocess.CompletedProcess:
+    """跑 gazetteer.py、clues.py。子脚本和这边都用 UTF-8：中文 Windows 默认按 GBK 读写，两边不一致就乱码或崩。"""
+    return subprocess.run(cmd, text=True, encoding="utf-8", errors="replace", capture_output=True,
+                          env={**os.environ, "PYTHONUTF8": "1"})
 
 
 def _bbox_km2(bb: list[float]) -> float:
@@ -200,11 +206,11 @@ def cmd_children(args, p: Path) -> None:
         cmd += ["--within", args.within]
     if args.proxy:
         cmd += ["--proxy", args.proxy]
-    r = subprocess.run(cmd, text=True, capture_output=True)
+    r = _run(cmd)
     out = r.stdout.strip(); print(out if len(out) < 1800 else out[:1800].rsplit('\n', 1)[0] + '\n  …')
     if r.returncode != 0:
         sys.exit(f"gazetteer 失败：{r.stderr.strip()[-600:]}")
-    kids = json.loads((p.parent / ".gz_children.json").read_text())
+    kids = json.loads((p.parent / ".gz_children.json").read_text(encoding="utf-8"))
     n = 0
     for name, k in kids.items():
         if name in b["candidates"]:
@@ -309,7 +315,7 @@ def cmd_urban(args, p: Path) -> None:
         cmd += ["--within", args.within]
     if args.proxy:
         cmd += ["--proxy", args.proxy]
-    r = subprocess.run(cmd, text=True, capture_output=True)
+    r = _run(cmd)
     if r.returncode != 0:
         sys.exit(f"gazetteer urban 失败：{r.stderr.strip()[-600:]}")
     d = json.loads(r.stdout[r.stdout.index("{"):])
@@ -475,7 +481,7 @@ def cmd_report(args, p: Path) -> None:
                                                and b["candidates"][e["candidate"]].get("status") != "excluded"})
     if args.merge:
         mp = Path(args.merge)
-        base = json.loads(mp.read_text()) if mp.exists() else {}
+        base = json.loads(mp.read_text(encoding="utf-8")) if mp.exists() else {}
         base["board"] = rep
         if rep["alternatives"]:
             base.setdefault("alternatives", [])
@@ -483,7 +489,7 @@ def cmd_report(args, p: Path) -> None:
                 [x for x in base.get("alternatives", []) if not isinstance(x, str) or "份额" not in x]
         base["excluded"] = [f"{x['name']}：{x['why']}（{x['computed']}）" for x in rep["excluded"]] or base.get("excluded", [])
         base["unused_clues"] = rep["unused_clues"] or base.get("unused_clues", [])
-        mp.write_text(json.dumps(base, ensure_ascii=False, indent=1))
+        mp.write_text(json.dumps(base, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"已并入 {mp}（board 字段 + alternatives/excluded/unused_clues）")
     print(json.dumps(rep, ensure_ascii=False, indent=1)[:4000])
     if rep["main"] and rep["alternatives"]:
@@ -495,7 +501,7 @@ def cmd_apply(args, p: Path) -> None:
     cl = HERE / "clues.py"
     if not cl.exists():
         sys.exit("clues.py 还没就位：先手工 `board.py clue` + `evidence`")
-    r = subprocess.run(["uv", "run", str(cl), "lookup", args.kind, args.value, "--json"], text=True, capture_output=True)
+    r = _run(["uv", "run", str(cl), "lookup", args.kind, args.value, "--json"])
     if r.returncode != 0:
         sys.exit(f"clues.py 失败：{r.stderr.strip()[-400:]}")
     try:
@@ -656,4 +662,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

@@ -103,7 +103,7 @@ def _cn_admin_children(parent: str) -> list[str]:
     if not f.exists():
         return []
     try:
-        d = json.loads(f.read_text())
+        d = json.loads(f.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
         return []
     # 兼容两种结构：{"_meta":…, "items":[{name, code, parent, level}]} 或 modood 的嵌套 [{name, code, children:[…]}]
@@ -279,7 +279,7 @@ def main() -> None:
     if args.cmd == "urban":
         out = urban(args.name, args.proxy, cache, args.within)
         if args.out:
-            args.out.write_text(json.dumps(out, ensure_ascii=False, indent=1))
+            args.out.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
         print(json.dumps(out, ensure_ascii=False, indent=1))
         return
     if args.cmd == "children":
@@ -299,9 +299,12 @@ def main() -> None:
             b = r["bbox"]
             print(f"  {name:<14} {r['bbox_km2'] or '?':>9} km²  {b if b else '（无 bbox）'}")
         if args.out:
-            args.out.write_text(json.dumps(out, ensure_ascii=False, indent=1))
+            args.out.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"-> {args.out}")
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

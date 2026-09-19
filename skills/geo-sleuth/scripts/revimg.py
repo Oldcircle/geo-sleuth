@@ -274,7 +274,7 @@ async def run(images: list[Path], engines: list[str], out_dir: Path, proxy: str 
                     except Exception as e:  # noqa: BLE001
                         res = {"error": str(e)[:300]}
                     res.update({"query": q, "engine": eng, "screenshot": str(shot), "image": f"q{k + 1:02d}"})
-                    (out_dir / f"q{k + 1:02d}_{eng}.json").write_text(json.dumps(res, ensure_ascii=False, indent=1))
+                    (out_dir / f"q{k + 1:02d}_{eng}.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
                     results.append(res)
             await b.close()
 
@@ -291,7 +291,7 @@ async def run(images: list[Path], engines: list[str], out_dir: Path, proxy: str 
                 except Exception as e:  # noqa: BLE001
                     res = {"error": str(e)[:300]}
                 res.update({"image": str(img), "engine": eng, "screenshot": str(shot)})
-                (out_dir / f"{name}_{eng}.json").write_text(json.dumps(res, ensure_ascii=False, indent=1))
+                (out_dir / f"{name}_{eng}.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
                 results.append(res)
             await b.close()
     return results
@@ -341,4 +341,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

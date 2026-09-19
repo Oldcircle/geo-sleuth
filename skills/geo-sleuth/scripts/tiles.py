@@ -81,7 +81,7 @@ def fetch(center: tuple[float, float], zoom: int, radius: int, out: Path, source
     img.save(out, quality=90)
     meta = {"zoom": zoom, "origin_tile": [xs[0], ys[0]], "center": list(center), "source": source,
             "size": list(img.size), "m_per_px": geo.meters_per_px(zoom, center[0]), "failed_tiles": failed}
-    out.with_suffix(".json").write_text(json.dumps(meta, indent=2))
+    out.with_suffix(".json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     return meta
 
 
@@ -89,7 +89,7 @@ class Mosaic:
     """经纬度 ↔ 拼图像素。"""
 
     def __init__(self, image: Path):
-        self.meta = json.loads(Path(image).with_suffix(".json").read_text())
+        self.meta = json.loads(Path(image).with_suffix(".json").read_text(encoding="utf-8"))
         self.z = self.meta["zoom"]
         self.ox, self.oy = self.meta["origin_tile"]
 
@@ -152,7 +152,7 @@ def mark(image: Path, points: dict, out: Path, label: bool, geojsons: list[Path]
     img = Image.open(image).convert("RGB")
     d = ImageDraw.Draw(img)
     for i, gp in enumerate(geojsons or []):
-        n = _draw_geojson(d, m, json.loads(Path(gp).read_text()), LINE_COLORS[i % len(LINE_COLORS)])
+        n = _draw_geojson(d, m, json.loads(Path(gp).read_text(encoding="utf-8")), LINE_COLORS[i % len(LINE_COLORS)])
         print(f"{gp}: {n} 个要素，颜色 {LINE_COLORS[i % len(LINE_COLORS)]}")
     for sp in sectors or []:
         _draw_sector(d, m, sp)
@@ -280,13 +280,13 @@ def main() -> None:
             pts[f"p{i}"] = [round(lat, 6), round(lon, 6)]
             print(f"p{i}  ({x:.0f},{y:.0f}) → {lat:.6f},{lon:.6f}")
         if args.out:
-            args.out.write_text(json.dumps(pts, indent=1))
+            args.out.write_text(json.dumps(pts, indent=1), encoding="utf-8")
             print(f"-> {args.out}")
         return
     if args.cmd == "sheet":
-        pts = json.loads(args.points.read_text()) if args.points else grid_points(args.grid, args.zoom, args.size, args.step)
+        pts = json.loads(args.points.read_text(encoding="utf-8")) if args.points else grid_points(args.grid, args.zoom, args.size, args.step)
         if args.grid:
-            args.out.with_suffix(".cells.json").write_text(json.dumps(pts, indent=1))
+            args.out.with_suffix(".cells.json").write_text(json.dumps(pts, indent=1), encoding="utf-8")
             print(f"网格 {len(pts)} 格（格名 r行c列，行从北往南、列从西往东；每格中心坐标 -> {args.out.with_suffix('.cells.json')}）")
         for p in sheet(pts, args.zoom, args.size, args.cols, args.out, args.source, args.proxy, args.cache):
             print(p)
@@ -298,10 +298,13 @@ def main() -> None:
     elif args.cmd == "mark":
         if not (args.points or args.geojson or args.sector):
             ap.error("mark 至少要 --points、--geojson、--sector 之一")
-        mark(args.image, json.loads(args.points.read_text()) if args.points else {}, args.out, args.label,
+        mark(args.image, json.loads(args.points.read_text(encoding="utf-8")) if args.points else {}, args.out, args.label,
              args.geojson, args.sector)
         print(args.out)
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

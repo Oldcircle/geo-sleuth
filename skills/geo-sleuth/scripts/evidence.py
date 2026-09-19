@@ -119,9 +119,12 @@ def main() -> None:
     ap.add_argument("spec", type=Path)
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
-    build(json.loads(args.spec.read_text()), args.spec.parent, args.out)
+    build(json.loads(args.spec.read_text(encoding="utf-8")), args.spec.parent, args.out)
     print(args.out)
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

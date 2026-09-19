@@ -209,9 +209,9 @@ def main() -> None:
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
 
     if args.cmd == "solve":
-        spec = json.loads(args.spec.read_text())
+        spec = json.loads(args.spec.read_text(encoding="utf-8"))
         pose = solve(spec, args.search_radius, args.restarts)
-        args.save.write_text(json.dumps(pose, ensure_ascii=False, indent=1))
+        args.save.write_text(json.dumps(pose, ensure_ascii=False, indent=1), encoding="utf-8")
         show = {k: v for k, v in pose.items() if not k.startswith("_")}
         print(json.dumps(show, ensure_ascii=False, indent=1))
         if pose["rms_px"] > 15:
@@ -220,12 +220,15 @@ def main() -> None:
             draw(args.photo, pose, spec["points"], args.out, observed=True)
             print(f"叠图 -> {args.out}")
     else:
-        pose = json.loads(args.pose.read_text())
-        raw = json.loads(args.points.read_text())
+        pose = json.loads(args.pose.read_text(encoding="utf-8"))
+        raw = json.loads(args.points.read_text(encoding="utf-8"))
         pts = raw if isinstance(raw, list) else [{"name": k, "ll": v[:2], "h": (v[2] if len(v) > 2 else 0.0)} for k, v in raw.items()]
         draw(args.photo, pose, pts, args.out, observed=False)
         print(args.out)
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

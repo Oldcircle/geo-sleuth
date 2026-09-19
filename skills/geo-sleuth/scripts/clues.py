@@ -329,7 +329,7 @@ def load(table: str) -> dict:
     f = DATA / f"{table}.json"
     if not f.exists():
         sys.exit(f"没有 {f}：先 `clues.py update {table} --proxy socks5h://127.0.0.1:10808（示例）`")
-    return json.loads(f.read_text())
+    return json.loads(f.read_text(encoding="utf-8"))
 
 
 def _fetch(url: str, proxy: str | None) -> str:
@@ -354,7 +354,7 @@ def cmd_update(args) -> None:
         data = PARSERS[name](raw)
         n = data.get("count") or len(data.get("items") or data)
         payload = {"_meta": {"source": SOURCES[name], "fetched": date.today().isoformat(), "count": n}, **data}
-        (DATA / f"{name}.json").write_text(json.dumps(payload, ensure_ascii=False, indent=1))
+        (DATA / f"{name}.json").write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"{name}: {n} 条 -> {DATA / f'{name}.json'}（{(DATA / f'{name}.json').stat().st_size // 1024} KB）")
 
 
@@ -442,7 +442,7 @@ def _country_en(name: str) -> str:
     n = name.strip()
     if _CN_NAMES is None:
         f = DATA / "country_names.json"
-        _CN_NAMES = json.loads(f.read_text()) if f.exists() else {}
+        _CN_NAMES = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
     aliases = _CN_NAMES.get("aliases") or {}
     en2zh = _CN_NAMES.get("en2zh") or {}
     if n in aliases:
@@ -552,7 +552,7 @@ def cmd_list(args) -> None:
         if not f.exists():
             print(f"{name}: 未抓取")
             continue
-        m = json.loads(f.read_text())["_meta"]
+        m = json.loads(f.read_text(encoding="utf-8"))["_meta"]
         print(f"{name}: {m.get('count')} 条，{f.stat().st_size // 1024} KB，抓取 {m.get('fetched')}，来源 {m['source'][0]}")
 
 
@@ -578,4 +578,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

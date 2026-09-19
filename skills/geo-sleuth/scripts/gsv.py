@@ -204,7 +204,7 @@ def main() -> None:
         if args.ids:
             panos = {pid: {"ll": None, "name": "", "date": ""} for pid in args.ids.split(",")}
         else:
-            pts = {"at": list(map(float, args.at.split(",")))} if args.at else json.loads(args.points.read_text())
+            pts = {"at": list(map(float, args.at.split(",")))} if args.at else json.loads(args.points.read_text(encoding="utf-8"))
             for name, (la, lo) in pts.items():
                 res = near(la, lo, args.radius, args.proxy)
                 if res and args.date:
@@ -240,8 +240,11 @@ def main() -> None:
             out = args.out if pi == 0 else args.out.with_name(f"{args.out.stem}_{pi + 1}{args.out.suffix}")
             sheet(page, out, args.proxy, args.cache)
             print(out)
-        args.out.with_suffix(".index.json").write_text(json.dumps(items, indent=1))
+        args.out.with_suffix(".index.json").write_text(json.dumps(items, indent=1), encoding="utf-8")
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

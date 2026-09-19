@@ -250,7 +250,7 @@ def cmd_locate(args) -> None:
         out["lat_range_by_lon"] = {f"{lo:.2f}": [min(v), max(v)] for i, (lo, v) in enumerate(sorted(cols.items())) if i % every == 0}
     print(json.dumps(out, ensure_ascii=False, indent=1))
     if args.points:
-        args.points.write_text(json.dumps({f"p{i}": list(p) for i, p in enumerate(pts)}))
+        args.points.write_text(json.dumps({f"p{i}": list(p) for i, p in enumerate(pts)}), encoding="utf-8")
         print(f"points -> {args.points}")
     if args.mosaic:
         _draw(args.mosaic, pts, step, args.out or args.mosaic.with_name(args.mosaic.stem + "_sun.jpg"))
@@ -583,4 +583,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

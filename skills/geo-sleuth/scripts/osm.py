@@ -64,14 +64,14 @@ def run(ql: str, proxy: str | None, cache: Path, timeout: int = 180, rounds: int
     cache.mkdir(parents=True, exist_ok=True)
     key = cache / (hashlib.sha1(ql.encode()).hexdigest()[:16] + ".json")
     if key.exists():
-        return json.loads(key.read_text())
+        return json.loads(key.read_text(encoding="utf-8"))
     last = ""
     for rnd in range(rounds):
         for ep in ENDPOINTS:
             cmd = ["curl", "-s", "-m", str(timeout + 30), "--data-urlencode", f"data={ql}", ep]
             if proxy:
                 cmd[1:1] = ["-x", proxy]
-            r = subprocess.run(cmd, capture_output=True, text=True)
+            r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
             try:
                 data = json.loads(r.stdout)
             except json.JSONDecodeError:
@@ -79,7 +79,7 @@ def run(ql: str, proxy: str | None, cache: Path, timeout: int = 180, rounds: int
                 continue
             if data.get("remark"):
                 print(f"Overpass 提示（结果可能不全）：{data['remark'][:200]}", file=sys.stderr)
-            key.write_text(json.dumps(data))
+            key.write_text(json.dumps(data), encoding="utf-8")
             return data
         if rnd < rounds - 1:
             print(f"Overpass 各镜像都没返回结果，{15 * (rnd + 1)} 秒后重试：{last}", file=sys.stderr)
@@ -318,7 +318,7 @@ def cmd_intersect(args) -> dict:
             if args.out and dropped:
                 dp = args.out.with_name(args.out.stem + "_dropped.json")
                 dp.write_text(json.dumps({f"{i:03d} {r['label']}".strip(): r["ll"] for i, r in enumerate(dropped, 1)},
-                                         ensure_ascii=False, indent=1))
+                                         ensure_ascii=False, indent=1), encoding="utf-8")
                 print(f"  被丢掉的 -> {dp}")
     if args.rank_near:
         rows = _rank_rows(rows, args.rank_near, args)
@@ -504,7 +504,7 @@ def cmd_geom(args) -> dict:
         feats.append({"type": "Feature", "id": f"{el['type']}/{el['id']}", "properties": tags, "geometry": geom})
     gj = {"type": "FeatureCollection", "features": feats}
     out = args.out or Path("osm_geom.geojson")
-    out.write_text(json.dumps(gj, ensure_ascii=False))
+    out.write_text(json.dumps(gj, ensure_ascii=False), encoding="utf-8")
     print(f"{len(feats)} 个要素 -> {out}")
     args.out = None
     return {}
@@ -747,7 +747,7 @@ def main() -> None:
         pts = cmd_street_scan(args)
     else:
         if args.cmd == "raw":
-            ql = args.file.read_text()
+            ql = args.file.read_text(encoding="utf-8")
             if args.bbox:
                 ql = ql.replace("{{bbox}}", ",".join(map(str, args.bbox)))
         else:
@@ -792,7 +792,7 @@ def main() -> None:
                     near_list.append({"dist_m": round(dmin), "tags": keep})
                 near_list.sort(key=lambda x: x["dist_m"])
                 rep[name] = {"ll": ll, "nearest": near_list[:4]}
-            args.report.write_text(json.dumps(rep, ensure_ascii=False, indent=1))
+            args.report.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"报告 -> {args.report}")
     for k, (name, ll) in enumerate(pts.items()):
         if k >= args.limit:
@@ -800,9 +800,12 @@ def main() -> None:
             break
         print(f"  {name}  {ll[0]},{ll[1]}")
     if args.out:
-        args.out.write_text(json.dumps(pts, ensure_ascii=False, indent=1))
+        args.out.write_text(json.dumps(pts, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}")
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

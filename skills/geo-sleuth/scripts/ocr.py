@@ -171,7 +171,7 @@ def main() -> None:
     if any(t["pass"] != "full" for t in found):
         print("pass=up/tile 的字只有放大后才读出来，算假设：回原图放大看一眼再用")
     if args.out:
-        Path(args.out).write_text(json.dumps({"image": args.image, "size": [W, H], "backend": be.name, "items": found}, ensure_ascii=False, indent=1))
+        Path(args.out).write_text(json.dumps({"image": args.image, "size": [W, H], "backend": be.name, "items": found}, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}")
     if args.draw:
         d = ImageDraw.Draw(im)
@@ -184,4 +184,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

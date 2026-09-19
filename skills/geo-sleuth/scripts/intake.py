@@ -45,7 +45,9 @@ KNOWN_CITIES = ("北京", "上海", "天津", "重庆", "广州", "深圳", "成
 
 def _run(cmd: list[str], cwd: Path | None = None, timeout: int = 900) -> tuple[int, str, str]:
     try:
-        r = subprocess.run(cmd, text=True, capture_output=True, cwd=cwd, timeout=timeout)
+        # 子脚本和这边都用 UTF-8：中文 Windows 默认按 GBK 读写，两边不一致就乱码或崩
+        r = subprocess.run(cmd, text=True, encoding="utf-8", errors="replace", capture_output=True, cwd=cwd, timeout=timeout,
+                           env={**os.environ, "PYTHONUTF8": "1"})
         return r.returncode, r.stdout, r.stderr
     except subprocess.TimeoutExpired:
         return 124, "", f"超时 {timeout}s"
@@ -84,7 +86,7 @@ def _collect_rev(rev_dir: Path) -> tuple[list[dict], dict]:
     entries = []
     for jf in sorted(rev_dir.glob("*.json")):
         try:
-            d = json.loads(jf.read_text())
+            d = json.loads(jf.read_text(encoding="utf-8"))
         except Exception:  # noqa: BLE001
             continue
         m = re.match(r"(.+)_(baidu|yandex|bing|baiduimg|sogouimg)$", jf.stem)
@@ -181,7 +183,7 @@ def main() -> None:
         exif_json = json.loads(exif_res[1].strip().splitlines()[0]) if exif_res[1].strip() else {}
     except Exception:  # noqa: BLE001
         exif_json = {"raw": exif_res[1][:500]}
-    (out / "exif.json").write_text(json.dumps(exif_json, ensure_ascii=False, indent=1))
+    (out / "exif.json").write_text(json.dumps(exif_json, ensure_ascii=False, indent=1), encoding="utf-8")
 
     # 第二批：以图搜图，两个引擎并行，各搜原图 + 最多 max-variants 张变体
     rev_dir = out / "rev"
@@ -209,7 +211,7 @@ def main() -> None:
     ocr_items = []
     if (out / "ocr.json").exists():
         try:
-            ocr_items = json.loads((out / "ocr.json").read_text()).get("items", [])
+            ocr_items = json.loads((out / "ocr.json").read_text(encoding="utf-8")).get("items", [])
         except Exception:  # noqa: BLE001
             pass
 
@@ -298,12 +300,15 @@ def main() -> None:
     for k, v in status.items():
         L.append(f"- {k}: {v}")
     L += ["", "接下来：把线索登记到 board.py（`clue`），查表线索用 `apply`；候选先列全（`children`）再排。"]
-    (out / "intake.md").write_text("\n".join(x for x in L if x is not None))
+    (out / "intake.md").write_text("\n".join(x for x in L if x is not None), encoding="utf-8")
     (out / "intake.json").write_text(json.dumps({"photo": str(photo), "exif": exif_json, "ocr": ocr_items, "rev": entries, "votes": votes,
-                                                 "status": status, "timings": timings}, ensure_ascii=False, indent=1))
+                                                 "status": status, "timings": timings}, ensure_ascii=False, indent=1), encoding="utf-8")
     print("\n".join(L[:6]))
     print(f"-> {out / 'intake.md'}（读这份）")
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

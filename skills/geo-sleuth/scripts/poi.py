@@ -40,9 +40,13 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 
 
 def _curl(url: str, proxy: str | None = None, ua: str = UA, timeout: int = 25) -> str:
-    cmd = ["curl", "-s", "-m", str(timeout), "-A", ua, url]
+    cmd = ["curl", "-sS", "-m", str(timeout), "-A", ua, url]
     cmd[1:1] = ["-x", proxy] if proxy else ["--noproxy", "*"]
-    return subprocess.run(cmd, capture_output=True, text=True).stdout
+    # 网页是 UTF-8。不写 encoding 的话中文 Windows 按 GBK 解码，解不开时 stdout 是 None
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode != 0:
+        print(f"请求没成功（curl 退出码 {r.returncode}）：{r.stderr.strip()[:200]}", file=sys.stderr)
+    return r.stdout
 
 
 def search_so(kw: str, city: str | None, n: int) -> tuple[list[dict], list[dict]]:
@@ -149,9 +153,12 @@ def main() -> None:
     if not uniq:
         print("  没有。换写法（去掉\"小区/花园\"后缀、加区县名），或用 revimg.py --query 搜网页找地址")
     if args.out:
-        args.out.write_text(json.dumps(pts, ensure_ascii=False, indent=1))
+        args.out.write_text(json.dumps(pts, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}")
 
 
 if __name__ == "__main__":
+    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()
