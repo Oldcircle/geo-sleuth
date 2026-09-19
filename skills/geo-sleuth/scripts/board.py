@@ -56,6 +56,8 @@ from datetime import datetime
 from pathlib import Path
 
 HERE = Path(__file__).parent
+# uv run 会把自己的路径写进环境变量 UV：照它调子脚本，uv 不在 PATH 里（比如刚装完没重开终端）也找得到
+UV = os.environ.get("UV") or "uv"
 LEVELS = ["country", "admin1", "admin2", "city", "district", "area", "road", "point"]
 LEVEL_ZH = {"country": "国家", "admin1": "省/州", "admin2": "地级/郡", "city": "城市", "district": "区县",
             "area": "片区", "road": "路", "point": "点"}
@@ -199,7 +201,7 @@ def cmd_add(args, p: Path) -> None:
 
 def cmd_children(args, p: Path) -> None:
     b = _load(p)
-    cmd = ["uv", "run", str(HERE / "gazetteer.py"), "children", args.parent, "--out", str(p.parent / ".gz_children.json")]
+    cmd = [UV, "run", str(HERE / "gazetteer.py"), "children", args.parent, "--out", str(p.parent / ".gz_children.json")]
     if args.level:
         cmd += ["--level", str(args.level)]
     if args.within:
@@ -310,7 +312,7 @@ def cmd_scan_bbox(args, p: Path) -> None:
 def cmd_urban(args, p: Path) -> None:
     b = _load(p)
     cname = _find(b, args.name)
-    cmd = ["uv", "run", str(HERE / "gazetteer.py"), "urban", cname]
+    cmd = [UV, "run", str(HERE / "gazetteer.py"), "urban", cname]
     if args.within:
         cmd += ["--within", args.within]
     if args.proxy:
@@ -501,7 +503,7 @@ def cmd_apply(args, p: Path) -> None:
     cl = HERE / "clues.py"
     if not cl.exists():
         sys.exit("clues.py 还没就位：先手工 `board.py clue` + `evidence`")
-    r = _run(["uv", "run", str(cl), "lookup", args.kind, args.value, "--json"])
+    r = _run([UV, "run", str(cl), "lookup", args.kind, args.value, "--json"])
     if r.returncode != 0:
         sys.exit(f"clues.py 失败：{r.stderr.strip()[-400:]}")
     try:

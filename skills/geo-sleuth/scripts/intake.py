@@ -33,6 +33,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).parent
+# uv run 会把自己的路径写进环境变量 UV：照它调子脚本，uv 不在 PATH 里（比如刚装完没重开终端）也找得到
+UV = os.environ.get("UV") or "uv"
 CITY_SUFFIX = ("省", "市", "区", "县", "州", "盟", "旗", "国", "府", "道", "自治区", "特别行政区", "City", "Province", "County", "Prefecture")
 PLACE_WORDS = ("公园", "大厦", "小区", "花园", "广场", "学校", "中学", "小学", "大学", "酒店", "宾馆", "景区", "寺", "塔", "桥", "大楼",
                "中心", "村", "镇", "街", "路", "湖", "山", "站", "港", "码头", "厂", "园", "苑", "府", "城", "馆", "庙", "教堂", "Park",
@@ -153,20 +155,20 @@ def main() -> None:
         return res
 
     def exif():
-        return _run(["uv", "run", _script("exif.py"), str(photo)])
+        return _run([UV, "run", _script("exif.py"), str(photo)])
 
     def edges():
-        return _run(["uv", "run", _script("imgprep.py"), "edges", str(photo), "--out-dir", str(out / "edges")])
+        return _run([UV, "run", _script("imgprep.py"), "edges", str(photo), "--out-dir", str(out / "edges")])
 
     def variants():
-        rc, so, se = _run(["uv", "run", _script("imgprep.py"), "variants", str(photo), "--prefix", "full", "--out-dir", str(out / "variants")])
+        rc, so, se = _run([UV, "run", _script("imgprep.py"), "variants", str(photo), "--prefix", "full", "--out-dir", str(out / "variants")])
         for i, b in enumerate(args.box or [], 1):
-            r2 = _run(["uv", "run", _script("imgprep.py"), "variants", str(photo), "--box", b, "--prefix", f"box{i}", "--out-dir", str(out / "variants")])
+            r2 = _run([UV, "run", _script("imgprep.py"), "variants", str(photo), "--box", b, "--prefix", f"box{i}", "--out-dir", str(out / "variants")])
             rc, so, se = max(rc, r2[0]), so + r2[1], se + r2[2]
         return rc, so, se
 
     def ocr():
-        return _run(["uv", "run", _script("ocr.py"), str(photo), "--out", str(out / "ocr.json"), "--draw", str(out / "ocr.png")])
+        return _run([UV, "run", _script("ocr.py"), str(photo), "--out", str(out / "ocr.json"), "--draw", str(out / "ocr.png")])
 
     # 第一批：元数据、边缘、变体、OCR 并行
     with ThreadPoolExecutor(4) as ex:
@@ -195,7 +197,7 @@ def main() -> None:
         images = [str(photo)] + [str(f) for f in prefer[: args.max_variants]]
 
         def rev(engine):
-            cmd = ["uv", "run", _script("revimg.py"), *images, "--out-dir", str(rev_dir), "--engines", engine]
+            cmd = [UV, "run", _script("revimg.py"), *images, "--out-dir", str(rev_dir), "--engines", engine]
             if args.exclude:
                 cmd += ["--exclude", args.exclude]
             if engine == "yandex" and args.proxy:

@@ -44,6 +44,8 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/intake.py photo.jpg --out-dir intake/ [--box 
 uv run ${CLAUDE_SKILL_DIR}/scripts/board.py init --photo photo.jpg
 ```
 
+`intake.py` 一般 1–2 分钟，第一次运行要装依赖会更久：命令超时给够（10 分钟以上）或放后台跑。被命令超时打断时，识图子进程可能还在往 `rev/` 里写文件，但不会生成 `intake.md`，别当成已经跑完。
+
 `intake.md` 里有：元数据、OCR 文字（放大/切块读出的标 pass=up/tile，是假设）、百度相似图片（来源站点计数 + 编号拼图）、识图标签分级计票、疑似小区/楼盘名、边缘图清单、失败项。然后你做四件事：
 
 - **看图**：`edges/` 四边四角逐张看；`references/observe.md` 的清单过一遍；每条线索 `board.py clue "<文本>" --kind <类> --status observed|read|inferred|computed --file <放大图>`。状态要诚实：读出来的字是 read，"楼大概 8 层""路在上坡"是 inferred。
