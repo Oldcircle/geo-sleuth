@@ -146,16 +146,17 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/terrain.py ridge photo.jpg --x0 X0 --x1 X1 --
 uv run ${CLAUDE_SKILL_DIR}/scripts/terrain.py fit (--hits hits.json | --at lat,lon) --ridge ridge.json --out fit.json \
   [--select 11,87,...] [--radius 2000] [--grid 250] [--zoom 11] [--focal-scales 0.9,1,1.12] [--az-step 0.5] \
   [--near 150] [--range 15000] [--nsamp 260] [--eye 1.6] [--cam-flat 8] [--cam-flat-radius 300] \
-  [--min-peak 6] [--cc-max 0.7] [--flat-clear 1.0] [--flat-w 1.5] [--flat-step 20] \
+  [--min-peak 6] [--cc-max 0.7] [--roll-max 1.0] [--flat-clear 1.0] [--flat-w 1.5] [--flat-step 20] \
   [--line lines.geojson --line-dist L0-L1:C0-C1:R0-R1 [--line-win -27:-21,-3:3,18:27] [--line-scale 200,200,300] \
    [--line-order none|asc|desc] [--line-w 0.3] [--line-min 150] [--line-sample 50] [--line-reach 3000] [--skip-tag electrified=no ...]] \
   [--top 20] [--keep 5000] [--sheet top.jpg] [--overlay|--photo photo.jpg] [--sheet-cols 4] [--sheet-width 360]
 ```
 
 - `ridge`：`--x0/--x1` 是山脊所在的列范围，`--step` 取点间距，`--flat x0:x1` 是平地平线（没有山的那段）的列范围，`--hrow` 是地平线所在行（不给则按画面中线估）。`--drop/--k/--hold/--halfw` 是找亮度突变的阈值（下降幅度、倍数、连续行数、横向平滑半宽）。输出 `{size, ridge:[[x,y]...], flat:[x0,x1], hrow, f0, f0_source}`；照片没有 EXIF 焦距时按 `--f35` 等效焦距和画幅估 `f0` 并标 `f0_source=assumed`，`--png` 出一张核对图。
-- `fit`：候选来自 `--hits`（`corridors.md` 4.3 的扫描结果，`--select` 只取指定簇号）或 `--at` 单点。每个候选点周围 `--radius` 米、`--grid` 米网格摆机位，朝向按 `--az-step` 扫，焦距按 `--focal-scales` 倍率试，地平线行也搜——**不要写死"竖拍 50°、地平线在中线"**。机位本身要求近处平（`--cam-flat` 米 / `--cam-flat-radius` 米内起伏），山要够高（`--min-peak`）。打分 = 山脊仰角 RMS + 平地平线段被山挡住的罚分（`--flat-clear` 容差、`--flat-w` 权重）。
+- `fit`：候选来自 `--hits`（`corridors.md` 4.3 的扫描结果，`--select` 只取指定簇号）或 `--at` 单点。每个候选点周围 `--radius` 米、`--grid` 米网格摆机位，朝向按 `--az-step` 扫，焦距按 `--focal-scales` 倍率试，地平线行也搜——**不要写死"竖拍 50°、地平线在中线"**。机位本身要求近处平（`--cam-flat` 米 / `--cam-flat-radius` 米内起伏），山要够高（`--min-peak`）。打分 = 山脊仰角 RMS + 平地平线段被山挡住的罚分（`--flat-clear` 容差、`--flat-w` 权重）。输出里的 `rms_px` 是 RMS 换成的像素数，要和照片山脊的取点误差比：前几名的 `rms_px` 都和取点误差差不多大（几到十来个像素）时，天际线分不开这些机位，要靠第二条约束。焦距有 EXIF 就只给 `--focal-scales 1`；没有时最优焦距常落在搜索范围的边上，这个焦距别拿来当结论。
+- **横滚一起解**（`--roll-max`，默认 1.0°，写 0 就是旧版行为）：手持拍歪 1°，画面两端的山脊就差十几像素，不解出来真值会和一堆错候选挤在同一档 RMS。每个朝向下把"地形仰角 − 照片仰角"对水平方位做最小二乘，截距是地平线偏移 `cc`、斜率是 tan(横滚)，结果写进机位记录的 `roll`。上限要收紧：合成题和实拍里 ±1° 的效果都比 ±2.5° 好（放宽后错候选也能靠歪斜吸噪声，真值和第二名的差距被抹平）。解出来的 `roll` 顶到上限说明这个自由度在补别的误差（机位不对、焦距不对），别当成真的拍摄歪斜。
 - 设施距离约束可选：`--line` 给线数据，`--line-dist` 给左/中/右三处距离区间（米），`--line-win` 是三处对应的画面方位窗（度，相对朝向），`--line-order` 要求三处距离单调（asc/desc）。落窗外按 `--line-scale` 和 `--line-w` 罚分。
-- 输出 `fit.json`：`{params, n_clusters, n_cams, n_skipped:{not_flat, no_peak, no_line, dup}, clusters:[{hit, name, hit_ll, n, max_ang, n_cams, rank, best}...], cams:[{hit, name, hit_ll, cam:[lat,lon], d, brg, g, H, fs, f, cc, rms, flatpen, score, (dL/dC/dR/line_pen), total}...]}`；`--sheet` 出前 N 名缩略图，配 `--photo` 时是照片叠合成天际线。
+- 输出 `fit.json`：`{params, n_clusters, n_cams, n_skipped:{not_flat, no_peak, no_line, dup}, clusters:[{hit, name, hit_ll, n, max_ang, n_cams, rank, best}...], cams:[{hit, name, hit_ll, cam:[lat,lon], d, brg, g, H, fs, f, cc, roll, rms, rms_px, flatpen, score, (dL/dC/dR/line_pen), total}...]}`；`--sheet` 出前 N 名缩略图，配 `--photo` 时是照片叠合成天际线（红线按该机位解出的 `roll` 画，不然两端会差出十几像素）。
 - `ridge` / `fit` 都用 `terrain.py` 的全局参数：`--proxy`（默认读 `GEO_PROXY`）、`--cache`（默认 `.geo-cache/dem`）。
 - 近处出现尖刺状假山脊（高程采样伪影）时，把 `--near` 调到 150–300 m。
 - **精搜（z13）不保证比粗搜更准**：复跑里同一条链精搜反而比粗搜离真值更远。z13 的平地筛会把真值附近的点筛掉，天际线本身也只给一条视线。精搜的作用是给 7.7 的等间距构件一个靠谱的 `--center`，不是自己把误差压下去。

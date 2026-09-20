@@ -87,10 +87,29 @@ def run(ql: str, proxy: str | None, cache: Path, timeout: int = 180, rounds: int
     sys.exit(f"Overpass 查询失败（公共服务器忙就换个时间，查询报错就检查写法、缩小范围）：{last}")
 
 
+def _area_sel(name: str, var: str, loose: bool = False) -> str:
+    """按名字取 OSM 区域，存进集合 var。
+    国内民族自治区在 OSM 里是双语名（"新疆维吾尔自治区 شىنجاڭ…"、"西藏自治区 བོད་…"、内蒙古带蒙文），
+    只写 ["name"="…"] 会静默查到 0 条；所以同时认 name:zh / name:zh-Hans（走索引，快）。
+    loose=True 再加"名字 + 空格 + 别的文字"的前缀正则，兜底没有 name:zh 的双语名；要扫全部区域名，慢，只在前面查不到时用。"""
+    q = name.replace("\\", "\\\\").replace('"', '\\"')
+    sel = f'area["name"="{q}"];area["name:zh"="{q}"];area["name:zh-Hans"="{q}"];'
+    if loose:
+        rx = re.sub(r'([.^$*+?()\[\]{}|\\])', r"\\\\\1", name).replace('"', '\\"')
+        sel += f'area["name"~"^{rx} "];'
+    return f"({sel})->.{var};"
+
+
+def _area_count(name: str, args, loose: bool = False) -> int:
+    """OSM 里能按这个名字取到几个区域（查到 0 条结果时用来区分"真没有"和"名字不对"）。"""
+    els = run(f"[out:json][timeout:120];{_area_sel(name, 'a', loose)}.a out count;", args.proxy, args.cache).get("elements") or []
+    return int(((els[0].get("tags") or {}).get("total", 0)) if els else 0)
+
+
 def _scope(args) -> tuple[str, str]:
     """返回 (前置语句, 过滤后缀)。"""
     if args.area:
-        return f'area["name"="{args.area}"]->.searchArea;', "(area.searchArea)"
+        return _area_sel(args.area, "searchArea", getattr(args, "area_loose", False)), "(area.searchArea)"
     if args.bbox:
         s, w, n, e = args.bbox
         return "", f"({s},{w},{n},{e})"
@@ -433,9 +452,12 @@ def cmd_coverage(args) -> dict:
     """各候选行政区里某类要素有几个。用 OSM 枚举候选之前先跑：数量明显偏少的区县不能靠 OSM 结果排除，要单独用卫星图网格扫。"""
     rows = []
     for name in [a for a in args.areas.split(",") if a]:
-        ql = f'[out:json][timeout:120];area["name"="{name}"]->.a;.a out count;nwr{args.filter}(area.a);out count;'
-        els = run(ql, args.proxy, args.cache).get("elements") or []
-        counts = [int((e.get("tags") or {}).get("total", 0)) for e in els]
+        for loose in (False, True):                       # 双语名又没有 name:zh 的，第二轮按名字前缀兜底
+            ql = f'[out:json][timeout:120];{_area_sel(name, "a", loose)}.a out count;nwr{args.filter}(area.a);out count;'
+            els = run(ql, args.proxy, args.cache).get("elements") or []
+            counts = [int((e.get("tags") or {}).get("total", 0)) for e in els]
+            if counts and counts[0] > 0:
+                break
         rows.append((name, counts[1] if len(counts) > 1 and counts[0] > 0 else -1))
     top = max((n for _, n in rows), default=0)
     print(f"OSM 里 {args.filter} 的数量（只比同类行政区；数量少可能是真的少，也可能是没人画）：")
@@ -505,6 +527,12 @@ def cmd_geom(args) -> dict:
     gj = {"type": "FeatureCollection", "features": feats}
     out = args.out or Path("osm_geom.geojson")
     out.write_text(json.dumps(gj, ensure_ascii=False), encoding="utf-8")
+    if not feats and args.area and not getattr(args, "area_loose", False) and _area_count(args.area, args) == 0:
+        if _area_count(args.area, args, loose=True) > 0:
+            print(f"「{args.area}」在 OSM 里是双语名、没有 name:zh，按名字前缀重查", file=sys.stderr)
+            args.area_loose = True
+            return cmd_geom(args)
+        print(f"注意：OSM 里按名字找不到区域「{args.area}」，0 条不代表这里没有；换写法或改用 --bbox", file=sys.stderr)
     print(f"{len(feats)} 个要素 -> {out}")
     args.out = None
     return {}

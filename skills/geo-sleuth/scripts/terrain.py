@@ -565,13 +565,15 @@ def _load_centers(args) -> list[dict]:
     return centers
 
 
-def _skyline_xy(hor: np.ndarray, az: np.ndarray, H: float, f: float, cc: float, cx: float, hrow: float, half_w: float):
-    """把 360° 地平线按 fit 用的针孔模型投到照片像素：x = cx + f·tan(方位偏移)，y = hrow − f·tan(仰角 − cc)。"""
+def _skyline_xy(hor: np.ndarray, az: np.ndarray, H: float, f: float, cc: float, cx: float, hrow: float, half_w: float,
+                roll: float = 0.0):
+    """把 360° 地平线按 fit 用的针孔模型投到照片像素：x = cx + f·tan(方位偏移)，y = hrow − f·tan(仰角 − cc)。
+    roll = 画面横滚角°（顺时针为正），按 fit 拟合出来的值给，否则两端会和照片差出十几像素。"""
     rel = (az - H + 180) % 360 - 180
     lim = math.degrees(math.atan(half_w / f)) + 1
     m = np.abs(rel) <= lim
     x = cx + f * np.tan(np.radians(rel[m]))
-    y = hrow - f * np.tan(np.radians(hor[m] - cc))
+    y = hrow - f * np.tan(np.radians(hor[m] - cc)) + math.tan(math.radians(roll)) * (x - cx)
     o = np.argsort(x)
     return list(zip(x[o].tolist(), y[o].tolist()))
 
@@ -598,7 +600,7 @@ def _fit_sheet(recs: list[dict], ridge: dict, photo: Path | None, out: Path, arg
         try:
             dem = DEM(tuple(r["cam"]), args.range + 500, args.zoom, args.cache, args.proxy)
             ang, _ = cast(dem, tuple(r["cam"]), r["g"] + args.eye, az, args.range, near=args.near, n=dist_n)
-            pts = _skyline_xy(ang.max(axis=1), az, r["H"], f, r["cc"], cx, hrow, W / 2)
+            pts = _skyline_xy(ang.max(axis=1), az, r["H"], f, r["cc"], cx, hrow, W / 2, r.get("roll", 0.0))
             d.line([(x * s, y * s) for x, y in pts], fill=(255, 40, 40), width=2)
         except SystemExit as e:
             d.text((6, th - 20), f"DEM 失败：{e}", fill="red", font=font)
@@ -634,6 +636,9 @@ def _cmd_fit(args) -> None:
     naz = int(round(360 / az_step))
     if abs(naz * az_step - 360) > 1e-6:
         sys.exit("--az-step 必须能整除 360")
+    if not 0 <= args.roll_max < 15:
+        sys.exit("--roll-max 要在 0–15° 之间（0 = 不解横滚，和旧版一致）")
+    roll_max = math.tan(math.radians(args.roll_max))
     AZ = np.arange(naz) * az_step
     HS = np.arange(naz)
 
@@ -744,15 +749,25 @@ def _cmd_fit(args) -> None:
                 r_off = np.degrees(np.arctan((RX - cx) / f))
                 r_el = np.degrees(np.arctan((hrow - RY) / f))
                 ri = (HS[:, None] + np.round(r_off / az_step).astype(int)[None, :]) % naz
+                # 地平线偏移 cc（俯仰/hrow 不准）和横滚 rr 一起用最小二乘解：手持歪 1° 时画面两端的山脊
+                # 就差十几像素，不解出来真值会和一堆错候选挤在同一档 rms（实拍一例：11.1 → 6.2 px，真值才离群）
                 diff = hor[ri] - r_el[None, :]
-                cc = np.clip(np.median(diff, axis=1), -args.cc_max, args.cc_max)
-                rms = np.sqrt(np.mean((diff - cc[:, None]) ** 2, axis=1))
+                if roll_max > 0 and (r_off != r_off.mean()).any():
+                    oc = r_off - r_off.mean()
+                    dmean = diff.mean(axis=1)
+                    rr = np.clip(((diff - dmean[:, None]) * oc[None, :]).sum(axis=1) / (oc ** 2).sum(), -roll_max, roll_max)
+                    cc = np.clip(dmean - rr * r_off.mean(), -args.cc_max, args.cc_max)
+                else:                                              # --roll-max 0：和旧版一样只减中位数
+                    rr = np.zeros(naz)
+                    cc = np.clip(np.median(diff, axis=1), -args.cc_max, args.cc_max)
+                rms = np.sqrt(np.mean((diff - cc[:, None] - rr[:, None] * r_off[None, :]) ** 2, axis=1))
                 if FLX.size:
                     fl_off = np.degrees(np.arctan((FLX - cx) / f))
                     fi = (HS[:, None] + np.round(fl_off / az_step).astype(int)[None, :]) % naz
                     pen = np.mean(np.clip(hor[fi] - cc[:, None] - args.flat_clear, 0, None), axis=1)
                 else:
                     pen = np.zeros(naz)
+                # 不同焦距之间按度比。试过折成像素比（× fs）：实拍回归里焦距偏短、机位更远，没采用
                 score = rms + args.flat_w * pen
                 total = score + args.line_w * line_pen if line_pen is not None else score
                 k = int(np.argmin(total))
@@ -763,7 +778,9 @@ def _cmd_fit(args) -> None:
                             "cam": [round(clat, 5), round(clon, 5)],
                             "d": round(math.hypot(dx, dy)), "brg": round(math.degrees(math.atan2(dx, dy)) % 360),
                             "g": round(g0, 1), "H": round(k * az_step, 2), "fs": fs, "f": round(f, 1),
-                            "cc": round(float(cc[k]), 2), "rms": round(float(rms[k]), 3), "flatpen": round(float(pen[k]), 3),
+                            "cc": round(float(cc[k]), 2), "roll": round(math.degrees(math.atan(float(rr[k]))), 2),
+                            "rms": round(float(rms[k]), 3),
+                            "rms_px": round(float(rms[k]) * f * math.pi / 180, 1), "flatpen": round(float(pen[k]), 3),
                             "score": round(float(score[k]), 3)}
                     if line_pen is not None:
                         best.update({"dL": round(float(dmins[0][k])), "dC": round(float(dmins[1][k])), "dR": round(float(dmins[2][k])),
@@ -791,7 +808,7 @@ def _cmd_fit(args) -> None:
                    "radius_m": args.radius, "grid_m": args.grid, "zoom": args.zoom, "focal_scales": fscales,
                    "az_step_deg": az_step, "near_m": args.near, "range_m": args.range, "nsamp": args.nsamp, "eye_m": args.eye,
                    "cam_flat_m": args.cam_flat, "cam_flat_radius_m": args.cam_flat_radius, "min_peak_deg": args.min_peak,
-                   "cc_max_deg": args.cc_max, "flat_clear_deg": args.flat_clear, "flat_w": args.flat_w, "flat_step_px": args.flat_step,
+                   "cc_max_deg": args.cc_max, "roll_max_deg": args.roll_max, "flat_clear_deg": args.flat_clear, "flat_w": args.flat_w, "flat_step_px": args.flat_step,
                    "line": args.line, "line_dist": args.line_dist, "line_win": args.line_win if args.line else None,
                    "line_scale": args.line_scale if args.line else None, "line_order": args.line_order if args.line else None,
                    "line_w": args.line_w, "line_min_m": args.line_min, "line_sample_m": args.line_sample, "line_reach_m": args.line_reach,
@@ -807,7 +824,7 @@ def _cmd_fit(args) -> None:
         if b:
             line_txt = f"  L/C/R {b['dL']}/{b['dC']}/{b['dR']} pen {b['line_pen']}" if "line_pen" in b else ""
             print(f"  {x['rank']:>3}. hit{x['hit']} {x['name'] or '-'}  cam {b['cam']}  H {b['H']}  f {b['f']:.0f}  "
-                  f"rms {b['rms']}  flat {b['flatpen']}{line_txt}  total {b['total']}", file=sys.stderr)
+                  f"rms {b['rms']} ({b['rms_px']} px)  flat {b['flatpen']}{line_txt}  total {b['total']}", file=sys.stderr)
     if args.sheet:
         top = [x["best"] for x in clusters_out if x["best"]][:args.top] if len(clusters_out) > 1 else recs[:args.top]
         if not top:
@@ -956,6 +973,8 @@ def main() -> None:
   rms     = 山脊仰角残差的 RMS（残差中位数当地平线偏移 cc，限 ±--cc-max）
   flatpen = 平地平线列上 max(0, 地平线仰角 − cc − --flat-clear) 的均值
   score   = rms + --flat-w × flatpen
+  rms_px  = rms 换成像素（rms × f × π/180），只用来判断分不分得开、不参与排序：前几名都和山脊取点本身的
+            误差（几个到十来个像素）差不多大，天际线就分不开它们，要靠第二条约束
 机位先过两道筛：周围 --cam-flat-radius 内高差 ≤ --cam-flat（画面里机位站在平地上），
 地平线最高仰角 ≥ --min-peak（有山可比）。
 给了 --line（osm.py geom 的 GeoJSON）再加一条独立约束：对每个朝向，设施采样点落在画面左/中/右三个方位窗
@@ -982,7 +1001,7 @@ total = score + --line-w × line_pen；三个窗里有一个没设施的朝向�
    "cams":     [<机位记录>, ...]}                                 # 全部机位按 total 升序，最多 --keep 条
   机位记录：{"hit","name","hit_ll", "cam": [lat,lon], "d": 离簇中心 m, "brg": 簇中心→机位方位°,
             "g": 地面高程 m, "H": 朝向°, "fs": 焦距倍率, "f": 焦距 px, "cc": 地平线偏移°,
-            "rms", "flatpen", "score", [给了 --line 时: "dL","dC","dR" m, "line_pen"], "total"}
+            "rms", "rms_px", "flatpen", "score", [给了 --line 时: "dL","dC","dR" m, "line_pen"], "total"}
 --sheet：多簇时画每簇最佳机位的前 --top 名，单簇/--at 时画前 --top 个机位；红线=合成天际线，黄点=照片山脊点。""")
     src = ft.add_mutually_exclusive_group(required=True)
     src.add_argument("--hits", help="scan 的输出 JSON（用 clusters 字段）或簇列表 JSON")
@@ -1003,6 +1022,8 @@ total = score + --line-w × line_pen；三个窗里有一个没设施的朝向�
     ft.add_argument("--cam-flat-radius", type=float, default=300, help="判断机位平不平的半径 m（默认 300；精搜用过 200）")
     ft.add_argument("--min-peak", type=float, default=6, help="地平线最高仰角至少多少度才打分（默认 6）")
     ft.add_argument("--cc-max", type=float, default=0.7, help="地平线偏移 cc 的上限°（默认 0.7，即 hrow 允许错十几像素）")
+    ft.add_argument("--roll-max", type=float, default=1.0,
+                    help="横滚角上限°（默认 1.0，手持歪斜的常见范围；0 = 不解横滚，和旧版一致）")
     ft.add_argument("--flat-clear", type=float, default=1.0, help="平地平线列上地平线高出 cc 多少度以内不罚（默认 1.0）")
     ft.add_argument("--flat-w", type=float, default=1.5, help="flatpen 权重（默认 1.5）")
     ft.add_argument("--flat-step", type=float, default=20, help="平地平线列范围内每多少像素取一列（默认 20）")
