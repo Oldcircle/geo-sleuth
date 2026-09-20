@@ -13,7 +13,7 @@
 数据来自 OSM Overpass（走代理，结果按查询缓存在 .geo-cache/osm/）。OSM 的行政区列表可能缺项：
 children 会和本地 data/cn_admin.json（国内三级行政区表，若存在）合并，缺 bbox 的条目标出来。
 admin_level 各国不同：中国 省 4 / 地级 5 / 县级 6，法国 大区 4 / 省 6，美国 州 4 / 县 6。不确定就不给 --level，
-脚本会从上级的 admin_level 往下试。
+脚本会从上级的 admin_level 往下试，跳过范围合计不到上级 30% 的级别（中国的 3 级只有港澳）。
 
 示例：
   gazetteer.py children <省级行政区全名> --out districts.json          # 直辖市 → 全部区县
@@ -39,6 +39,7 @@ import osm  # noqa: E402
 DATA = Path(__file__).parent.parent / "data"
 LEVEL_NAMES = {"CN": {4: "省级", 5: "地级", 6: "县级", 7: "乡镇"}, "FR": {4: "大区", 6: "省", 8: "市镇"},
                "US": {4: "州", 6: "县", 8: "市"}, "*": {2: "国家", 4: "一级行政区", 6: "二级行政区", 8: "三级行政区"}}
+MIN_COVER = 0.3   # children 自动选级：这一级的 bbox 面积合计至少占上级 bbox 的这么多
 
 
 def _cache(args) -> Path:
@@ -87,14 +88,27 @@ def children(parent: str, proxy: str | None, cache: Path, level: int | None, wit
         sys.exit(f"OSM 里没有叫“{parent}”的行政区关系：换全名（带不带“市/省/区”）、或加 --within 上级名")
     p = ps[0]
     levels = [level] if level else [p["admin_level"] + k for k in (1, 2, 3, 4)]
+    first = None
     for lv in levels:
         ql = (f'[out:json][timeout:180];rel({p["osm_id"]});map_to_area->.a;'
               f'rel(area.a)["boundary"="administrative"]["admin_level"="{lv}"];out tags bb;')
         rows = _rel_rows(osm.run(ql, proxy, cache))
         rows = [r for r in rows if r["osm_id"] != p["osm_id"]]
-        if len(rows) >= 2:
-            return p, sorted(rows, key=lambda r: r["name"])
-    return p, []
+        if len(rows) < 2:
+            continue
+        rows = sorted(rows, key=lambda r: r["name"])
+        if level:
+            return p, rows
+        # 自动选级：只盖住上级一小块的那级不算"下一级"（中国 admin_level 3 只有港澳，省在 4）
+        cover = sum(r["bbox_km2"] for r in rows) / max(p["bbox_km2"], 1e-9)
+        if cover >= MIN_COVER:
+            return p, rows
+        print(f"admin_level {lv} 只有 {len(rows)} 个（{'、'.join(r['name'] for r in rows[:6])}），"
+              f"范围合计只占上级 {cover:.1%}，不当下一级，往下试", file=sys.stderr)
+        first = first or rows
+    if first:
+        print("往下几级都没有盖住上级的，退回第一个有 ≥2 个的级别；不对就给 --level", file=sys.stderr)
+    return p, first or []
 
 
 def _cn_admin_children(parent: str) -> list[str]:

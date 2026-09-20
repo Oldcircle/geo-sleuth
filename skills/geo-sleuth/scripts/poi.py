@@ -155,6 +155,11 @@ def main() -> None:
     if args.out:
         args.out.write_text(json.dumps(pts, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}")
+    if len(uniq) >= 2:
+        # 同一所学校的几个校区、连锁店的几家分店都会列在这里，第一条不一定是对的那处
+        print(f"\n{len(uniq)} 处都要当候选，不要只取第一条："
+              + (f"`board.py add --from {args.out} --level area --parent <上级>` 全部进候选盘" if args.out
+                 else "加 --out pois.json，再 `board.py add --from pois.json --level area` 全部进候选盘"))
 
 
 if __name__ == "__main__":

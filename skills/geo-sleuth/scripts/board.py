@@ -14,7 +14,7 @@
 - 区分检验分不出高低时，next 给出确定的下一步，而不是停在原地。
 
   init       新建 board.json
-  add        加一个候选（国家/省/市/区县/片区/点）
+  add        加候选（国家/省/市/区县/片区/点）；--from 批量导入 poi.py / gazetteer.py / osm.py geom 的输出
   children   用 gazetteer.py 把某个行政区的下级全部加为候选（"类别推断先列全"）
   clue       登记一条线索：看到的 / 读出的字 / 推测 / 算出来的
   evidence   一条线索对若干候选的似然比（>1 支持，<1 反对）
@@ -32,6 +32,7 @@
 示例：
   board.py init --photo photo.jpg
   board.py children <直辖市或省名>                       # 38 个区县全部进候选，先验均匀
+  board.py add --from pois.json --level area --parent <城市>   # 同名多校区、OSM 围墙这类细层候选全部进盘，不手挑
   board.py clue "公交上黄下绿，车尾绿色下弯" --kind livery --status observed --file bus_zoom.png
   board.py evidence --clue K1 --for <区县A>:5 --for <区县B>:2 --why "两区公交图逐张比车尾" --file livery_sheet.jpg
   board.py apply --kind plate --value <车牌前两位>
@@ -181,10 +182,92 @@ def cmd_init(args, p: Path) -> None:
     print(f"新建 {p}")
 
 
+def _bbox_around(lat: float, lon: float, r: float) -> list[float]:
+    dy, dx = r / 110574, r / (111320 * math.cos(math.radians(lat)))
+    return [round(lat - dy, 6), round(lon - dx, 6), round(lat + dy, 6), round(lon + dx, 6)]
+
+
+def _coords(g) -> list[tuple[float, float]]:
+    """GeoJSON 几何里的全部 (lon, lat)。"""
+    if isinstance(g, (list, tuple)) and g and isinstance(g[0], (int, float)):
+        return [(float(g[0]), float(g[1]))]
+    out = []
+    for x in g or []:
+        out += _coords(x)
+    return out
+
+
+def _read_from(path: Path, radius: float) -> list[tuple[str, dict]]:
+    """--from 文件 → [(名字, {bbox, center})]。认四种：
+    poi.py/tiles.py 的 {名字: [lat, lon]}；gazetteer.py 的 {名字: {bbox, center}}；
+    GeoJSON（osm.py geom，按 properties.name 取名）；[{name, lat, lon} 或 {name, bbox}]。点按 --radius 给范围。"""
+    d = json.loads(path.read_text(encoding="utf-8"))
+    rows: list[tuple[str, dict]] = []
+
+    def one(name: str, v) -> None:
+        if isinstance(v, (list, tuple)) and len(v) >= 2 and all(isinstance(x, (int, float)) for x in v[:2]):
+            lat, lon = float(v[0]), float(v[1])
+            rows.append((name, {"center": [lat, lon], "bbox": _bbox_around(lat, lon, radius)}))
+        elif isinstance(v, dict):
+            bb = v.get("bbox")
+            c = v.get("center") or ([v["lat"], v["lon"]] if "lat" in v and "lon" in v else None)
+            if bb:
+                rows.append((name, {"center": c or [(bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2], "bbox": bb}))
+            elif c:
+                rows.append((name, {"center": c, "bbox": _bbox_around(float(c[0]), float(c[1]), radius)}))
+
+    if isinstance(d, dict) and d.get("type") == "FeatureCollection":
+        for i, f in enumerate(d.get("features", []), 1):
+            pr = f.get("properties") or {}
+            pts = _coords((f.get("geometry") or {}).get("coordinates"))
+            if not pts:
+                continue
+            lons, lats = [q[0] for q in pts], [q[1] for q in pts]
+            name = pr.get("name") or f"{pr.get('@id') or pr.get('id') or f'#{i}'}"
+            bb = [min(lats), min(lons), max(lats), max(lons)]
+            if len(pts) == 1:
+                bb = _bbox_around(lats[0], lons[0], radius)
+            rows.append((name, {"center": [round((bb[0] + bb[2]) / 2, 6), round((bb[1] + bb[3]) / 2, 6)],
+                                "bbox": [round(v, 6) for v in bb]}))
+    elif isinstance(d, dict):
+        for name, v in d.items():
+            if not str(name).startswith("_"):
+                one(str(name), v)
+    elif isinstance(d, list):
+        for i, v in enumerate(d, 1):
+            if isinstance(v, dict):
+                one(str(v.get("name") or f"#{i}"), v)
+    # 同名的（同一所学校的几个校区、OSM 里几块同名围墙）加序号，一个都不丢
+    seen: dict[str, int] = {}
+    out = []
+    for name, v in rows:
+        seen[name] = seen.get(name, 0) + 1
+        out.append((name if seen[name] == 1 else f"{name}#{seen[name]}", v))
+    return out
+
+
 def cmd_add(args, p: Path) -> None:
     b = _load(p)
     if args.level not in LEVELS:
         sys.exit(f"--level 只能是 {LEVELS}")
+    if not args.names and not args.from_:
+        sys.exit("给候选名，或 --from 文件（poi.py --out、gazetteer.py --out、osm.py geom 的 GeoJSON）")
+    if args.from_:
+        rows = _read_from(Path(args.from_), args.radius)
+        if not rows:
+            sys.exit(f"{args.from_} 里没读出带坐标的候选")
+        n = 0
+        for name, v in rows:
+            if name in b["candidates"]:
+                continue
+            b["candidates"][name] = {"level": args.level, "parent": args.parent, "bbox": v["bbox"], "scan_bbox": None,
+                                     "center": v["center"], "prior": args.prior, "status": "open",
+                                     "note": args.note or "", "from": str(args.from_)}
+            n += 1
+        _log(b, f"add --from {args.from_} → +{n} 个 {args.level}")
+        _save(p, b)
+        print(f"从 {args.from_} 加入 {n} 个 {LEVEL_ZH[args.level]}候选（共读出 {len(rows)} 个，重名的已跳过）。"
+              f"全部进盘、先验均匀：看过的每一个都要登记 evidence（对不上也记 --against），check 会列出没看过的。")
     for name in args.names:
         if name in b["candidates"]:
             print(f"已有 {name}，跳过")
@@ -209,20 +292,50 @@ def cmd_children(args, p: Path) -> None:
     if args.proxy:
         cmd += ["--proxy", args.proxy]
     r = _run(cmd)
+    for line in r.stderr.splitlines():
+        if "不当下一级" in line or "退回第一个" in line:
+            print(line)
     out = r.stdout.strip(); print(out if len(out) < 1800 else out[:1800].rsplit('\n', 1)[0] + '\n  …')
     if r.returncode != 0:
         sys.exit(f"gazetteer 失败：{r.stderr.strip()[-600:]}")
     kids = json.loads((p.parent / ".gz_children.json").read_text(encoding="utf-8"))
+    as_level, why = _child_level(b, args, out)
     n = 0
     for name, k in kids.items():
         if name in b["candidates"]:
             continue
-        b["candidates"][name] = {"level": args.as_level, "parent": args.parent, "bbox": k.get("bbox"), "scan_bbox": None,
+        b["candidates"][name] = {"level": as_level, "parent": args.parent, "bbox": k.get("bbox"), "scan_bbox": None,
                                  "prior": 1.0, "status": "open", "note": k.get("note", ""), "osm_id": k.get("osm_id")}
         n += 1
-    _log(b, f"children {args.parent} → +{n} 个 {args.as_level}")
+    _log(b, f"children {args.parent} → +{n} 个 {as_level}")
     _save(p, b)
-    print(f"加入 {n} 个候选（级别 {args.as_level}，先验均匀）。人口、名气不进分数。")
+    print(f"加入 {n} 个候选（级别 {as_level}：{why}；先验均匀）。人口、名气不进分数。")
+
+
+# 上级在 board 里是哪一级 → 下级记成哪一级
+NEXT_LEVEL = {"country": "admin1", "admin1": "admin2", "admin2": "district", "city": "district", "district": "area",
+              "area": "road", "road": "point"}
+
+
+def _child_level(b: dict, args, gz_out: str) -> tuple[str, str]:
+    """children 的候选级别：--as-level 给了就用；上级是国家 → admin1；上级已在 board 里 → 它的下一级
+    （省下面隔了一级直接是区县的，如直辖市，记成 district）；都不是 → district。"""
+    if args.as_level:
+        return args.as_level, "--as-level 指定"
+    m = re.search(r"admin_level (\d+)）下级 admin_level (\d+)", gz_out)
+    p_lv, c_lv = (int(m.group(1)), int(m.group(2))) if m else (None, None)
+    if p_lv is not None and p_lv <= 2:
+        # 直接从国家跳到更细的级别（--level 5/6）时别记成省级
+        lv = "admin1" if c_lv is None or c_lv <= 4 else ("admin2" if c_lv == 5 else "district")
+        return lv, f"上级是国家，下级 admin_level {c_lv}"
+    hits = [k for k in b["candidates"] if _norm(k) == _norm(args.parent)]
+    if len(hits) == 1:
+        lv = b["candidates"][hits[0]]["level"]
+        nxt = NEXT_LEVEL.get(lv, "district")
+        if lv == "admin1" and p_lv is not None and c_lv is not None and c_lv >= p_lv + 2:
+            nxt = "district"
+        return nxt, f"上级 {hits[0]} 在候选盘里是 {lv}"
+    return "district", "默认"
 
 
 def cmd_clue(args, p: Path) -> None:
@@ -411,6 +524,13 @@ def cmd_next(args, p: Path) -> None:
         print("    有候选没有范围：`board.py urban` 或 `scan-bbox` 补上，否则排不了序")
 
 
+def _unseen(rows: list[dict], lv: str) -> list[str]:
+    """细层（片区/路/点）里一条证据都没有的未排除候选。粗层按份额/页数排着扫，没证据是常态，不算。"""
+    if lv not in ("area", "road", "point"):
+        return []
+    return [r["name"] for r in rows if r["n_ev"] == 0 and not r["excluded"]]
+
+
 def cmd_check(args, p: Path) -> None:
     b = _load(p)
     ok = True
@@ -433,6 +553,11 @@ def cmd_check(args, p: Path) -> None:
         weak = [r["name"] for r in rows[1:] if r["share"] >= 0.15]
         if weak:
             print(f"  WARN 还有份额 ≥15% 的备选：{', '.join(weak)} → 写进 alternatives 并给区分检验，不取中点")
+        unseen = _unseen(rows, lv)
+        if unseen:
+            print(f"  WARN {len(unseen)}/{len(rows)} 个{LEVEL_ZH[lv]}候选一条证据都没有，等于没看过："
+                  f"{'、'.join(unseen[:10])}{' …' if len(unseen) > 10 else ''} → 逐个看，对不上也登记 evidence --against；"
+                  f"没看过的不能算排除，结论里写明")
         down = [(e["candidate"], e["clue"]) for e in b["evidence"]
                 if e["lr"] < 1 and b["clues"][e["clue"]]["status"] in ("inferred", "observed")
                 and b["candidates"][e["candidate"]].get("status") != "excluded"]
@@ -472,6 +597,7 @@ def cmd_report(args, p: Path) -> None:
             if r["share"] >= 0.05:
                 rep["alternatives"].append({"name": r["name"], "share": round(r["share"], 3),
                                             "how_to_separate": "对两者一起做一项便宜检验（地形/涂装/市政设施/水系模板），或各扫建成区前 3 页"})
+        rep["unexamined"] = _unseen(rows, lv)
     for name, c in b["candidates"].items():
         if c.get("status") == "excluded":
             ex = c.get("excluded_by", {})
@@ -583,7 +709,9 @@ def main() -> None:
     i.add_argument("--force", action="store_true")
 
     a = sub.add_parser("add")
-    a.add_argument("names", nargs="+")
+    a.add_argument("names", nargs="*")
+    a.add_argument("--from", dest="from_", help="批量导入：poi.py --out / gazetteer.py --out 的 JSON，或 osm.py geom 的 GeoJSON")
+    a.add_argument("--radius", type=float, default=500, help="--from 里只有点坐标时，候选范围取点周围多少米（默认 500）")
     a.add_argument("--level", required=True, help=f"{'/'.join(LEVELS)}")
     a.add_argument("--parent")
     a.add_argument("--bbox", help="s,w,n,e")
@@ -594,7 +722,8 @@ def main() -> None:
     ch.add_argument("parent")
     ch.add_argument("--level", type=int, help="OSM admin_level（不给就自动）")
     ch.add_argument("--within")
-    ch.add_argument("--as-level", default="district", help=f"记成哪一级候选：{'/'.join(LEVELS)}，默认 district")
+    ch.add_argument("--as-level", help=f"记成哪一级候选：{'/'.join(LEVELS)}。不给就自动：上级是国家记 admin1，"
+                                        "上级已在候选盘里记它的下一级，否则 district")
     ch.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
 
     c = sub.add_parser("clue")
