@@ -14,7 +14,7 @@
 | `tiles.py` | 卫星切片拼图、`mark` 标点 + 叠 GeoJSON 线 + 视野扇形、`sheet` 候选点带编号缩略图 | 代理（Google） |
 | `baidu_pano.py` | 百度全景：near / info / scan / render / sheet（`--headings` 单点环视、`--road` `--spread`）/ sample 候选城市街景抽样 | 直连 |
 | `gsv.py` | Google 街景（国外）：near / render / sheet，免 key，只取官方覆盖 | 代理 |
-| `pose.py` | 多点反解机位：经纬度、高度、朝向、俯仰、横滚、视角 + 误差半径；`project` 把地图点投回照片 | — |
+| `pose.py` | 多点反解机位：经纬度、高度、朝向、俯仰、横滚、视角 + 误差半径 + 逐点检查；`check` 给离散候选机位打分；`project` 把地图点投回照片 | — |
 | `terrain.py` | 高程：view 合成山体视图（`--overlay` 天际线叠照片、`--roll`）/ profile 天际线 / elev / `ridge` 从照片读山脊像素点 / `scan` 沿设施线整区筛「近处平 + 有山」的点并聚簇 / `fit` 候选机位批量天际线打分（可选设施距离约束，出前 N 名叠图） | 直连或代理均可（`ridge` 不联网） |
 | `evidence.py` | 证据图：卫星图 + 机位扇形 + 比对格 | — |
 | `intake.py` | 第 0–3 步一条命令：exif + 边缘图 + 变体 + OCR + 百度/Yandex 识图并行，出 intake.md（分级计票、疑似地名） | 百度直连；Yandex 代理 |

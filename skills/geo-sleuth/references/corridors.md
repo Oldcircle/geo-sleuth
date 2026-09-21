@@ -129,6 +129,7 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/terrain.py scan --lines lines.geojson --out h
 - 输出 `hits.json`：`{params:{...}, n_samples, n_hits, n_clusters, hits:[{lat, lon, h0: 地面高程 m, max_ang: 最高地平线仰角°, az: 那个方位°, relief: 该方位最大相对高差 m, flat_run_deg: 紧挨山体的平地平线长度°, name/hs/elec/id: 线的 OSM 标签}...], clusters:[...]}`。簇按 `max_ang` 从大到小，簇代表就是簇里最陡的那个点（字段和 `hits` 一样，多一个 `n` = 簇内点数）；`--clusters-out` 另写一份只有簇列表的 JSON。
 3. 结果簇进 `geometry.md` 7.4 的天际线批量打分（`terrain.py fit --hits`）。
 
+- **山就在跟前**（山脚离机位几百米）时默认值会漏：`--near-radius` 1200 m 内一定爬上山坡，`--dist` 从 1.5 km 起也量不到这座山。把 `--near-radius` 缩到几百米（`--near-step` 要比它小，否则只采到机位本身一个点，近处平等于没查），`--dist` 从 400 m 起。丘陵区这样放宽后候选会很多，天际线分不开时要靠第二条约束。
 - **阈值取照片估计值的一半左右**。z10 一格约 150 m，山头被抹平，算出来的仰角偏小。实战里按照片估计值设阈值，真值附近一个点都没留下，放宽后才进来。宁多勿漏，数量交给下一步排序。
 - 设施离画面左缘、中间、右缘各有多远也是一条独立的数值约束：用等间距构件当尺（`geometry.md` 第 3 节）估出三处距离，交给 `terrain.py fit` 的 `--line` / `--line-dist` 一起打分。
 

@@ -8,6 +8,8 @@
 规则写成代码，不靠自觉：
 - 没有"删除候选"的操作。排除只有一个入口 `exclude`，必须给算过的文件（geo.py frame、terrain.py 之类的产出），
   线索本身必须是读出来的字或算出来的结果；推测只能降权（似然比被夹在 1/3–3 之间）。
+- 排除范围必须 ≤ 证据范围：区县/片区/路这类有延展的候选，exclude 要用 --covers 写明证据覆盖到哪一段，
+  覆盖不足一半会被拒；在一个点上看过就整条排除（以点代面）是复发过两次的错。
 - 离散候选不取中点：report 的主答案永远是第一名，其余进备选。
 - 人口、名气不是证据：先验默认均匀（可选按面积），没有按人口的选项。
 - 扫描顺序按"份额 ÷ 页数"排：小城区先扫，大城区放最后并设页数上限。
@@ -62,6 +64,9 @@ UV = os.environ.get("UV") or "uv"
 LEVELS = ["country", "admin1", "admin2", "city", "district", "area", "road", "point"]
 LEVEL_ZH = {"country": "国家", "admin1": "省/州", "admin2": "地级/郡", "city": "城市", "district": "区县",
             "area": "片区", "road": "路", "point": "点"}
+# 有延展的候选：排除范围必须 <= 证据范围。在一条路/一个片区的某一个点上看过就整条排除，是复发过两次的错
+EXTENDED_LEVELS = {"district", "area", "road"}
+COVERS_MIN = 0.5  # --covers 至少要覆盖候选范围的这个比例，才允许整体排除
 STATUS = ["observed", "read", "inferred", "computed"]
 # 似然比上限：推测只能排序，读出的字和算出来的结果才能大幅改分
 LR_CAP = {"inferred": 3.0, "observed": 5.0, "read": 50.0, "computed": 50.0}
@@ -405,8 +410,27 @@ def cmd_exclude(args, p: Path) -> None:
                  f"硬规则 9：排除和确认用同一个标准。")
     if not args.computed or not Path(args.computed).exists():
         sys.exit("排除必须附算过的文件（--computed，例如 geo.py frame 的输出、terrain.py 的比对图），文件要真实存在")
-    b["candidates"][cname]["status"] = "excluded"
-    b["candidates"][cname]["excluded_by"] = {"clue": args.clue, "computed": args.computed, "why": args.why or ""}
+    c = b["candidates"][cname]
+    if c["level"] in EXTENDED_LEVELS:
+        if not args.covers:
+            sys.exit(
+                f"{cname} 是{LEVEL_ZH[c['level']]}级候选（有延展）：排除要加 --covers 写明证据实际覆盖到哪里"
+                f"（'lat,lon' 或 'lat,lon:lat,lon'）。硬规则 9：排除范围必须 ≤ 证据范围——"
+                f"在一个点上看过就整条排除是以点代面。只验了一段就改用："
+                f"board.py evidence --clue {args.clue} --against {cname}:0.34 --file {args.computed}")
+        pts = _parse_covers(args.covers)
+        if not pts:
+            sys.exit("--covers 要能解析出坐标：'lat,lon'（单点）或 'lat,lon:lat,lon'（区间）")
+        r = _covers_ratio(c, pts)
+        if r is not None and r[0] < COVERS_MIN:
+            cov_m = _cov_span_m(pts[0], pts[-1]) if len(pts) >= 2 else 0.0
+            sys.exit(
+                f"--covers 只覆盖 {cname} 的约 {r[0]:.0%}（证据 {cov_m:.0f} m / 候选范围对角 {r[1]:.0f} m）："
+                f"不足以整条排除。补足其余段的比对图再排除，或先降权："
+                f"board.py evidence --clue {args.clue} --against {cname}:0.34 --file {args.computed}")
+    c["status"] = "excluded"
+    c["excluded_by"] = {"clue": args.clue, "computed": args.computed, "why": args.why or "",
+                        "covers": args.covers or ""}
     cl["used"] = True
     _log(b, f"exclude {cname} by {args.clue} ({args.computed})")
     _save(p, b)
@@ -524,6 +548,37 @@ def cmd_next(args, p: Path) -> None:
         print("    有候选没有范围：`board.py urban` 或 `scan-bbox` 补上，否则排不了序")
 
 
+def _parse_covers(s: str) -> list[tuple[float, float]]:
+    """--covers：'lat,lon' 或 'lat,lon:lat,lon'（证据实际覆盖到的点/区间）。解析不出坐标返回 []。"""
+    pts = []
+    for part in str(s).split(":"):
+        m = re.findall(r"-?\d+\.\d+|-?\d+", part)
+        if len(m) >= 2:
+            pts.append((float(m[0]), float(m[1])))
+    return pts
+
+
+def _cov_span_m(a: tuple[float, float], b: tuple[float, float]) -> float:
+    kx = 111320.0 * math.cos(math.radians((a[0] + b[0]) / 2))
+    return math.hypot((b[1] - a[1]) * kx, (b[0] - a[0]) * 110540.0)
+
+
+def _covers_ratio(c: dict, pts: list[tuple[float, float]]) -> tuple[float, float] | None:
+    """(证据覆盖长度 / 候选范围对角, 对角米数)。候选没有 bbox 时返回 None（算不出，只能提示）。"""
+    bb = c.get("bbox") or c.get("scan_bbox")
+    if not bb or len(bb) != 4:
+        return None
+    try:
+        sw, ww, nn, ee = (float(v) for v in bb)
+    except (TypeError, ValueError):
+        return None
+    diag = _cov_span_m((sw, ww), (nn, ee))
+    if diag <= 1.0:
+        return None
+    cov = _cov_span_m(pts[0], pts[-1]) if len(pts) >= 2 else 0.0
+    return cov / diag, diag
+
+
 def _unseen(rows: list[dict], lv: str) -> list[str]:
     """细层（片区/路/点）里一条证据都没有的未排除候选。粗层按份额/页数排着扫，没证据是常态，不算。"""
     if lv not in ("area", "road", "point"):
@@ -541,6 +596,23 @@ def cmd_check(args, p: Path) -> None:
             if not ex.get("computed") or not Path(ex["computed"]).exists():
                 ok = False
                 print(f"  FAIL 排除 {name} 的文件不存在：{ex.get('computed')}")
+    for name, c in b["candidates"].items():
+        if c.get("status") != "excluded" or c["level"] not in EXTENDED_LEVELS:
+            continue
+        ex = c.get("excluded_by", {})
+        pts = _parse_covers(ex.get("covers", ""))
+        if not pts:
+            ok = False
+            print(f"  FAIL 排除 {name}（{LEVEL_ZH[c['level']]}级）没有记录 --covers：证据覆盖了多少无从判断，"
+                  f"可能是以点代面 → 重新 exclude 并补 --covers，或改成 evidence --against 降权")
+            continue
+        r = _covers_ratio(c, pts)
+        if r is None:
+            print(f"  NOTE 排除 {name} 的证据覆盖 {ex['covers']}；候选没有 bbox，覆盖比例算不出 → "
+                  f"结论里写明只验了这一段")
+        elif r[0] < COVERS_MIN:
+            ok = False
+            print(f"  FAIL 排除 {name} 的证据只覆盖约 {r[0]:.0%}（候选范围对角 {r[1]:.0f} m）：排除范围大于证据范围")
     lv = _frontier(b)
     if lv:
         rows = [r for r in _scores(b, lv, args.prior_by) if not r["excluded"]]
@@ -745,6 +817,7 @@ def main() -> None:
     x.add_argument("name")
     x.add_argument("--clue", required=True)
     x.add_argument("--computed", required=True, help="算过的文件（必须存在）")
+    x.add_argument("--covers", help="证据实际覆盖到哪里：'lat,lon' 或 'lat,lon:lat,lon'；区县/片区/路级候选必填")
     x.add_argument("--why")
 
     sb = sub.add_parser("scan-bbox")
