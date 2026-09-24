@@ -192,6 +192,8 @@ Python 3.10+, [`uv`](https://docs.astral.sh/uv/) and an agent that can run shell
 
 Optional: Google Chrome for reverse image search (`uvx playwright install chromium` works too), and `export GEO_PROXY=socks5h://127.0.0.1:<port>` to route every networked script through a proxy.
 
+Language: the skill's instructions and script output are written in Chinese. Your agent reads them fine and replies in your language, and it has solved cases outside China too (e.g. a coastal road in Los Angeles).
+
 ## Roadmap
 
 - [ ] Operator-level test on synthetic terrain cases for `terrain.py scan / fit`
