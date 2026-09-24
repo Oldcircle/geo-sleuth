@@ -516,7 +516,8 @@ def cmd_next(args, p: Path) -> None:
     print(f"当前前沿：{LEVEL_ZH[lv]}，未排除 {len(rows)} 个；第一 {top['name']} {top['share']:.0%}"
           + (f"，第二 {second['name']} {second['share']:.0%}" if second else ""))
     if unused:
-        print(f"还没用上的线索：{', '.join(f'{k}({b['clues'][k]['kind']})' for k in unused)} → 先 evidence 或 apply")
+        pending = ", ".join(f"{k}({b['clues'][k]['kind']})" for k in unused)
+        print(f"还没用上的线索：{pending} → 先 evidence 或 apply")
     separable = (not second) or (top["share"] >= 0.7 and top["share"] / max(second["share"], 1e-9) >= 3)
     if separable and top["n_verified"] == 0 and second:
         print(f"{top['name']} 领先但没有任何核实过的证据（read/computed），只是推测堆出来的：先做一项便宜的核实再扫。")
