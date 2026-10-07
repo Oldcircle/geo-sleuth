@@ -3,16 +3,16 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "pyobjc-framework-Vision; sys_platform == 'darwin'", "pyobjc-framework-Quartz; sys_platform == 'darwin'", "rapidocr-onnxruntime"]
 # ///
-"""读照片里的文字（第二读者）：整图、放大、切块各跑一遍，合并去重，标出哪些字只有放大后才读得出。
+"""Read the text in a photo (second reader): runs once each on the whole image, upscaled, and in tiles; merges and dedupes; marks which text was only readable after zooming.
 
-后端：macOS 用 Apple Vision（本机、免下载、中英日韩都行），其他系统或 Vision 不可用时用 RapidOCR。
-放大或切块后才读出来的字（pass = up / tile）只是假设，要回原图放大看一眼。
+Backends: on macOS, Apple Vision (local, no download, handles Chinese, English, Japanese and Korean); on other systems or when Vision isn't available, RapidOCR.
+Text read only after upscaling or tiling (pass = up / tile) is just an assumption; go back to the original image and zoom in to take a look.
 
   ocr.py photo.jpg [--langs zh-Hans,en] [--upscale 2] [--tiles 2x2] [--min-conf 0.3] [--out ocr.json] [--draw ocr.png]
 
-示例：
+Examples:
   ocr.py photo.jpg --out ocr.json --draw ocr.png
-  ocr.py photo.jpg --langs zh-Hans,zh-Hant,en,ja --tiles 3x3 --upscale 3     # 远处小字多时切细一点、放大一点
+  ocr.py photo.jpg --langs zh-Hans,zh-Hant,en,ja --tiles 3x3 --upscale 3     # lots of small distant text: finer tiles, more upscaling
 """
 from __future__ import annotations
 
@@ -51,14 +51,14 @@ class VisionOCR:
         handler = Vision.VNImageRequestHandler.alloc().initWithData_options_(data, None)
         req = Vision.VNRecognizeTextRequest.alloc().init()
         req.setRecognitionLevel_(Vision.VNRequestTextRecognitionLevelAccurate)
-        req.setUsesLanguageCorrection_(False)      # 别把专名"纠正"掉
+        req.setUsesLanguageCorrection_(False)      # don't "correct" proper names away
         try:
             req.setRecognitionLanguages_(self.langs)
         except Exception:  # noqa: BLE001
             pass
         ok, err = handler.performRequests_error_([req], None)
         if not ok:
-            raise RuntimeError(f"Vision 失败：{err}")
+            raise RuntimeError(f"Vision failed: {err}")
         W, H = im.size
         out = []
         for obs in req.results() or []:
@@ -67,7 +67,7 @@ class VisionOCR:
                 continue
             text = str(cand[0].string())
             conf = float(cand[0].confidence())
-            bb = obs.boundingBox()          # 归一化，原点左下
+            bb = obs.boundingBox()          # normalized, origin at bottom-left
             x, y, w, h = bb.origin.x, bb.origin.y, bb.size.width, bb.size.height
             out.append({"text": text, "conf": round(conf, 3), "box": [int(x * W), int((1 - y - h) * H), int((x + w) * W), int((1 - y) * H)]})
         return out
@@ -96,11 +96,11 @@ def backend(langs: list[str]):
         try:
             return VisionOCR(langs)
         except Exception as e:  # noqa: BLE001
-            print(f"Apple Vision 不可用（{str(e)[:120]}），改用 RapidOCR", file=sys.stderr)
+            print(f"Apple Vision unavailable ({str(e)[:120]}), using RapidOCR instead", file=sys.stderr)
     try:
         return RapidOCRBackend(langs)
     except Exception as e:  # noqa: BLE001
-        sys.exit(f"没有可用的 OCR 后端：{e}")
+        sys.exit(f"No OCR backend available: {e}")
 
 
 def recognize(im: Image.Image, be, upscale: float, tiles: tuple[int, int], min_conf: float) -> list[dict]:
@@ -131,7 +131,7 @@ def recognize(im: Image.Image, be, upscale: float, tiles: tuple[int, int], min_c
         tw, th = W / c, H / r
         for i in range(r):
             for j in range(c):
-                # 各块留一成重叠，免得字被切在边上
+                # Each tile keeps a 10% overlap so text isn't cut at the edges
                 x0, y0 = max(0, int(j * tw - tw * 0.1)), max(0, int(i * th - th * 0.1))
                 x1, y1 = min(W, int((j + 1) * tw + tw * 0.1)), min(H, int((i + 1) * th + th * 0.1))
                 s = max(upscale or 1, 2)
@@ -143,9 +143,9 @@ def recognize(im: Image.Image, be, upscale: float, tiles: tuple[int, int], min_c
 
 def _where(box, W, H) -> str:
     cx, cy = (box[0] + box[2]) / 2 / W, (box[1] + box[3]) / 2 / H
-    v = "上" if cy < 0.33 else ("下" if cy > 0.67 else "中")
-    h = "左" if cx < 0.33 else ("右" if cx > 0.67 else "中")
-    return f"{v}{h}" if v + h != "中中" else "中间"
+    v = "top" if cy < 0.33 else ("bottom" if cy > 0.67 else "middle")
+    h = "left" if cx < 0.33 else ("right" if cx > 0.67 else "center")
+    return f"{v}-{h}" if (v, h) != ("middle", "center") else "center"
 
 
 def main() -> None:
@@ -164,12 +164,12 @@ def main() -> None:
     r, c = (int(v) for v in args.tiles.lower().split("x"))
     found = recognize(im, be, args.upscale, (r, c), args.min_conf)
     W, H = im.size
-    print(f"{be.name}：{len(found)} 条，{time.time() - t0:.1f}s（图 {W}×{H}）")
-    print(f"{'置信':>5} {'来源':<5} {'位置':<4} 文字")
+    print(f"{be.name}: {len(found)} items, {time.time() - t0:.1f}s (image {W}×{H})")
+    print(f"{'conf':>5} {'pass':<5} {'where':<13} text")
     for t in found:
-        print(f"{t['conf']:>5.2f} {t['pass']:<5} {_where(t['box'], W, H):<4} {t['text']}")
+        print(f"{t['conf']:>5.2f} {t['pass']:<5} {_where(t['box'], W, H):<13} {t['text']}")
     if any(t["pass"] != "full" for t in found):
-        print("pass=up/tile 的字只有放大后才读出来，算假设：回原图放大看一眼再用")
+        print("Text with pass=up/tile was only read after zooming; treat it as an assumption: go back to the original, zoom in and look before using it")
     if args.out:
         Path(args.out).write_text(json.dumps({"image": args.image, "size": [W, H], "backend": be.name, "items": found}, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}")
@@ -180,11 +180,11 @@ def main() -> None:
             d.rectangle(t["box"], outline=col, width=2)
             d.text((t["box"][0], max(0, t["box"][1] - 12)), f"{t['text'][:20]} {t['conf']:.2f}", fill=col)
         im.save(args.draw)
-        print(f"-> {args.draw}（绿=整图读出，黄=放大/切块读出）")
+        print(f"-> {args.draw} (green = read from the whole image, yellow = read after upscaling/tiling)")
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m², ñ, and Chinese text the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

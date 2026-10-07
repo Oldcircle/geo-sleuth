@@ -1,140 +1,133 @@
-# 脚本、数据源与坐标系
+# Scripts, data sources and coordinate systems
 
-## 脚本总表（`scripts/`）
+## Script overview (`scripts/`)
 
-| 脚本 | 做什么 | 网络 |
+| Script | What it does |
+|---|--- |
+| `doctor.py` | Environment checks, browser launch, optional endpoint probes; English fixes and JSON output |
+| `exif.py` | GPS, capture time, equivalent focal length, camera heading |
+| `imgprep.py` | zoom (enlarge to read text) / edges (four edges, four corners) / variants (image-search variants) / grid (split into tiles) / `piers` (brightness profile along a given row to find pixel columns of evenly spaced structures; outputs a check image) |
+| `revimg.py` | Baidu image search + Yandex reverse image search; `--query` Chinese keyword search (Bing China, Baidu/Sogou Images) |
+| `geo.py` | Coordinate conversion, bearing and distance, camera geometry (`range --hfov a:b` distance range), `line` alignment line, `intersect` sight-line intersection, `frame` computes the frame and occlusion before excluding, `spacing` pixel columns of evenly spaced structures × known polyline → solve for camera position (optionally scored jointly with the skyline) |
+| `poi.py` | Place names, residential compound names, housing development names, shop names → candidate coordinates (360 Maps + OSM Nominatim + Baidu suggestions); lists every same-name point nationwide |
+| `sun.py` | Sun position, shadow-length ratio, `locate` location band, `when` time, `street` street orientation, `facing` heading from lit faces, `dish` satellite dish |
+| `osm.py` | Overpass: find / near (co-occurrence) / crossings (line-to-point) / route (route corridor) / intersect (crossings of two kinds of lines; bends are only labeled, `--rank-near` ranks) / street-scan (street-view geometry template) / geom (export geometry) |
+| `tiles.py` | Satellite tile mosaic, `mark` plots points + overlays GeoJSON lines + field-of-view wedge, `sheet` numbered thumbnails of candidate points |
+| `baidu_pano.py` | Baidu panoramas: near / info / scan / render / sheet (`--headings` to look around from one point, `--road` `--spread`) / sample (street view sampling of candidate cities) |
+| `gsv.py` | Google Street View (outside China): near / render / sheet, no key, official coverage only |
+| `pose.py` | Solve camera position from multiple points: lat/lon, height, heading, pitch, roll, field of view + error radius + per-point check; `check` scores discrete candidate camera positions; `project` projects map points back onto the photo |
+| `terrain.py` | Elevation: view (synthesized mountain view; `--overlay` overlays the skyline on the photo, `--roll`) / profile (skyline) / elev / `ridge` reads ridgeline pixel points from the photo / `scan` filters a whole region along infrastructure lines for "flat nearby + mountain present" points and clusters them / `fit` batch skyline scoring of candidate camera positions (optional infrastructure-distance constraint; outputs overlays of the top N) |
+| `evidence.py` | Evidence image: satellite image + camera-position wedge + comparison panels |
+| `intake.py` | Steps 0–3 in one command: exif + edge crops + variants + OCR + Baidu/Yandex reverse image search in parallel; outputs intake.md (tiered vote count, possible place names) |
+| `ocr.py` | Reads text in the photo (Apple Vision, falls back to RapidOCR): full image + zoomed + tiles, merged; text read only after zooming is marked in `pass` |
+| `clues.py` | Lookup tables: license plate prefixes, landline area codes, country calling codes, driving side, overseas territories, admin hierarchy; tables are in `data/`, `update` re-fetches them |
+| `board.py` | Candidate board: candidates, clues, evidence likelihood ratios, exclusions (require a computed file), ranking, scan cost, next step, pre-conclusion check, generates result.json fields |
+| `gazetteer.py` | Admin-division gazetteer: lists all subdivisions (with bbox), built-up area extents, scan pages |
+| `sat_scan.py` | CLIP zero-shot scoring and ranking of satellite grid cells/candidate points (sports fields, factory buildings, silos, dams…), top-N thumbnails + heatmap |
+| `match.py` | Ranks the photo against candidate ground-level images: DINOv2 global similarity + SIFT inlier re-ranking; candidates can be rendered on the fly from panorama ids |
+| `geo.py bearings` | Camera position → bearing, angular width and distance of each outline in a GeoJSON; use with `sun.py compass` to compute the bearing first, then identify the structure |
+
+## Coordinate systems (must be kept apart in China)
+
+| Code | Name | Who uses it |
 |---|---|---|
-| `exif.py` | GPS、拍摄时间、等效焦距、镜头朝向 | — |
-| `imgprep.py` | zoom 放大读字 / edges 四边四角 / variants 搜图变体 / grid 切块 / `piers` 沿指定行取亮度剖面找等间距构件的像素列（出核对图） | — |
-| `revimg.py` | 百度识图 + Yandex 以图搜图；`--query` 中文关键词搜索（必应国内版、百度/搜狗图片） | 百度、必应直连；Yandex 走代理 |
-| `geo.py` | 坐标系换算、方位距离、相机几何（`range --hfov a:b` 距离区间）、`line` 对齐线、`intersect` 视线交会、`frame` 排除前算画框和遮挡、`spacing` 等间距构件像素列 × 已知折线反解机位（可选和天际线联合打分） | 仅 `spacing` 取高程切片，直连或代理均可 |
-| `poi.py` | 地名、小区名、楼盘名、店名 → 坐标候选（360 地图 + OSM Nominatim + 百度联想），全国同名点都列出 | 360、百度直连；Nominatim 走代理 |
-| `sun.py` | 太阳位置、影长比、`locate` 地带、`when` 时刻、`street` 街道走向、`facing` 受光面定朝向、`dish` 卫星锅 | — |
-| `osm.py` | Overpass：find / near 共现 / crossings 线变点 / route 线路走廊 / intersect 两类线交叉（折角只标注，`--rank-near` 排序）/ street-scan 街景几何模板 / geom 导出几何 | 代理 |
-| `tiles.py` | 卫星切片拼图、`mark` 标点 + 叠 GeoJSON 线 + 视野扇形、`sheet` 候选点带编号缩略图 | 代理（Google） |
-| `baidu_pano.py` | 百度全景：near / info / scan / render / sheet（`--headings` 单点环视、`--road` `--spread`）/ sample 候选城市街景抽样 | 直连 |
-| `gsv.py` | Google 街景（国外）：near / render / sheet，免 key，只取官方覆盖 | 代理 |
-| `pose.py` | 多点反解机位：经纬度、高度、朝向、俯仰、横滚、视角 + 误差半径 + 逐点检查；`check` 给离散候选机位打分；`project` 把地图点投回照片 | — |
-| `terrain.py` | 高程：view 合成山体视图（`--overlay` 天际线叠照片、`--roll`）/ profile 天际线 / elev / `ridge` 从照片读山脊像素点 / `scan` 沿设施线整区筛「近处平 + 有山」的点并聚簇 / `fit` 候选机位批量天际线打分（可选设施距离约束，出前 N 名叠图） | 直连或代理均可（`ridge` 不联网） |
-| `evidence.py` | 证据图：卫星图 + 机位扇形 + 比对格 | — |
-| `intake.py` | 第 0–3 步一条命令：exif + 边缘图 + 变体 + OCR + 百度/Yandex 识图并行，出 intake.md（分级计票、疑似地名） | 百度直连；Yandex 代理 |
-| `ocr.py` | 读照片文字（Apple Vision，回退 RapidOCR）：整图 + 放大 + 切块合并，放大才读出的标 pass | — |
-| `clues.py` | 查表：车牌前缀、固话区号、国家电话码、行驶方向、海外领地、行政区上下级；表在 `data/`，`update` 重抓 | lookup 不联网；update 代理 |
-| `board.py` | 候选盘：候选、线索、证据似然比、排除（要算过的文件）、排名、扫描成本、下一步、出结论检查、生成 result.json 字段 | — |
-| `gazetteer.py` | 行政区名录：下级列全（带 bbox）、建成区范围、扫描页数 | 代理（Overpass） |
-| `sat_scan.py` | 卫星图网格/候选点 CLIP 零样本打分排序（操场、厂房、筒仓、水坝…），前 N 名缩略图 + 热图 | 代理（Google 切片、首次下模型） |
-| `match.py` | 照片 vs 候选实景图排名：DINOv2 全局相似度 + SIFT 内点精排；候选可由全景 id 现场渲染 | 百度直连 / Google 代理；首次下模型 |
-| `geo.py bearings` | 机位 → GeoJSON 里每个轮廓的方位角、角宽、距离；配 `sun.py compass` 先算方位再认构件 | — |
+| wgs | WGS84 | GPS, photo EXIF, Google satellite imagery, OpenStreetMap, elevation tiles |
+| gcj | GCJ-02 | Amap (Gaode), Tencent, 360 Maps, Google's China road maps, **Google Earth's Chinese label layer in China** |
+| bd | BD-09 | Baidu Maps lat/lon |
+| bdmc | Baidu Mercator | `@x,y` in Baidu Maps URLs, the Baidu panorama API |
 
-## 坐标系（国内必须分清）
+In China the same point differs by several hundred meters between WGS84 and GCJ-02. Conversion: `scripts/geo.py convert --from X --to Y a b`.
+- Amap links use gcj: `https://uri.amap.com/marker?position=<lon>,<lat>`; Google links use wgs.
+- **Google Earth in China: the imagery is WGS84, the Chinese place-name labels are GCJ-02, and the two are offset by several hundred meters** (v005: a dock's Chinese label landed on the river surface). Place points and read coordinates from the imagery.
+- For coordinates read from Chinese map apps or websites, confirm the coordinate system before using them.
 
-| 代号 | 名称 | 谁在用 |
+## Satellite imagery
+
+| Source | Notes |
+|---|---|
+| Google satellite tiles | `mt1.google.com/vt/lyrs=s`, WGS84, sharp in China. `tiles.py` default |
+| Esri World Imagery | Backup; older in some parts of China; has the Wayback historical archive |
+| Google Earth desktop | Historical imagery timeline, tilted 3D (manual use); 3D models in China are old, newly built supertall buildings are often missing |
+
+- The same place at different zoom levels may be imagery from different years and different tilt angles.
+- Zoom 17 is about 1.1 m/pixel, for areas; zoom 19 is about 0.28 m/pixel, for single buildings; zoom 7–9 as the base map for `sun.py locate --mosaic`.
+
+## Street view and ground-level imagery
+
+### Baidu panoramas (main source in China)
+
+The endpoints are all at `https://mapsv0.bdimg.com/`, need no key, and must be accessed directly:
+
+| Purpose | Parameters |
+|---|---|
+| Nearest panorama to a point | `?qt=qsdata&x=<bdmc x>&y=<bdmc y>` |
+| Panorama info (date, location, all points along the road, historical versions) | `?qt=sdata&sid=<panoid>` |
+| Render a perspective view by heading | `?qt=pr3d&panoid=<id>&heading=<compass angle>&pitch=<pitch>&fovy=<vertical FOV>&width=<≤1024>&height=<>` |
+
+- heading is a compass bearing, 0 = due north, clockwise; a width over 1024 returns 404.
+- Covers urban arterial roads and many roads inside industrial zones; almost nothing inside residential compounds. Captures are mostly from 2017–2019, so new buildings aren't visible.
+- Place search on map.baidu.com triggers a captcha; don't try to get around it; use `poi.py` for place names.
+
+### Other
+
+| Source | Use | Known issues |
 |---|---|---|
-| wgs | WGS84 | GPS、照片 EXIF、Google 卫星图、OpenStreetMap、高程切片 |
-| gcj | GCJ-02 | 高德、腾讯、360 地图、Google 中国区道路图，**Google Earth 国内的中文标注图层** |
-| bd | BD-09 | 百度地图经纬度 |
-| bdmc | 百度墨卡托 | 百度地图 URL 里的 `@x,y`、百度全景接口 |
+| Google Street View | Street view outside China, with historical dates; `gsv.py` | Almost none in China; user-uploaded panoramas (ids like CIHM0og…) can't produce perspective views, and the script already filters them out |
+| Mapillary, KartaView | Crowdsourced street view, rural roads outside China | Almost none in China |
+| Tencent Street View | Backup in China | API not yet investigated |
+| Map POI photos, hotel/scenic-area photos online, tourist photos | Compare skylines and building shapes when there's no street view | Shooting angle can't be controlled |
 
-国内同一个点在 WGS84 和 GCJ-02 之间差几百米。换算：`scripts/geo.py convert --from X --to Y a b`。
-- 高德链接用 gcj：`https://uri.amap.com/marker?position=经度,纬度`；Google 链接用 wgs。
-- **Google Earth 在国内：影像是 WGS84，中文地名标注是 GCJ-02，两者错开几百米**（v005：码头的中文标签落在江面上）。打点、读坐标以影像为准。
-- 从国内地图 App 或网页读来的坐标，先确认坐标系再用。
+## Search
 
-## 卫星图
-
-| 来源 | 说明 |
-|---|---|
-| Google 卫星切片 | `mt1.google.com/vt/lyrs=s`，WGS84，国内清晰；需要代理。`tiles.py` 默认 |
-| Esri World Imagery | 备用，国内部分地区较旧；有 Wayback 历史存档 |
-| Google Earth 桌面版 | 历史影像时间轴、倾斜 3D（人工用）；国内 3D 模型旧，新建超高层常缺 |
-
-- 同一地点不同缩放级别可能是不同年份、不同倾斜角度的影像。
-- 17 级约 1.1 m/像素看片区；19 级约 0.28 m/像素看单栋楼；7–9 级给 `sun.py locate --mosaic` 当底图。
-
-## 街景与实景
-
-### 百度全景（国内主力）
-
-接口都在 `https://mapsv0.bdimg.com/`，不需要 key，必须直连：
-
-| 用途 | 参数 |
-|---|---|
-| 某点最近的全景 | `?qt=qsdata&x=<bdmc x>&y=<bdmc y>` |
-| 全景信息（日期、位置、整条路的点、历史版本） | `?qt=sdata&sid=<panoid>` |
-| 按朝向渲染透视图 | `?qt=pr3d&panoid=<id>&heading=<罗盘角>&pitch=<俯仰>&fovy=<竖直视角>&width=<≤1024>&height=<>` |
-
-- heading 是罗盘方位，0 = 正北，顺时针；宽度超过 1024 返回 404。
-- 覆盖城市主干道和不少工业区内部路；小区内部基本没有。采集多在 2017–2019 年，新楼看不到。
-- map.baidu.com 的地点搜索会触发验证码，不要去绕；查地名用 `poi.py`。
-
-### 其他
-
-| 来源 | 用途 | 已知问题 |
+| Source | Good at | How to use |
 |---|---|---|
-| Google 街景 | 国外街景，有历史日期；`gsv.py` | 国内几乎没有；用户上传的全景照片（id 形如 CIHM0og…）出不了透视图，脚本已过滤 |
-| Mapillary、KartaView | 众包街景，国外乡村道路 | 国内几乎没有 |
-| 腾讯街景 | 国内备选 | 接口待调研 |
-| 地图 POI 图片、酒店/景区网上实拍、游客照 | 没有街景时比天际线、楼形 | 拍摄角度不可控 |
+| Baidu image search | Chinese web pages, Weibo, Baijiahao, e-commerce, scenic areas; gives "图中可能是…" ("the image may show…") | `revimg.py` |
+| Yandex Images | Buildings, street view, foreign content; gives tags and source sites | `revimg.py` |
+| Google Lens | Recognizing "what this is" (species, car models, statues, attractions), often stronger than Baidu and Yandex | Requests from a server's egress IP get challenged for verification; when you have a browser-control tool, use it in the user's browser; the AI Overview will confidently report a place name based on similar images |
+| Bing China, Baidu Images, Sogou Images | Chinese-keyword web and image search | `revimg.py --query`; Baidu web search pops up a verification challenge, not used |
+| Douyin, Xiaohongshu, Weibo | Influencer check-in spots, scenic areas' official accounts, same-city content | Web search or user assistance |
+| Development photo albums on real-estate sites (Anjuke, Fang.com, Loupan.com, etc.) | New housing developments, commercial complexes; albums include signboards | Web search the development name |
+| Travel review sites (Tripadvisor, Ctrip) | User photos of statues, parks, attractions | Web search |
+| Stock photo libraries (VCG, Getty, Alamy) | Captions carry exact place names and dates | Web search |
+| Local government and local media websites | Check the names and sizes of scenic areas, towers, statues | Web search |
 
-## 搜索
+## Place name → coordinates (China)
 
-| 来源 | 擅长 | 用法 |
+| Source | Notes |
+|---|---|
+| 360 Maps search `restapi.map.so.com/newapi` | No key; good coverage of residential compounds, housing developments, shops and organizations, with address and district; coordinates are GCJ-02 (`poi.py` already converts to WGS84); without a city it returns a list of cities nationwide that have same-name results |
+| OpenStreetMap Nominatim | Named residential compounds, parks, roads; WGS84 |
+| Baidu Maps search suggestions `map.baidu.com/su` | No key; only "city + district + name", no coordinates |
+| Baidu Maps place search, Tencent and Amap APIs | Baidu needs a captcha, Tencent and Amap need keys; not used |
+
+## Place name → coordinates (outside China)
+
+- `poi.py "<address or place name>" --sources osm --country <two-letter country code>` (Nominatim, WGS84). When a street address isn't found, drop the house number and search only the street + district name.
+
+## Ground photos (when there's no street view)
+
+| Source | Notes |
+|---|---|
+| Images from news, encyclopedias, company websites, blogs | First find a name for the facility (OSM name, nearby place name + the local-language word for the facility type), then search; rural factory buildings and abandoned facilities often have only this kind of ground photo |
+| Wikimedia Commons search by coordinates | `commons.wikimedia.org/w/api.php?action=query&list=geosearch&gscoord=<lat>|<lon>&gsradius=10000&gsnamespace=6&format=json`, no key; remote areas often have only a few |
+| Mapillary | Wide coverage, but the API needs an OAuth token; the scripts don't use it |
+| KartaView | API needs no key; very little coverage |
+
+## Thematic maps and structured data
+
+| Source | Use | Known issues |
 |---|---|---|
-| 百度识图 | 中文网页、微博、百家号、电商、景区；会给"图中可能是…" | `revimg.py`，直连 |
-| Yandex 图片 | 建筑、街景、外国内容；给标签和来源站 | `revimg.py --proxy` |
-| Google Lens | 认"这是什么"（物种、车型、雕像、景点），常比百度 Yandex 强 | 服务器出口会被要求验证；有浏览器操作工具时在用户浏览器里用；AI 概览会凭相似图硬报地名 |
-| 必应国内版、百度图片、搜狗图片 | 中文关键词网页和图片搜索 | `revimg.py --query`；百度网页搜索会弹验证，不用 |
-| 抖音、小红书、微博 | 网红打卡点、景区官方号、同城内容 | 网页搜索或用户协助 |
-| 房产网楼盘相册（安居客、房天下、楼盘网等） | 新楼盘、商业综合体，相册里有立牌 | 网页搜索楼盘名 |
-| 旅游点评站（Tripadvisor、携程） | 雕像、公园、景点用户图 | 网页搜索 |
-| 图库（视觉中国、Getty、Alamy） | 图片说明带精确地名、年代 | 网页搜索 |
-| 地方政府、地方媒体网站 | 核对景区、塔、雕像的名称和尺寸 | 网页搜索 |
+| OpenStreetMap Overpass | Feature co-occurrence, line-to-point, route corridors, line crossings, street-view templates, points along a road, large buildings | `osm.py`; public servers are often busy or rate-limited (the script retries on mirrors; a result with a remark gets a warning that it may be incomplete); **ranges of hundreds of kilometers with a name regex (`[~"name"~...]`) often time out**; drop the regex or query by sub-area; in Chinese counties and townships, buildings and parking are basically empty, and rivers often have only centerlines |
+| OpenRailwayMap (openrailwaymap.org) | Railway class, single/double track, electrification, stations | Viewed manually on the web; same data as OSM |
+| OpenInfraMap (openinframap.org) | Power lines and voltage, substations | Viewed manually on the web; voltage may be untagged |
+| AWS Terrain Tiles (Terrarium) | Global elevation, about 30 m | `terrain.py`; details smaller than a hundred meters are unreliable |
+| City open data | Street trees (species, trunk diameter at breast height, location), etc. | Many foreign cities, few Chinese ones |
 
-## 地名 → 坐标（国内）
+## Time and weather
 
-| 来源 | 说明 |
+| Source | Use |
 |---|---|
-| 360 地图搜索 `restapi.map.so.com/newapi` | 免 key、直连；小区、楼盘、店铺、单位覆盖好，带地址和区县；坐标 GCJ-02（`poi.py` 已转 WGS84）；不给城市时返回全国有同名结果的城市列表 |
-| OpenStreetMap Nominatim | 走代理；有名字的小区、公园、道路；WGS84 |
-| 百度地图搜索联想 `map.baidu.com/su` | 免 key、直连；只有"城市 + 区县 + 名字"，没有坐标 |
-| 百度地图地点搜索、腾讯、高德接口 | 百度要验证码，腾讯高德要 key，不用 |
-
-## 地名 → 坐标（国外）
-
-- `poi.py "<地址或地名>" --sources osm --country <两位国家代码> --proxy socks5h://127.0.0.1:10808`（Nominatim，WGS84）。门牌地址搜不到时去掉门牌号只搜街道 + 区名。
-
-## 地面照片（没有街景时）
-
-| 来源 | 说明 |
-|---|---|
-| 新闻、百科、企业官网、博客配图 | 先给设施找名字（OSM 名字、附近地名 + 当地语言的设施类型词）再搜；乡间厂房、废弃设施常只有这一种地面照片 |
-| Wikimedia Commons 按坐标搜图 | `commons.wikimedia.org/w/api.php?action=query&list=geosearch&gscoord=<lat>|<lon>&gsradius=10000&gsnamespace=6&format=json`，免 key、走代理；偏远地区常只有几张 |
-| Mapillary | 覆盖广，但接口要 OAuth token，脚本不用 |
-| KartaView | 接口免 key，覆盖很少 |
-
-## 专题图与结构化数据
-
-| 来源 | 用途 | 已知问题 |
-|---|---|---|
-| OpenStreetMap Overpass | 要素共现、线变点、线路走廊、线交叉、街景模板、沿路取点、大建筑 | `osm.py`；公共服务器常忙或限流（脚本换镜像重试，结果带 remark 会提示不全）；**上百公里的范围加名字正则（`[~"name"~...]`）常超时**，去掉正则或分区查；国内县乡建筑、停车场基本为空，江河常只有中心线 |
-| OpenRailwayMap（openrailwaymap.org） | 铁路等级、单双线、电气化、车站 | 网页人工看；数据同 OSM |
-| OpenInfraMap（openinframap.org） | 输电线路和电压、变电站 | 网页人工看；电压可能没标 |
-| AWS Terrain Tiles（Terrarium） | 全球约 30 m 高程 | `terrain.py`；细节小于百米不可靠 |
-| 城市开放数据 | 行道树（树种、胸径、位置）等 | 国外城市多，国内少 |
-
-## 时间与天气
-
-| 来源 | 用途 |
-|---|---|
-| `sun.py`（NOAA 算法，和 NREL SPA 差 ≤0.02°） | 太阳位置，替代 SunCalc |
-| 历史逐日天气（气温、晴雨） | 核对"结冰""晴天"；有日期时排除阴雨地区 |
-| 历史气象卫星云图 | 当天大片云区排除（台风、锋面时才有明显效果） |
-| Flightradar24、FlightAware | 按注册号查航班历史；付费档可下载 KML/CSV 航迹 |
-
-## 网络
-
-- 走代理 `socks5h://127.0.0.1:10808`（脚本参数 `--proxy` 或环境变量 `GEO_PROXY`）：Google 卫星图、Google 街景、Overpass、Yandex。
-- 必须直连：百度全景、百度识图、必应国内版。高程切片两种都行。
-- macOS 没有 `timeout` 命令；zsh 的 for 循环里 `$var` 不分词（写 `${=var}` 或用 `bash -c`）；zsh 里 `echo =====` 这类以 `=` 开头的词会被当成命令路径展开而报错，分隔线用 `-----`。
-- `revimg.py` 用的 Chrome 代理写 `socks5://`（脚本会自动把 `socks5h://` 改掉）。
-- 国外新闻站 WebFetch 报 "Socket closed" 时，改 `curl -s -A 'Mozilla/5.0' --socks5-hostname 127.0.0.1:10808 <url>` 抓 HTML 再提正文。
+| `sun.py` (NOAA algorithm, within ≤0.02° of NREL SPA) | Sun position; replaces SunCalc |
+| Historical daily weather (temperature, sun/rain) | Check "frozen", "sunny"; with a date, exclude overcast or rainy areas |
+| Historical weather-satellite cloud imagery | Exclude large cloud areas on that day (clearly effective only with typhoons and fronts) |
+| Flightradar24, FlightAware | Flight history by registration; the paid tier can download KML/CSV tracks |

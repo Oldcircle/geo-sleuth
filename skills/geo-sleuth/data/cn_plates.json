@@ -462,13 +462,13 @@
    "O": "警用"
   },
   "letter_notes_unverified": {
-   "A": "主城区",
-   "B": "主城区",
-   "C": "永川、江津、合川、璧山、铜梁、大足、荣昌、潼南（原永川地区）",
-   "D": "主城区（后增）",
-   "F": "万州、开州、梁平、忠县、云阳、奉节、巫山、巫溪、城口（原万县地区）",
-   "G": "涪陵、南川、垫江、丰都、武隆（原涪陵地区）",
-   "H": "黔江、石柱、秀山、酉阳、彭水（原黔江地区）"
+   "A": "main urban districts",
+   "B": "main urban districts",
+   "C": "永川、江津、合川、璧山、铜梁、大足、荣昌、潼南 (former 永川 prefecture)",
+   "D": "main urban districts (added later)",
+   "F": "万州、开州、梁平、忠县、云阳、奉节、巫山、巫溪、城口 (former 万县 prefecture)",
+   "G": "涪陵、南川、垫江、丰都、武隆 (former 涪陵 prefecture)",
+   "H": "黔江、石柱、秀山、酉阳、彭水 (former 黔江 prefecture)"
   }
  },
  "川": {

@@ -1,167 +1,167 @@
-# 国外线索
+# Clues outside China
 
-国外照片的通用顺序：行驶方向和车牌外形排除大洲 → 文字语种和电话区号 → 车牌样式到州省 → 基础设施和市政设施 → 建筑植被。
-按国家分节；只收能迁移到新照片的线索。
+General order for photos outside China: driving side and plate shape to exclude continents → language of the text and phone area codes → plate style to the state/province → infrastructure and municipal fixtures → architecture and vegetation.
+Sections are by country; only clues that transfer to new photos are included.
 
-## 通用
+## General
 
-### 行驶方向、驾驶位
-- 看什么：车内驾驶位在左还是右；车流靠道路哪侧；路边停车的车头朝向
-- 指向：靠右行驶的国家排除英国、爱尔兰、日本、澳大利亚、新西兰、南非、印度、东南亚部分国家及港澳；反之亦然
-- 强度：强（排除类，单条排除一批国家）
-- 反例：左行国家里有少量进口左舵车；**照片或视频可能被镜像翻转**，先看有没有反字
-- 来源：v009 v010-4
+### Driving side, driver's seat
+- Look for: whether the driver's seat is on the left or the right; which side of the road traffic keeps to; which way cars parked at the roadside face
+- Points to: right-hand traffic excludes the UK, Ireland, Japan, Australia, New Zealand, South Africa, India, some Southeast Asian countries, and Hong Kong/Macau; and vice versa
+- Strength: strong (exclusion type; one clue excludes a batch of countries)
+- Counterexamples: left-hand-traffic countries have a few imported left-hand-drive cars; **the photo or video may be mirrored**, first check for reversed text
+- Sources: v009 v010-4
 
-### 车牌外形长宽比
-- 看什么：车牌外形，不需要读字
-- 指向：窄长条 → 欧洲；接近 2:1 的矩形 → 北美；再细分看底色和图案
-- 强度：中
-- 反例：日本车牌也接近 2:1（配驾驶位排除）；欧洲部分车型挂方牌；摩托车牌普遍偏方
-- 来源：v009
+### Plate aspect ratio
+- Look for: the plate's shape; no need to read the characters
+- Points to: long narrow strip → Europe; rectangle close to 2:1 → North America; refine further by background color and graphics
+- Strength: medium
+- Counterexamples: Japanese plates are also close to 2:1 (exclude them with the driver's seat side); some European vehicles carry square plates; motorcycle plates are generally squarish
+- Sources: v009
 
-### 按州省发牌国家的车牌底色和图案
-- 看什么：字读不出时，车牌整体底色、色带、中间图案（州旗、省旗）、边框颜色
-- 指向：州/省级（美国、墨西哥、加拿大、巴西旧版、澳大利亚等）
-- 强度：中（对着州车牌样式图筛到几个州，一次缩一个数量级）
-- 反例：外州车跨州行驶（货运走廊、边境城市尤其多）；新旧版并存，对照图有时效；强光过曝会把浅色图案拍成白色
-- 来源：v002 v009
+### Plate background and graphics in countries that issue plates by state/province
+- Look for: when the characters can't be read: the plate's overall background color, color bands, central graphic (state or provincial flag), border color
+- Points to: state/province level (US, Mexico, Canada, Brazil's old format, Australia, etc.)
+- Strength: medium (filter to a few states against a chart of state plate designs; narrows by an order of magnitude in one step)
+- Counterexamples: out-of-state vehicles crossing state lines (especially common on freight corridors and in border cities); old and new formats coexist, and reference charts go out of date; overexposure in strong light renders light-colored graphics as white
+- Sources: v002 v009
 
-### 官方双语、多语标牌
-- 看什么：同一块官方交通牌、路名牌上两种语言，内容相同
-- 指向：法定多语行政区，而不是"离讲这种语言的国家近"（例：意大利的德意双语 → 博尔扎诺省/南蒂罗尔）
-- 强度：强
-- 反例：私人店招的双语不算；旅游区给游客加的外语牌不算
-- 来源：v001
+### Official bilingual or multilingual signs
+- Look for: two languages with the same content on one official traffic sign or street-name sign
+- Points to: an officially multilingual admin area, not "near a country that speaks that language" (e.g., German-Italian bilingual signs in Italy → Province of Bolzano/South Tyrol)
+- Strength: strong
+- Counterexamples: bilingual private shop signs don't count; foreign-language signs added for tourists in tourist areas don't count
+- Sources: v001
 
-### 连锁品牌的子品牌、业务线
-- 看什么：招牌上母品牌之外的小标志（卡车胎翻新、商用车服务等）
-- 指向：子品牌门店少得多，列出全国门店就是候选点清单；同时提示货运走廊、工业区外围
-- 强度：弱（单独）；配合门店搜索到中
-- 反例：地图门店数据不全
-- 来源：v002
+### Sub-brands and business lines of chain brands
+- Look for: small marks on the sign besides the parent brand (truck tire retreading, commercial vehicle service, etc.)
+- Points to: sub-brands have far fewer stores, so listing all their stores nationwide gives a candidate point list; also suggests a freight corridor or the outskirts of an industrial zone
+- Strength: weak (alone); medium together with a store search
+- Counterexamples: store data on maps is incomplete
+- Sources: v002
 
-### 区域性快消品广告
-- 看什么：车身、街边的饮料、零食品牌广告
-- 指向：该品牌主要销售的国家或大区
-- 强度：弱
-- 反例：跨国品牌、进口品牌
-- 来源：v007
+### Ads for regional consumer goods
+- Look for: drink and snack brand ads on vehicles and along the street
+- Points to: the country or region where the brand mainly sells
+- Strength: weak
+- Counterexamples: multinational brands, imported brands
+- Sources: v007
 
-### 公交运营商缩写 + 线路号
-- 看什么：车头车尾顶部的运营商缩写和线路号
-- 指向：城市；线路号 → `osm.py route` 查线路走廊，沿线找
-- 强度：强（到城市）；配线路图到一条线
-- 反例：二手进口公交车身上保留原产国文字，不能据此判断国家；线路编号会调整
-- 来源：v007
+### Bus operator abbreviation + route number
+- Look for: the operator abbreviation and route number at the top of the bus front and rear
+- Points to: city; route number → look up the route corridor with `osm.py route` and search along it
+- Strength: strong (to the city); with a route map, to one line
+- Counterexamples: second-hand imported buses keep text from the country of origin on the body, so it can't be used to judge the country; route numbers get changed
+- Sources: v007
 
-### 美国州际公路盾牌
-- 看什么：红蓝盾牌形路牌上的数字
-- 指向：一条具体的州际公路；再配一个天际线地标或出口编号定路段和方向
-- 强度：强（到一条路）
-- 反例：同号公路跨多个州或区；牌子很小，容易漏看（v010-4 人没看到，AI 看到了）
-- 来源：v010-4
+### US Interstate shields
+- Look for: the number on red-and-blue shield-shaped road signs
+- Points to: one specific Interstate; add a skyline landmark or an exit number to fix the segment and direction
+- Strength: strong (to one road)
+- Counterexamples: a highway with the same number runs through several states or areas; the sign is small and easy to miss (in v010-4 the human didn't see it, the AI did)
+- Sources: v010-4
 
-## 欧洲
+## Europe
 
-### 屋顶颜色：红陶瓦 vs 灰色坡顶（意大利北部等）
-- 看什么：照片远景或卫星图里成片屋顶的颜色
-- 指向：意大利语区以红陶瓦为主；灰色、深色坡顶多 → 德语文化区城镇（奥地利、德国、南蒂罗尔）
-- 强度：弱（整片统计才有意义）
-- 反例：新建公寓常用平顶或灰色金属顶
-- 来源：v001
+### Roof color: red terracotta tile vs gray pitched roofs (northern Italy, etc.)
+- Look for: the color of roofs across an area in distant views of the photo or in satellite imagery
+- Points to: Italian-speaking areas are mostly red terracotta; many gray or dark pitched roofs → towns in the German-speaking cultural area (Austria, Germany, South Tyrol)
+- Strength: weak (meaningful only as a statistic over a whole area)
+- Counterexamples: new apartment buildings often use flat roofs or gray metal roofs
+- Sources: v001
 
-### 拱的形态：圆拱还是尖拱
-- 看什么：门窗的拱是圆的还是尖的；大拱里套两个小拱的双联窗
-- 指向：圆拱 → 罗马式或文艺复兴；尖拱 → 哥特式。一座城市资料说中世纪遗存很少，照片里却是完整的"中世纪院落"→ 优先考虑 19 世纪以后的仿建（博览会场馆、仿古街、影视城）
-- 强度：弱（缩小建筑类型，帮助选搜索词）
-- 反例：仿建很多；中文界面以图搜图会把国内近代红砖建筑大量混进来
-- 来源：v004
+### Arch form: round or pointed
+- Look for: whether door and window arches are round or pointed; biforate windows (two small arches inside one large arch)
+- Points to: round arch → Romanesque or Renaissance; pointed arch → Gothic. If sources say a city has few medieval remains but the photo shows an intact "medieval courtyard" → prefer 19th-century-or-later replicas (exposition pavilions, mock-historic streets, film studio sets)
+- Strength: weak (narrows the building type, helps choose search terms)
+- Counterexamples: there are many replicas; reverse image search in a Chinese-language interface mixes in large numbers of modern-era Chinese red-brick buildings
+- Sources: v004
 
-### 同一片区统一的路灯造型
-- 看什么：路灯杆的颜色、灯头形状
-- 指向：同一城市或片区统一采购，用来在候选城镇之间抽查确认
-- 强度：弱（验证用，不用来找）
-- 反例：同一厂家的灯卖给很多城市
-- 来源：v001 v009
+### Uniform streetlight design within an area
+- Look for: streetlight pole color, lamp head shape
+- Points to: procured uniformly by one city or area; use it for spot-check confirmation between candidate towns
+- Strength: weak (for verifying, not for finding)
+- Counterexamples: one manufacturer's lights are sold to many cities
+- Sources: v001 v009
 
-## 北美
+## North America
 
-### 加拿大不列颠哥伦比亚省车牌
-- 看什么：白底蓝字，"两字母一数字 + 中间小省旗 + 两数字一字母"
-- 指向：BC 省
-- 强度：强（格式和省旗都看清时）
-- 反例：外省车在温哥华常见；旧版格式不同
-- 来源：v009
+### British Columbia, Canada plates
+- Look for: blue characters on white, "two letters, one digit + small provincial flag in the middle + two digits, one letter"
+- Points to: BC
+- Strength: strong (when both the format and the provincial flag are clearly visible)
+- Counterexamples: out-of-province cars are common in Vancouver; older formats differ
+- Sources: v009
 
-### 墨绿路灯杆 + 人行道外侧草地带的住宅街
-- 看什么：住宅街路灯杆漆成墨绿色、弯臂灯头；人行道和车道之间隔草地带；浅排水沟
-- 指向：温哥华及大温地区住宅区（配车牌再用）
-- 强度：弱
-- 反例：美国西北部（西雅图、波特兰一带）住宅区很像；草地带在北美郊区很普遍
-- 来源：v009
+### Residential streets with dark green streetlight poles + a grass strip outside the sidewalk
+- Look for: on residential streets, streetlight poles painted dark green with curved-arm lamp heads; a grass strip separating sidewalk and roadway; shallow gutters
+- Points to: residential areas of Vancouver and Metro Vancouver (use together with plates)
+- Strength: weak
+- Counterexamples: residential areas in the US Northwest (around Seattle and Portland) look very similar; grass strips are very common in North American suburbs
+- Sources: v009
 
-## 制式继承（海外领地、前殖民地）
+## Inherited standards (overseas territories, former colonies)
 
-认出"某国制式"的基础设施时，候选是本土 + 沿用本土标准的海外领地 + 部分前殖民地。和 IP 属地、出题人说的大洲一交，常常只剩一处。
+When you recognize infrastructure built to "country X's standard", the candidates are the home country + overseas territories that keep the home country's standards + some former colonies. Intersect that with the IP location and the continent the puzzle setter named, and often only one place remains.
 
-### 法国配电网的拱形横担
-- 看什么：混凝土或金属电杆顶上一根向上拱起的横担，三根导线挂在悬垂绝缘子下（中压线路的"拱形"布置）；远处同款杆一字排开
-- 指向：法国电网体系：本土和沿用本土标准的海外省；部分北非前殖民地有相近杆型
-- 强度：中（能从全世界缩到法国体系的几个地区，再配 IP、大洲、气候定一处）
-- 反例：邻国边境地区有相近样式；前殖民地后来换了杆型；远景小图容易把普通直横担看成拱形，要放大核实
-- 来源：v013
+### Arched crossarms on the French distribution grid
+- Look for: a crossarm arching upward on top of a concrete or metal pole, three conductors hanging from suspension insulators (the "arched" layout of medium-voltage lines); identical poles lined up into the distance
+- Points to: the French grid system: metropolitan France and the overseas departments that keep its standards; some former North African colonies have similar pole types
+- Strength: medium (narrows the whole world to a few regions in the French system; then use IP, continent, and climate to fix one)
+- Counterexamples: border areas of neighboring countries have similar styles; former colonies later changed pole types; in small distant images an ordinary straight crossarm is easily seen as arched, so zoom in to verify
+- Sources: v013
 
-## 墨西哥
+## Mexico
 
-### 车牌底色（模糊也能用）
-- 看什么：车尾车牌整体底色和图案位置，不需要读字
-- 指向：州级。按视频用的对照图，整块近乎纯白的是墨西哥城和新莱昂州，其余州多带明显彩色图案或色带
-- 强度：中（单一来源）
-- 反例：跨州车辆；各州换版；联邦牌照是另一套；过曝
-- 来源：v002
+### Plate background color (usable even when blurry)
+- Look for: the overall background color and graphic placement of the rear plate; no need to read the characters
+- Points to: state level. Per the reference chart used in the video, nearly pure white plates are Mexico City and Nuevo León; most other states carry prominent colored graphics or color bands
+- Strength: medium (single source)
+- Counterexamples: vehicles from other states; states change plate designs; federal plates are a separate system; overexposure
+- Sources: v002
 
-### 路边高大钢管单柱输电杆
-- 看什么：灰色钢管单柱，一侧三层弯臂横担，长绝缘子串；旁边矮杆是配电线
-- 指向：高压输电走廊；到 OpenInfraMap 查该城市这一电压线路沿哪些路走，用来在城市内部筛路段
-- 强度：弱（定不了城市）
-- 反例：不同电压外形相近；OSM 电网数据可能缺线或没标电压
-- 来源：v002
+### Tall single tubular steel transmission poles along roads
+- Look for: a gray single tubular steel pole with three tiers of curved crossarms on one side and long insulator strings; the shorter poles beside it carry distribution lines
+- Points to: a high-voltage transmission corridor; check OpenInfraMap for which roads lines of this voltage follow in that city, and use that to filter road segments within the city
+- Strength: weak (can't fix the city)
+- Counterexamples: different voltages look similar; OSM power data may be missing lines or lack voltage tags
+- Sources: v002
 
-## 日本
+## Japan
 
-### 道口、车站标牌上的铁路公司名
-- 看什么："踏切 とまれ"圆牌、警示牌、道口设备箱上印的公司名
-- 指向：运营区域。JR 客运分六家各有地盘（JR西日本 = 近畿、中国地方、北陆一部分）；私铁名常能直接定到线路
-- 强度：中（JR 到大区，私铁到线路）
-- 反例：公司交界附近；线路移交第三方后旧标牌没换
-- 来源：v003
+### Railway company names on level-crossing and station signs
+- Look for: the company name printed on round "踏切 とまれ" (level crossing, stop) signs, warning signs, and crossing equipment boxes
+- Points to: operating area. JR passenger service is split among six companies, each with its own territory (JR西日本 (JR West) = Kinki, the Chūgoku region, part of Hokuriku); private railway names can often pin the line directly
+- Strength: medium (JR to the broad region, private railways to the line)
+- Counterexamples: near company boundaries; old signs not replaced after a line was handed over to a third-party operator
+- Sources: v003
 
-### 电话区号（市外局番）
-- 看什么：招牌、施工告示、警示牌、自动售货机上的 TEL 号码
-- 指向：0 后第一位大致由北向南（01 北海道 … 09 九州冲绳）；完整区号查表到市（例：03 = 东京 23 区）
-- 强度：中
-- 反例：区号 2–5 位不定，只看到部分数字时按分组判断位数；0120、0570、050、080、090 不对应地区
-- 来源：v003
+### Telephone area codes (市外局番)
+- Look for: TEL numbers on signs, construction notices, warning signs, vending machines
+- Points to: the first digit after the 0 runs roughly north to south (01 Hokkaido … 09 Kyushu and Okinawa); look up the full area code in a table to get the city (e.g., 03 = Tokyo's 23 wards)
+- Strength: medium
+- Counterexamples: area codes vary from 2 to 5 digits; when only part of the number is visible, judge the length from the digit grouping; 0120, 0570, 050, 080, 090 don't map to a region
+- Sources: v003
 
-### 同一道口并排四条轨道
-- 看什么：道口地面并排的轨道数、有无接触网
-- 指向：干线复复线区段；叠加"紧贴海岸"等条件可缩到几公里（`osm.py crossings --kind level_crossing` 按节点数估轨道数）
-- 强度：中
-- 反例：车站咽喉区、两家公司线路并排也会出现 4 条；城市复复线多数是立交，有道口的地方反而少
-- 来源：v003
+### Four parallel tracks at one level crossing
+- Look for: the number of parallel tracks across the crossing, whether there is overhead catenary
+- Points to: a quadruple-track section of a trunk line; adding conditions like "right on the coast" can narrow it to a few km (`osm.py crossings --kind level_crossing` estimates the track count from the node count)
+- Strength: medium
+- Counterexamples: station throats and two companies' lines running side by side also show 4 tracks; urban quadruple-track sections are mostly grade-separated, so places with level crossings are actually rare
+- Sources: v003
 
-### 标牌底部的发牌单位
-- 看什么：规制牌、施工牌、公告牌底部的"〇〇警察署""〇〇土木事務所""〇〇区役所"
-- 指向：区、市
-- 强度：中
-- 反例：县级或跨区管辖的单位名不等于所在区
-- 来源：v003
+### Issuing authority at the bottom of signs
+- Look for: "〇〇警察署" (police station), "〇〇土木事務所" (civil engineering office), "〇〇区役所" (ward office) at the bottom of regulatory signs, construction signs, and notice boards
+- Points to: ward, city
+- Strength: medium
+- Counterexamples: the name of a prefectural or cross-ward agency is not the ward you are in
+- Sources: v003
 
-## 东南亚
+## Southeast Asia
 
-### 缅甸车牌的省邦代码
-- 看什么：车牌上的拉丁字母缩写（如 YGN）加号码
-- 指向：缅甸；YGN = 仰光省
-- 强度：中（单一来源）
-- 反例：跨省车辆；2013 年前的旧牌是缅文
-- 来源：v007
+### Region/state codes on Myanmar plates
+- Look for: a Latin-letter abbreviation on the plate (e.g., YGN) plus a number
+- Points to: Myanmar; YGN = Yangon Region
+- Strength: medium (single source)
+- Counterexamples: vehicles from other regions; old plates from before 2013 are in Burmese script
+- Sources: v007

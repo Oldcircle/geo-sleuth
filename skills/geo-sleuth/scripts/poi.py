@@ -3,28 +3,29 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""地名、小区名、楼盘名、店名 → 坐标候选（免 key）。
+"""Place name, residential compound name, housing development name, shop name → coordinate candidates (no API key).
 
-以图搜图常给出"图中可能是 XX花园""XX大厦"，网页里读到一个小区名、酒店名，都要先落到坐标才能核对。
-同名的地方全国常有几十个，脚本把各地的同名点都列出来，由画面里的其他线索去挑。
+Reverse image search often returns "the photo may be XX花园 (XX Garden)" or "XX大厦 (XX Tower)"; a compound name or hotel name read on a web page must be placed at coordinates before it can be checked.
+The same name often exists dozens of times across China; the script lists the same-name points in every region, and other clues in the photo pick among them.
 
-来源：
-  so    360 地图搜索（直连）：小区、楼盘、店铺、单位覆盖好，带地址；原始坐标 GCJ-02，已转成 WGS84
-  osm   OpenStreetMap Nominatim（走代理）：有名字的小区、公园、道路；坐标 WGS84
-  sug   百度地图搜索联想（直连）：只有"城市 + 区县 + 名字"，没有坐标；用来看全国哪些区县有这个名字
+Sources:
+  so    360 Maps search: good coverage of residential compounds, housing developments, shops and organizations, with address; raw coordinates are GCJ-02, converted to WGS84
+  osm   OpenStreetMap Nominatim: named compounds, parks, roads; coordinates WGS84
+  sug   Baidu Maps search suggestions: only "city + district + name", no coordinates; use it to see which districts in China have this name
 
-示例：
-  poi.py "<小区名>" --city <城市>                 # 城市里所有同名点，出 {名字: [lat, lon]}
-  poi.py "<区县> <路名> 学校" --city <直辖市或地级市>   # --city 只认地级市，区县写进关键词
-  poi.py "<门牌地址或地名>" --sources osm --country mx --proxy socks5h://127.0.0.1:10808（示例）   # 国外
-  poi.py "<小区名>"                                # 不给城市：列出全国哪些城市有同名点
-  poi.py "<酒店名>" --city <城市> --out pois.json && tiles.py sheet --points pois.json --zoom 18 --out pois_sheet.jpg
+Examples:
+  poi.py "<compound name>" --city <city>                 # all same-name points in the city, outputs {name: [lat, lon]}
+  poi.py "<district> <road name> 学校" --city <municipality or prefecture-level city>   # --city only accepts prefecture-level cities; put the district in the keyword (学校 = school)
+  poi.py "<street address or place name>" --sources osm --country mx   # outside China
+  poi.py "<compound name>"                                # no city: lists which cities in China have a same-name point
+  poi.py "<hotel name>" --city <city> --out pois.json && tiles.py sheet --points pois.json --zoom 18 --out pois_sheet.jpg
 
-百度地图网页的地点搜索会要验证码，脚本不用；腾讯、高德接口要 key，也不用。
+Baidu Maps web place search requires a CAPTCHA, so the script doesn't use it; the Tencent and Amap APIs require a key, so it doesn't use them either.
 """
 from __future__ import annotations
 
 import argparse
+from _net import curl_args, PROXY_HELP
 import json
 import os
 import re
@@ -40,24 +41,24 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 
 
 def _curl(url: str, proxy: str | None = None, ua: str = UA, timeout: int = 25) -> str:
-    cmd = ["curl", "-sS", "-m", str(timeout), "-A", ua, url]
-    cmd[1:1] = ["-x", proxy] if proxy else ["--noproxy", "*"]
-    # 网页是 UTF-8。不写 encoding 的话中文 Windows 按 GBK 解码，解不开时 stdout 是 None
+    cmd = ["curl", "-q", "-sS", "-m", str(timeout), "-A", ua, url]
+    cmd += curl_args(proxy)
+    # Pages are UTF-8. Without encoding=, Chinese Windows decodes as GBK, and stdout is None when decoding fails
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
-        print(f"请求没成功（curl 退出码 {r.returncode}）：{r.stderr.strip()[:200]}", file=sys.stderr)
+        print(f"Request failed (curl exit code {r.returncode}): {r.stderr.strip()[:200]}", file=sys.stderr)
     return r.stdout
 
 
-def search_so(kw: str, city: str | None, n: int) -> tuple[list[dict], list[dict]]:
+def search_so(kw: str, city: str | None, n: int, proxy: str | None = None) -> tuple[list[dict], list[dict]]:
     q = {"keyword": kw, "batch": 1, "number": n, "ext": 1, "sid": 1000}
     if city:
         q["cityname"] = city
-    raw = _curl("https://restapi.map.so.com/newapi?" + urllib.parse.urlencode(q))
+    raw = _curl("https://restapi.map.so.com/newapi?" + urllib.parse.urlencode(q), proxy=proxy)
     try:
         d = json.loads(raw)
     except json.JSONDecodeError:
-        print(f"360 地图没返回 JSON：{raw[:120]}", file=sys.stderr)
+        print(f"360 Maps did not return JSON: {raw[:120]}", file=sys.stderr)
         return [], []
     rows = []
     for p in d.get("poi") or []:
@@ -73,7 +74,7 @@ def search_so(kw: str, city: str | None, n: int) -> tuple[list[dict], list[dict]
 
 
 def search_osm(kw: str, city: str | None, n: int, proxy: str | None, country: str) -> list[dict]:
-    q = {"q": f"{kw} {city}" if city else kw, "format": "jsonv2", "limit": n, "accept-language": "zh-CN"}
+    q = {"q": f"{kw} {city}" if city else kw, "format": "jsonv2", "limit": n, "accept-language": "en"}
     if country:
         q["countrycodes"] = country
     raw = _curl("https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(q), proxy=proxy,
@@ -81,15 +82,15 @@ def search_osm(kw: str, city: str | None, n: int, proxy: str | None, country: st
     try:
         d = json.loads(raw)
     except json.JSONDecodeError:
-        print(f"Nominatim 没返回 JSON（国内要走代理）：{raw[:120]}", file=sys.stderr)
+        print(f"Nominatim did not return JSON (check service availability with doctor.py --network): {raw[:120]}", file=sys.stderr)
         return []
     return [{"src": "osm", "name": p.get("name") or p.get("display_name", "").split(",")[0],
              "city": "", "area": "", "address": p.get("display_name", ""), "type": f"{p.get('category')}/{p.get('type')}",
              "wgs": [round(float(p["lat"]), 6), round(float(p["lon"]), 6)]} for p in d]
 
 
-def search_sug(kw: str) -> list[dict]:
-    raw = _curl("https://map.baidu.com/su?" + urllib.parse.urlencode({"wd": kw, "cid": 1, "type": 0, "newmap": 1, "ie": "utf-8"}))
+def search_sug(kw: str, proxy: str | None = None) -> list[dict]:
+    raw = _curl("https://map.baidu.com/su?" + urllib.parse.urlencode({"wd": kw, "cid": 1, "type": 0, "newmap": 1, "ie": "utf-8"}), proxy=proxy)
     try:
         d = json.loads(raw)
     except json.JSONDecodeError:
@@ -104,66 +105,66 @@ def search_sug(kw: str) -> list[dict]:
 
 
 def _neg_coords(argv: list[str]) -> list[str]:
-    """argparse 把 -1.45,-48.5 这种负坐标当成选项名；前面补个空格就当普通值（float 会忽略空格）。南半球、西半球的题都要用。"""
+    """argparse treats negative coordinates like -1.45,-48.5 as option names; a leading space makes them plain values (float ignores the space). Every southern- or western-hemisphere case needs this."""
     return [" " + a if re.match(r"^-\d[\d.]*(,-?[\d.]+)+$", a) else a for a in argv]
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("keyword", help="地名、小区名、楼盘名、店名")
-    ap.add_argument("--city", help="城市名，如 某某市 或 某某（不给就全国查）")
-    ap.add_argument("--sources", default="so,osm,sug", help="so,osm,sug 任选，逗号分隔")
-    ap.add_argument("--limit", type=int, default=10, help="每个来源最多几条")
-    ap.add_argument("--country", default="cn", help="Nominatim 的国家代码，国外地名改成对应代码或留空")
-    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help="Nominatim 用；360 和百度联想始终直连")
-    ap.add_argument("--out", type=Path, help="写出 {名字: [lat, lon]}（WGS84），给 tiles.py mark / sheet")
+    ap.add_argument("keyword", help="place name, residential compound name, housing development name, or shop name")
+    ap.add_argument("--city", help="city name, e.g. <name>市 or <name> (omit to search all of China)")
+    ap.add_argument("--sources", default="so,osm,sug", help="any of so,osm,sug, comma-separated")
+    ap.add_argument("--limit", type=int, default=10, help="max results per source")
+    ap.add_argument("--country", default="cn", help="Nominatim country code; for places outside China change it to the matching code or leave it empty")
+    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
+    ap.add_argument("--out", type=Path, help="write {name: [lat, lon]} (WGS84) for tiles.py mark / sheet")
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
 
     src = set(args.sources.split(","))
     rows: list[dict] = []
     if "so" in src:
-        so_rows, cities = search_so(args.keyword, args.city, args.limit)
+        so_rows, cities = search_so(args.keyword, args.city, args.limit, args.proxy)
         if args.city and so_rows and not any(args.city in (r["city"] + r["area"] + r["address"]) for r in so_rows):
-            print(f"注意：360 地图的结果里没有一条在\"{args.city}\"——它不认这个城市名，悄悄换成了别的城市。"
-                  f"--city 填地级市或直辖市（如 重庆），区县名写进关键词（如 \"<区县> <名字>\"）")
+            print(f"Note: none of the 360 Maps results is in \"{args.city}\" — it doesn't recognize this city name and silently switched to another city. "
+                  f"Pass a prefecture-level city or municipality to --city (e.g. 重庆 (Chongqing)), and put the district name in the keyword (e.g. \"<district> <name>\")")
         rows += so_rows
         if cities and not args.city:
-            print("360 地图：全国有同名结果的城市（结果数）")
-            print("  " + "、".join(f"{c['city']}({c['count']})" for c in cities[:30]))
+            print("360 Maps: cities in China with same-name results (result count)")
+            print("  " + ", ".join(f"{c['city']}({c['count']})" for c in cities[:30]))
     if "osm" in src:
         rows += search_osm(args.keyword, args.city, args.limit, args.proxy, args.country)
     if "sug" in src:
-        sug = search_sug(args.keyword)
+        sug = search_sug(args.keyword, args.proxy)
         if sug:
-            print("百度联想（无坐标，只看哪些区县有这个名字）：")
-            print("  " + "；".join(f"{s['city']}{s['area']} {s['name']}" for s in sug[:15]))
+            print("Baidu suggestions (no coordinates; only shows which districts have this name):")
+            print("  " + "; ".join(f"{s['city']}{s['area']} {s['name']}" for s in sug[:15]))
 
-    # 同一个地方两个来源都有时去重（相距 150 m 内且名字互相包含）
+    # Deduplicate when two sources return the same place (within 150 m and one name contains the other)
     uniq: list[dict] = []
     for r in rows:
         if any(geo.distance(r["wgs"], u["wgs"]) < 150 and (r["name"] in u["name"] or u["name"] in r["name"]) for u in uniq):
             continue
         uniq.append(r)
-    print(f"\n{len(uniq)} 个带坐标的候选（WGS84）：")
+    print(f"\n{len(uniq)} candidates with coordinates (WGS84):")
     pts = {}
     for i, r in enumerate(uniq, 1):
         label = f"{i:02d} {r['name']} {r['area']}".strip()
         pts[label] = r["wgs"]
         print(f"  {label}  {r['wgs'][0]},{r['wgs'][1]}  [{r['src']}] {r['type']}  {r['address'][:60]}")
     if not uniq:
-        print("  没有。换写法（去掉\"小区/花园\"后缀、加区县名），或用 revimg.py --query 搜网页找地址")
+        print("  None. Try another spelling (drop the \"小区/花园\" (compound/garden) suffix, add the district name), or use revimg.py --query to search the web for an address")
     if args.out:
         args.out.write_text(json.dumps(pts, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}")
     if len(uniq) >= 2:
-        # 同一所学校的几个校区、连锁店的几家分店都会列在这里，第一条不一定是对的那处
-        print(f"\n{len(uniq)} 处都要当候选，不要只取第一条："
-              + (f"`board.py add --from {args.out} --level area --parent <上级>` 全部进候选盘" if args.out
-                 else "加 --out pois.json，再 `board.py add --from pois.json --level area` 全部进候选盘"))
+        # Several campuses of one school or several branches of a chain all show up here; the first one is not necessarily the right one
+        print(f"\nAll {len(uniq)} places must be candidates; don't take only the first one: "
+              + (f"`board.py add --from {args.out} --level area --parent <parent>` puts them all on the candidate board" if args.out
+                 else "add --out pois.json, then `board.py add --from pois.json --level area` puts them all on the candidate board"))
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m² or ñ, and the Chinese the agent reads is garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

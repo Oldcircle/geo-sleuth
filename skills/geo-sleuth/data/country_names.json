@@ -1,9 +1,9 @@
 {
  "_meta": {
-  "source": ["手工整理（中英文国家/地区名对照，供 driving_side / calling_codes / territories / plate_styles 查询用）"],
+  "source": ["Manually curated Chinese/English country and territory names for country lookups."],
   "fetched": "2026-09-14",
   "count": 300,
-  "note": "en2zh 的键与各表里的英文写法一致；aliases 把别名（简称、繁体、旧名、英文缩写）映射到 en2zh 里的键。查不到时 clues.py 会去掉括号再试，再退到子串匹配。"
+  "note": "en2zh keys match the English names in the lookup tables. aliases maps short names, traditional Chinese forms, historical names and abbreviations to those keys. clues.py also handles parenthesized text and substring matching."
  },
  "en2zh": {
   "Abkhazia": "阿布哈兹", "Afghanistan": "阿富汗", "Albania": "阿尔巴尼亚", "Algeria": "阿尔及利亚", "American Samoa": "美属萨摩亚",

@@ -3,39 +3,40 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "numpy"]
 # ///
-"""用高程数据从候选机位"看"出去：合成山体层次图和天际线，拿来和照片比山脊。
+"""Use elevation data to "look" out from a candidate camera position: synthesize a layered terrain view and skyline to compare ridgelines with the photo.
 
-没有街景、只有远山（山区合影、隔江远眺、航拍、窗外山脊线）时，替代 Google Earth 倾斜 3D。
-高程用 AWS Terrain Tiles（Terrarium 编码，全球约 30 m，免 key，国内可直连；不通就加 --proxy）。
+When there is no street view, only distant mountains (group photos in the mountains, views across a river, aerial shots, a ridgeline outside a window), this replaces Google Earth oblique 3D.
+Elevation comes from AWS Terrain Tiles (Terrarium encoding, ~30 m worldwide, no key).
 
-  view     从一个机位按朝向和视角渲染：远近分层着色 + 红色天际线 + 方位刻度，可和照片上下并排
-  profile  输出每个方位的天际线仰角和距离（JSON），做数值比对
-  elev     查某点地面高程
-  scan     沿线状设施（铁路、公路、输电线）逐点算 360° 地平线，筛出"近处平 + 有山 + 山紧挨一段平地平线"
-           的点并聚簇——画面里只有一条设施和一座认不出的山时，用它把整个大区筛成几百片
-  ridge    照片山脊取点：逐列找天空到山体的亮度突变，输出像素点列表 + 平地平线列范围 + 地平线行 + 焦距（ridge.json）
-  fit      拿 ridge.json 给 scan 的每个簇打分：簇内摆机位网格，搜朝向 × 焦距 × 地平线偏移，
-           天际线 RMS + 平地平线罚分 (+ 可选：线状设施离画面左/中/右各多远)，按分排序，--sheet 出前 N 名叠图
+  view     render from one camera position by heading and field of view: shading layered by distance + red skyline + bearing ticks; can be stacked above/below the photo
+  profile  output the skyline elevation angle and distance at each bearing (JSON), for numeric comparison
+  elev     look up the ground elevation at a point
+  scan     along linear infrastructure (railway, road, power line), compute the 360° horizon point by point, keep the points that are "flat nearby + a mountain + the mountain right next to a stretch of flat horizon"
+           and cluster them — when the frame shows only one piece of infrastructure and a mountain you can't recognize, use it to cut a whole large region down to a few hundred patches
+  ridge    sample the photo's ridgeline: per column, find the sky-to-mountain brightness jump; output a pixel point list + flat-horizon column range + horizon row + focal length (ridge.json)
+  fit      score each scan cluster against ridge.json: lay a camera-position grid in each cluster, search heading × focal length × horizon offset,
+           skyline RMS + flat-horizon penalty (+ optional: how far the linear infrastructure is at the frame's left/center/right), sort by score, --sheet draws overlays of the top N
 
-重要：天际线轮廓对上，只能说明机位在某条视线附近——沿视线前后挪几百米，远山轮廓几乎不变。
-要定点，需要第二条独立约束（另一组近物—远物对齐、地图上的路或河岸）。见 references/geometry.md。
+Important: a matching skyline outline only shows that the camera position is near some sight line — moving a few hundred meters forward or back along the sight line barely changes the distant mountain outline.
+To pin a point you need a second independent constraint (another near–far object alignment, a road or riverbank on the map). See references/geometry.md.
 
-示例：
+Examples:
   terrain.py elev --at 35.3606,138.7274
-  terrain.py view --at 35.4983,138.7688 --heading 194 --hfov 50 --range 30000 --out fuji.png   # 河口湖看富士山
-  terrain.py view --at <候选机位> --height 20 --heading <朝向> --hfov 65 --out v.png --photo photo.jpg
+  terrain.py view --at 35.4983,138.7688 --heading 194 --hfov 50 --range 30000 --out fuji.png   # Mt. Fuji from Lake Kawaguchi
+  terrain.py view --at <candidate camera position> --height 20 --heading <heading> --hfov 65 --out v.png --photo photo.jpg
   terrain.py profile --at 35.4983,138.7688 --heading 194 --hfov 50 --out prof.json
-  terrain.py scan --lines rail_bridges.geojson --bbox 35.1,138.3,36.0,139.2 --out hits.json   # 先用 osm.py geom 取线
+  terrain.py scan --lines rail_bridges.geojson --bbox 35.1,138.3,36.0,139.2 --out hits.json   # get the lines with osm.py geom first
   terrain.py ridge photo.jpg --x0 760 --x1 1260 --step 20 --flat 0:280 --out ridge.json --png ridge.png
-  terrain.py fit --hits hits.json --ridge ridge.json --out fit.json --sheet top.jpg            # 粗搜：每簇 2 km / 250 m / z11
+  terrain.py fit --hits hits.json --ridge ridge.json --out fit.json --sheet top.jpg            # coarse search: per cluster 2 km / 250 m / z11
   terrain.py fit --at 35.4983,138.7688 --ridge ridge.json --radius 800 --grid 100 --zoom 13 --az-step 0.25 \\
-             --line rail.geojson --line-dist 350-750:550-900:800-1700 --out fine.json          # 精搜 + 设施距离约束
+             --line rail.geojson --line-dist 350-750:550-900:800-1700 --out fine.json          # fine search + infrastructure distance constraint
 
-ridge.json 和 fit.json 的字段见各子命令的 --help。
+For the fields of ridge.json and fit.json, see each subcommand's --help.
 """
 from __future__ import annotations
 
 import argparse
+from _net import curl_args, PROXY_HELP
 import json
 import math
 import os
@@ -59,11 +60,8 @@ K_REFRACTION = 0.13
 def _fetch(z: int, x: int, y: int, cache: Path, proxy: str | None) -> np.ndarray:
     p = cache / f"terrarium_{z}_{x}_{y}.png"
     if not (p.exists() and p.stat().st_size > 100):
-        cmd = ["curl", "-s", "-m", "60", "-o", str(p), TILE.format(z=z, x=x, y=y)]
-        if proxy:
-            cmd[1:1] = ["-x", proxy]
-        else:
-            cmd[1:1] = ["--noproxy", "*"]
+        cmd = ["curl", "-q", "-s", "-m", "60", "-o", str(p), TILE.format(z=z, x=x, y=y)]
+        cmd += curl_args(proxy)
         subprocess.run(cmd, check=False)
     try:
         a = np.asarray(Image.open(p).convert("RGB"), dtype=np.float32)
@@ -73,7 +71,7 @@ def _fetch(z: int, x: int, y: int, cache: Path, proxy: str | None) -> np.ndarray
 
 
 class DEM:
-    """以 Web 墨卡托像素为索引的高程拼图。"""
+    """Elevation mosaic indexed by Web Mercator pixels."""
 
     def __init__(self, center: tuple[float, float], radius_m: float, zoom: int, cache: Path, proxy: str | None):
         cache.mkdir(parents=True, exist_ok=True)
@@ -85,7 +83,7 @@ class DEM:
         tx1, ty1 = int((cx + r_px) // 256), int((cy + r_px) // 256)
         nx, ny = tx1 - self.tx0 + 1, ty1 - self.ty0 + 1
         if nx * ny > 400:
-            sys.exit(f"范围太大（{nx}x{ny} 块切片），减小 --range 或调低 --zoom")
+            sys.exit(f"Area too large ({nx}x{ny} tiles); reduce --range or lower --zoom")
         self.h = np.zeros((ny * 256, nx * 256), dtype=np.float32)
         jobs = [(x, y) for y in range(self.ty0, ty1 + 1) for x in range(self.tx0, tx1 + 1)]
         with ThreadPoolExecutor(16) as ex:
@@ -115,8 +113,8 @@ def _dest_np(lat0: float, lon0: float, brg: np.ndarray, dist: np.ndarray) -> tup
 
 
 def cast(dem: DEM, at, eye_alt: float, azimuths: np.ndarray, rng: float, near: float = 40.0, n: int = 900):
-    """返回 (每列每个采样的仰角°, 采样距离 m)。n = 每条视线的采样数（view/profile 用 900；fit 用 --nsamp）。"""
-    dist = near * (rng / near) ** (np.arange(n) / (n - 1))          # 近处密、远处疏
+    """Return (elevation angle ° of each sample in each column, sample distance m). n = samples per sight line (view/profile use 900; fit uses --nsamp)."""
+    dist = near * (rng / near) ** (np.arange(n) / (n - 1))          # dense near, sparse far
     lat, lon = _dest_np(at[0], at[1], azimuths, dist)
     h = dem.sample(lat, lon)
     drop = dist ** 2 / (2 * R_EARTH) * (1 - K_REFRACTION)
@@ -127,7 +125,7 @@ def cast(dem: DEM, at, eye_alt: float, azimuths: np.ndarray, rng: float, near: f
 def render(ang: np.ndarray, dist: np.ndarray, azimuths: np.ndarray, pitch: float, vfov: float, height: int) -> tuple[Image.Image, np.ndarray, np.ndarray]:
     W = ang.shape[0]
     img = np.zeros((height, W, 3), dtype=np.uint8)
-    img[:] = (205, 225, 245)                                         # 天空
+    img[:] = (205, 225, 245)                                         # sky
     top = pitch + vfov / 2
 
     def row(a):
@@ -141,7 +139,7 @@ def render(ang: np.ndarray, dist: np.ndarray, azimuths: np.ndarray, pitch: float
     for c in range(W):
         idx = np.nonzero(visible[c])[0]
         prev = row(-90.0)
-        # 从近到远：每个可见采样把这一列从"它的仰角"涂到"之前最高点"，颜色按距离由深到浅
+        # near to far: each visible sample paints this column from "its elevation angle" to "the previous highest point", color from dark to light by distance
         lo_row = height
         for i in idx:
             r = row(ang[c, i])
@@ -176,8 +174,8 @@ def annotate(im: Image.Image, azimuths: np.ndarray, pitch: float, vfov: float, t
     d = ImageDraw.Draw(im)
     f = _font(16)
     hr = (pitch + vfov / 2) / vfov * (H - 1)
-    d.line([(0, hr), (W, hr)], fill=(90, 90, 200), width=1)           # 眼睛高度的水平线
-    names = {0: "北", 45: "东北", 90: "东", 135: "东南", 180: "南", 225: "西南", 270: "西", 315: "西北"}
+    d.line([(0, hr), (W, hr)], fill=(90, 90, 200), width=1)           # horizontal line at eye height
+    names = {0: "N", 45: "NE", 90: "E", 135: "SE", 180: "S", 225: "SW", 270: "W", 315: "NW"}
     span = azimuths[-1] - azimuths[0]
     stepdeg = 5 if span <= 60 else 10 if span <= 150 else 30
     first = math.ceil(azimuths[0] / stepdeg) * stepdeg
@@ -193,9 +191,9 @@ def annotate(im: Image.Image, azimuths: np.ndarray, pitch: float, vfov: float, t
 
 
 # ---------------------------------------------------------------- scan ----
-# 线状设施 × 地形筛选。方法见 references/corridors.md 4.3。
-# 和 view/profile 的区别：这里要覆盖一个省级大区，切片数远超 DEM 类的 400 块上限，
-# 所以自己拼一张只填"用得到的切片"的大图，按最近邻采样（z10 一格约 150 m，插值没意义）。
+# Linear infrastructure × terrain filtering. Method in references/corridors.md 4.3.
+# Difference from view/profile: this has to cover a province-sized region, far more tiles than the DEM class's 400-tile limit,
+# so it builds its own large mosaic filled only with "the tiles actually needed", sampled nearest-neighbor (one z10 cell is ~150 m; interpolation is pointless).
 
 
 def _tile_xy(lat: float, lon: float, z: int) -> tuple[float, float]:
@@ -212,7 +210,7 @@ def _haversine(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 
 class _Mosaic:
-    """一批 Terrarium 切片拼成的大图，最近邻采样。没下到的切片留 0（当海平面）。"""
+    """A large mosaic stitched from a batch of Terrarium tiles, nearest-neighbor sampling. Tiles that failed to download stay 0 (treated as sea level)."""
 
     def __init__(self, need: set[tuple[int, int]], zoom: int, cache: Path, proxy: str | None, threads: int):
         cache.mkdir(parents=True, exist_ok=True)
@@ -222,7 +220,7 @@ class _Mosaic:
         nx = max(t[0] for t in need) - self.tx0 + 1
         ny = max(t[1] for t in need) - self.ty0 + 1
         gb = nx * ny * 256 * 256 * 2 / 1e9
-        print(f"拼图 {nx}x{ny} 块，{gb:.2f} GB 内存", file=sys.stderr)
+        print(f"mosaic {nx}x{ny} tiles, {gb:.2f} GB memory", file=sys.stderr)
         self.h = np.zeros((ny * 256, nx * 256), dtype=np.int16)
         jobs = sorted(need)
         done = 0
@@ -232,7 +230,7 @@ class _Mosaic:
                        (x - self.tx0) * 256:(x - self.tx0 + 1) * 256] = np.clip(arr, -500, 9000).astype(np.int16)
                 done += 1
                 if done % 200 == 0:
-                    print(f"  切片 {done}/{len(jobs)}", file=sys.stderr)
+                    print(f"  tiles {done}/{len(jobs)}", file=sys.stderr)
 
     def sample(self, lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
         n = 256 * 2 ** self.z
@@ -244,7 +242,7 @@ class _Mosaic:
 
 
 def _line_points(gj: dict, step: float, skip: list[tuple[str, str]], bbox: tuple[float, float, float, float] | None):
-    """沿每条 LineString 每 step 米取一个点，返回 [(lat, lon, properties)]。"""
+    """Take one point every step meters along each LineString; return [(lat, lon, properties)]."""
     pts = []
     n_line = n_skip = 0
     for f in gj.get("features", []):
@@ -256,7 +254,7 @@ def _line_points(gj: dict, step: float, skip: list[tuple[str, str]], bbox: tuple
         if any(str(tags.get(k, "")) == v for k, v in skip):
             n_skip += 1
             continue
-        c = [(y, x) for x, y in g["coordinates"]]                     # geojson 是 lon,lat
+        c = [(y, x) for x, y in g["coordinates"]]                     # geojson is lon,lat
         if bbox and not (min(p[0] for p in c) <= bbox[2] and max(p[0] for p in c) >= bbox[0]
                          and min(p[1] for p in c) <= bbox[3] and max(p[1] for p in c) >= bbox[1]):
             continue
@@ -270,18 +268,18 @@ def _line_points(gj: dict, step: float, skip: list[tuple[str, str]], bbox: tuple
                             c[i - 1][1] + (c[i][1] - c[i - 1][1]) * t, tags))
                 got += 1
             acc = (acc + d) % step
-        # 整条比 step 还短、或首尾几乎重合（环线）的，补一个中点，免得整条线漏掉
+        # lines shorter than step overall, or whose ends nearly coincide (loops), get one midpoint added so the whole line isn't missed
         if got == 0 or _haversine(c[0], c[-1]) < step:
             pts.append((c[len(c) // 2][0], c[len(c) // 2][1], tags))
     if bbox:
         s, w, n, e = bbox
         pts = [p for p in pts if s <= p[0] <= n and w <= p[1] <= e]
-    print(f"线 {n_line} 条（按 --skip-tag 跳过 {n_skip} 条），采样点 {len(pts)} 个", file=sys.stderr)
+    print(f"{n_line} lines ({n_skip} skipped by --skip-tag), {len(pts)} sample points", file=sys.stderr)
     return pts
 
 
 def _cluster(hits: list[dict], km: float) -> list[dict]:
-    """按 max_ang 从大到小贪心聚簇：最陡的点当簇代表，km 内的点归入，代表加一个 n=簇内点数。"""
+    """Greedy clustering by max_ang from largest to smallest: the steepest point represents the cluster, points within km join it, and the representative gets n = number of points in the cluster."""
     order = sorted(hits, key=lambda h: -h["max_ang"])
     used = [False] * len(order)
     out = []
@@ -301,9 +299,9 @@ def _cmd_scan(args) -> None:
     az_step = args.az_step
     naz = int(round(360 / az_step))
     if abs(naz * az_step - 360) > 1e-6:
-        sys.exit("--az-step 必须能整除 360")
+        sys.exit("--az-step must divide 360 evenly")
     if args.step <= 0 or args.near_step <= 0 or args.near_radius < 0:
-        sys.exit("--step / --near-step 要大于 0，--near-radius 不能为负")
+        sys.exit("--step / --near-step must be greater than 0, --near-radius must not be negative")
     dist = np.array([float(x) for x in args.dist.split(",")], dtype=float)
     near = np.arange(0, args.near_radius + 1e-6, args.near_step, dtype=float)
     skip = []
@@ -311,22 +309,22 @@ def _cmd_scan(args) -> None:
         if s.lower() in ("none", "-"):
             continue
         if "=" not in s:
-            sys.exit(f"--skip-tag 要写成 键=值，收到 {s!r}")
+            sys.exit(f"--skip-tag must be written as key=value, got {s!r}")
         k, v = s.split("=", 1)
         skip.append((k, v))
     bbox = None
     if args.bbox:
         b = [float(x) for x in args.bbox.split(",")]
         if len(b) != 4:
-            sys.exit("--bbox 要 4 个数：s,w,n,e")
+            sys.exit("--bbox needs 4 numbers: s,w,n,e")
         bbox = (min(b[0], b[2]), min(b[1], b[3]), max(b[0], b[2]), max(b[1], b[3]))
 
     gj = json.loads(Path(args.lines).read_text(encoding="utf-8"))
     pts = _line_points(gj, args.step, skip, bbox)
     if not pts:
-        sys.exit("采样点为 0：--bbox 圈空了，或 geojson 里没有 LineString")
+        sys.exit("0 sample points: --bbox encloses nothing, or the geojson has no LineString")
 
-    reach = float(dist.max()) + 500                                   # 多留半公里，采样点落在切片边上也够用
+    reach = float(dist.max()) + 500                                   # half a kilometer extra, enough even when a sample point falls on a tile edge
     need: set[tuple[int, int]] = set()
     for lat, lon, _ in pts:
         x, y = _tile_xy(lat, lon, args.zoom)
@@ -334,9 +332,9 @@ def _cmd_scan(args) -> None:
         for tx in range(int(x - r), int(x + r) + 1):
             for ty in range(int(y - r), int(y + r) + 1):
                 need.add((tx, ty))
-    print(f"要 {len(need)} 块 z{args.zoom} 切片", file=sys.stderr)
+    print(f"need {len(need)} z{args.zoom} tiles", file=sys.stderr)
     if len(need) > args.max_tiles:
-        sys.exit(f"切片 {len(need)} 块 > --max-tiles {args.max_tiles}：缩小 --bbox、调低 --zoom，或分块跑")
+        sys.exit(f"{len(need)} tiles > --max-tiles {args.max_tiles}: shrink --bbox, lower --zoom, or run in chunks")
     mos = _Mosaic(need, args.zoom, args.cache, args.proxy, args.threads)
 
     az = np.arange(0, 360, az_step)
@@ -346,22 +344,22 @@ def _cmd_scan(args) -> None:
     hits = []
     for idx, (lat, lon, tags) in enumerate(pts):
         if idx and idx % 2000 == 0:
-            print(f"  扫描 {idx}/{len(pts)}，命中 {len(hits)}", file=sys.stderr)
+            print(f"  scanned {idx}/{len(pts)}, hits {len(hits)}", file=sys.stderr)
         ln, lo = _dest_np(lat, lon, az, near)
         hn = mos.sample(ln, lo)
-        if hn.max() - hn.min() > args.near_flat:                      # 近处不平：山谷、山腰，不是画面里那种平地
+        if hn.max() - hn.min() > args.near_flat:                      # not flat nearby: a valley or hillside, not the flat ground seen in the frame
             continue
         h0 = float(np.median(hn))
         la, lo = _dest_np(lat, lon, az, dist)
         h = mos.sample(la, lo)
-        ang = np.degrees(np.arctan2(h - h0 - args.eye, dist[None, :]))  # 几公里内地球曲率 <5 m，和 z10 的误差比可以忽略
-        hor = ang.max(axis=1)                                         # 每个方位的地平线仰角
+        ang = np.degrees(np.arctan2(h - h0 - args.eye, dist[None, :]))  # within a few km earth curvature is <5 m, negligible next to z10 error
+        hor = ang.max(axis=1)                                         # horizon elevation angle at each bearing
         rel = (h - h0).max(axis=1)
         mt = hor >= args.min_peak
         low = hor < args.max_low
         if not mt.any() or low.sum() < min_low:
             continue
-        best = 0                                                      # 紧挨山体的那段平地平线有多长
+        best = 0                                                      # how long the flat horizon right next to the mountain is
         for i in range(naz):
             if not mt[i]:
                 continue
@@ -371,7 +369,7 @@ def _cmd_scan(args) -> None:
                     jj = (i + sgn * (k + 1)) % naz
                     if low[jj]:
                         run += 1
-                    elif run == 0 and k < 2:                          # 允许山脚到平地之间有 2 格过渡
+                    elif run == 0 and k < 2:                          # allow a 2-cell transition between the mountain foot and flat ground
                         pass
                     else:
                         break
@@ -386,7 +384,7 @@ def _cmd_scan(args) -> None:
                      "elec": tags.get("electrified", ""), "id": tags.get("id", tags.get("@id", ""))})
 
     clusters = _cluster(hits, args.cluster_km)
-    print(f"命中 {len(hits)} 点 → {len(clusters)} 簇", file=sys.stderr)
+    print(f"{len(hits)} hit points → {len(clusters)} clusters", file=sys.stderr)
     out = {
         "params": {"lines": str(args.lines), "bbox": list(bbox) if bbox else None, "step_m": args.step,
                    "zoom": args.zoom, "near_flat_m": args.near_flat, "near_radius_m": args.near_radius,
@@ -401,17 +399,17 @@ def _cmd_scan(args) -> None:
     print(f"→ {args.out}", file=sys.stderr)
     if args.clusters_out:
         Path(args.clusters_out).write_text(json.dumps(clusters, ensure_ascii=False, indent=0), encoding="utf-8")
-        print(f"→ {args.clusters_out}（只有簇列表）", file=sys.stderr)
+        print(f"→ {args.clusters_out} (cluster list only)", file=sys.stderr)
 
 
 # ---------------------------------------------------------------- ridge ----
-# 照片山脊取点。方法见 references/geometry.md 7.4：逐列从上往下找天空→山体的亮度突变。
+# Photo ridgeline sampling. Method in references/geometry.md 7.4: per column, top to bottom, find the sky→mountain brightness jump.
 
 
 def _focal_px(photo: Path, w: int, h: int, f0_arg: float | None, f35_default: float):
-    """照片焦距（像素）。优先级：--f0 > EXIF 的 35mm 等效焦距 > 按 --f35 假设。
-    35mm 等效焦距按对角线换算：f_px = f35 / 43.27 × 对角线像素；照片缩过尺寸也成立。
-    返回 (f_px, 来源, f35)。"""
+    """Photo focal length (pixels). Priority: --f0 > EXIF 35mm-equivalent focal length > assumed from --f35.
+    The 35mm equivalent converts via the diagonal: f_px = f35 / 43.27 × diagonal pixels; this holds even if the photo was resized.
+    Return (f_px, source, f35)."""
     diag = math.hypot(w, h)
     if f0_arg:
         return float(f0_arg), "arg", round(f0_arg * 43.2666 / diag, 1)
@@ -426,9 +424,9 @@ def _focal_px(photo: Path, w: int, h: int, f0_arg: float | None, f35_default: fl
 
 
 def _sky_edge(prof: np.ndarray, ymin: int, ymax: int, k: int, drop: float, hold: int) -> int | None:
-    """一列亮度剖面里，从上往下找第一处"上面 k 行均值比下面 k 行均值高出 drop、且再往下 hold 行仍然暗"的行，
-    再在它 ±k 行内取梯度最大处。返回山体第一行的行号；找不到返回 None。
-    hold 是为了跳过电线、天线这类竖向只有几像素的东西。"""
+    """In one column's brightness profile, top to bottom, find the first row where "the mean of the k rows above exceeds the mean of the k rows below by drop, and the hold rows further down are still dark",
+    then take the maximum-gradient row within ±k rows of it. Return the row index of the mountain's first row; None if not found.
+    hold is there to skip things only a few pixels tall vertically, such as wires and antennas."""
     n = len(prof)
     cs = np.concatenate([[0.0], np.cumsum(prof, dtype=np.float64)])
     y = np.arange(max(ymin, k), min(ymax, n - k - hold))
@@ -452,9 +450,9 @@ def _cmd_ridge(args) -> None:
     a = np.asarray(im, dtype=np.float32)
     L = a[..., 0] * 0.299 + a[..., 1] * 0.587 + a[..., 2] * 0.114
     if not (0 <= args.x0 < args.x1 < W):
-        sys.exit(f"--x0/--x1 要满足 0 ≤ x0 < x1 < 宽 {W}")
+        sys.exit(f"--x0/--x1 must satisfy 0 ≤ x0 < x1 < width {W}")
     if args.step <= 0:
-        sys.exit("--step 要大于 0")
+        sys.exit("--step must be greater than 0")
     ymin = args.ymin if args.ymin is not None else 0
     ymax = args.ymax if args.ymax is not None else H
     f0, f_src, f35 = _focal_px(args.photo, W, H, args.f0, args.f35)
@@ -469,14 +467,14 @@ def _cmd_ridge(args) -> None:
         (ridge.append([x, y]) if y is not None else missing.append(x))
     flat = None
     flat_rows: list[int] = []
-    flat_pts: list[list[int]] = []                                    # 画核对图用：flat_rows 只有行号，没找到突变的列不在里面，按序号对不回列
+    flat_pts: list[list[int]] = []                                    # for drawing the check image: flat_rows has only row indices and omits columns with no jump found, so index order can't map back to columns
     if args.flat:
         b = args.flat.split(":")
         if len(b) != 2:
-            sys.exit("--flat 要写成 x0:x1")
+            sys.exit("--flat must be written as x0:x1")
         flat = [int(b[0]), int(b[1])]
         if not (0 <= flat[0] < flat[1] < W):
-            sys.exit(f"--flat 要满足 0 ≤ x0 < x1 < 宽 {W}")
+            sys.exit(f"--flat must satisfy 0 ≤ x0 < x1 < width {W}")
         for x in range(flat[0], flat[1] + 1, args.step):
             y = edge(x)
             if y is not None:
@@ -489,7 +487,7 @@ def _cmd_ridge(args) -> None:
     else:
         hrow, h_src = H / 2, "center"
     if len(ridge) < 3:
-        print(f"警告：只取到 {len(ridge)} 个山脊点（缺 {len(missing)} 列），fit 至少要 3 个；调 --drop/--ymin/--ymax 或看 --png", file=sys.stderr)
+        print(f"warning: only {len(ridge)} ridge points found ({len(missing)} columns missing), fit needs at least 3; adjust --drop/--ymin/--ymax or check --png", file=sys.stderr)
     out = {
         "photo": str(args.photo), "image_size": [W, H], "cx": W / 2,
         "ridge": ridge, "missing_cols": missing,
@@ -500,10 +498,10 @@ def _cmd_ridge(args) -> None:
                    "drop": args.drop, "k": args.k, "hold": args.hold, "halfw": args.halfw},
     }
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
-    src_txt = {"arg": "--f0", "exif": "EXIF 35mm 等效", "assumed": f"没有 EXIF，按 {f35} mm 等效假设"}[f_src]
-    h_txt = {"arg": "--hrow", "flat": f"--flat 列里天空→地面的中位行（{len(flat_rows)} 列）", "center": "没给 --flat，取画面中线"}[h_src]
-    print(f"{W}x{H}  山脊 {len(ridge)} 点（缺 {len(missing)} 列）  平地平线列 {flat}  "
-          f"hrow {hrow:.0f}（{h_txt}）  f0 {f0:.0f} px（{src_txt}，水平视角 {2 * math.degrees(math.atan(W / 2 / f0)):.1f}°）→ {args.out}")
+    src_txt = {"arg": "--f0", "exif": "EXIF 35mm equivalent", "assumed": f"no EXIF, assumed {f35} mm equivalent"}[f_src]
+    h_txt = {"arg": "--hrow", "flat": f"median sky→ground row in the --flat columns ({len(flat_rows)} columns)", "center": "no --flat given, frame midline"}[h_src]
+    print(f"{W}x{H}  ridge {len(ridge)} points ({len(missing)} columns missing)  flat-horizon columns {flat}  "
+          f"hrow {hrow:.0f} ({h_txt})  f0 {f0:.0f} px ({src_txt}, horizontal FOV {2 * math.degrees(math.atan(W / 2 / f0)):.1f}°) → {args.out}")
     if args.png:
         d = ImageDraw.Draw(im)
         d.line([(0, hrow), (W, hrow)], fill=(80, 80, 255), width=1)
@@ -517,18 +515,18 @@ def _cmd_ridge(args) -> None:
             d.line([(x, ymin), (x, ymax - 1)], fill=(255, 0, 0), width=1)
         d.text((8, 8), f"ridge {len(ridge)} pts  hrow {hrow:.0f} ({h_src})  f0 {f0:.0f}px ({f_src})", fill="yellow", font=_font(20))
         im.save(args.png, quality=90)
-        print(f"检查图 → {args.png}（黄点=山脊点，红竖线=没找到的列，蓝线=hrow，青线=平地平线列范围）")
+        print(f"check image → {args.png} (yellow dots = ridge points, red vertical lines = columns not found, blue line = hrow, cyan line = flat-horizon column range)")
 
 
 # ------------------------------------------------------------------ fit ----
-# 天际线批量打分。方法见 references/geometry.md 7.4；设施距离约束见 corridors.md 4.3。
-# 每个候选机位算一圈 360° 地平线 hor(az)，照片山脊点换成 (方位偏移, 仰角) 后在所有朝向上一次比对：
-#   rms = 山脊仰角残差的 RMS（残差中位数当地平线偏移 cc，限 ±cc_max）
-#   flatpen = 平地平线列上 max(0, hor - cc - flat_clear) 的均值
+# Batch skyline scoring. Method in references/geometry.md 7.4; infrastructure distance constraint in corridors.md 4.3.
+# For each candidate camera position compute a full 360° horizon hor(az); convert photo ridge points to (bearing offset, elevation angle) and compare against all headings at once:
+#   rms = RMS of the ridge elevation-angle residuals (the residual median serves as horizon offset cc, clamped to ±cc_max)
+#   flatpen = mean of max(0, hor - cc - flat_clear) over the flat-horizon columns
 #   score = rms + flat_w × flatpen
-# 给了 --line 时再加：对每个朝向，设施采样点落在画面左/中/右三个方位窗内的最近距离 dL/dC/dR，
-#   line_pen = 各自落在 --line-dist 区间外的米数 / --line-scale (+ 顺序不对罚 1)
-#   total = score + line_w × line_pen；没给 --line 时 total = score。
+# With --line, also add: for each heading, the nearest distance dL/dC/dR of infrastructure sample points inside the frame's left/center/right bearing windows,
+#   line_pen = meters each falls outside its --line-dist interval / --line-scale (+ penalty 1 for wrong order)
+#   total = score + line_w × line_pen; without --line, total = score.
 
 
 def _parse_pairs(s: str, name: str, n: int = 3, sep: str = ",", rng: str = ":") -> list[tuple[float, float]]:
@@ -536,10 +534,10 @@ def _parse_pairs(s: str, name: str, n: int = 3, sep: str = ",", rng: str = ":") 
     for part in s.split(sep):
         b = part.split(rng)
         if len(b) != 2:
-            sys.exit(f"{name} 每段要写成 a{rng}b，收到 {part!r}")
+            sys.exit(f"{name}: each segment must be written as a{rng}b, got {part!r}")
         out.append((float(b[0]), float(b[1])))
     if len(out) != n:
-        sys.exit(f"{name} 要 {n} 段，收到 {len(out)} 段")
+        sys.exit(f"{name} needs {n} segments, got {len(out)}")
     return out
 
 
@@ -550,25 +548,25 @@ def _load_centers(args) -> list[dict]:
     j = json.loads(Path(args.hits).read_text(encoding="utf-8"))
     items = j["clusters"] if isinstance(j, dict) and "clusters" in j else j
     if not isinstance(items, list):
-        sys.exit("--hits 要是 scan 的输出（带 clusters 字段）或簇/点的列表")
+        sys.exit("--hits must be scan output (with a clusters field) or a list of clusters/points")
     centers = []
     for i, c in enumerate(items):
         if "lat" not in c or "lon" not in c:
-            sys.exit(f"--hits 第 {i} 项没有 lat/lon")
+            sys.exit(f"--hits item {i} has no lat/lon")
         centers.append({**c, "src_idx": c.get("src_idx", i)})
     if args.select:
         want = [int(x) for x in args.select.split(",")]
         bad = [i for i in want if not 0 <= i < len(centers)]
         if bad:
-            sys.exit(f"--select 里 {bad} 超出范围 0–{len(centers) - 1}")
+            sys.exit(f"--select indices {bad} out of range 0–{len(centers) - 1}")
         centers = [centers[i] for i in want]
     return centers
 
 
 def _skyline_xy(hor: np.ndarray, az: np.ndarray, H: float, f: float, cc: float, cx: float, hrow: float, half_w: float,
                 roll: float = 0.0):
-    """把 360° 地平线按 fit 用的针孔模型投到照片像素：x = cx + f·tan(方位偏移)，y = hrow − f·tan(仰角 − cc)。
-    roll = 画面横滚角°（顺时针为正），按 fit 拟合出来的值给，否则两端会和照片差出十几像素。"""
+    """Project the 360° horizon onto photo pixels with the pinhole model fit uses: x = cx + f·tan(bearing offset), y = hrow − f·tan(elevation angle − cc).
+    roll = frame roll angle ° (clockwise positive); pass the value fit solved for, otherwise both ends will be off from the photo by a dozen-plus pixels."""
     rel = (az - H + 180) % 360 - 180
     lim = math.degrees(math.atan(half_w / f)) + 1
     m = np.abs(rel) <= lim
@@ -603,7 +601,7 @@ def _fit_sheet(recs: list[dict], ridge: dict, photo: Path | None, out: Path, arg
             pts = _skyline_xy(ang.max(axis=1), az, r["H"], f, r["cc"], cx, hrow, W / 2, r.get("roll", 0.0))
             d.line([(x * s, y * s) for x, y in pts], fill=(255, 40, 40), width=2)
         except SystemExit as e:
-            d.text((6, th - 20), f"DEM 失败：{e}", fill="red", font=font)
+            d.text((6, th - 20), f"DEM failed: {e}", fill="red", font=font)
         for x, y in ridge["ridge"]:
             d.ellipse([x * s - 2, y * s - 2, x * s + 2, y * s + 2], fill=(255, 220, 0))
         line_txt = f"  L/C/R {r['dL']:.0f}/{r['dC']:.0f}/{r['dR']:.0f} pen {r['line_pen']:.2f}" if "line_pen" in r else ""
@@ -614,54 +612,54 @@ def _fit_sheet(recs: list[dict], ridge: dict, photo: Path | None, out: Path, arg
         d.text((4, 2), txt, fill="yellow", font=font)
         sheet.paste(tile, ((i % cols) * tw, (i // cols) * th))
     sheet.save(out, quality=88)
-    print(f"叠图 → {out}（红线=合成天际线，黄点=照片山脊点，蓝线=hrow，青线=平地平线列）", file=sys.stderr)
+    print(f"overlay → {out} (red line = synthetic skyline, yellow dots = photo ridge points, blue line = hrow, cyan line = flat-horizon columns)", file=sys.stderr)
 
 
 def _cmd_fit(args) -> None:
     if bool(args.hits) == bool(args.at):
-        sys.exit("--hits 和 --at 二选一")
+        sys.exit("give exactly one of --hits and --at")
     ridge = json.loads(Path(args.ridge).read_text(encoding="utf-8"))
     RX = np.array([p[0] for p in ridge["ridge"]], float)
     RY = np.array([p[1] for p in ridge["ridge"]], float)
     if RX.size < 3:
-        sys.exit(f"ridge.json 里只有 {RX.size} 个山脊点，至少要 3 个")
+        sys.exit(f"ridge.json has only {RX.size} ridge points, needs at least 3")
     W, Hh = ridge["image_size"]
     hrow, f0, cx = float(ridge["hrow"]), float(ridge["f0"]), float(ridge.get("cx", W / 2))
     flat = ridge.get("flat")
     FLX = np.arange(flat[0], flat[1] + 1e-6, args.flat_step, dtype=float) if flat else np.zeros(0)
     fscales = [float(x) for x in args.focal_scales.split(",")]
     if args.grid <= 0 or args.radius < 0 or args.nsamp < 2 or args.near <= 0 or args.range <= args.near:
-        sys.exit("--grid > 0、--radius ≥ 0、--nsamp ≥ 2、0 < --near < --range")
+        sys.exit("need --grid > 0, --radius ≥ 0, --nsamp ≥ 2, 0 < --near < --range")
     az_step = args.az_step
     naz = int(round(360 / az_step))
     if abs(naz * az_step - 360) > 1e-6:
-        sys.exit("--az-step 必须能整除 360")
+        sys.exit("--az-step must divide 360 evenly")
     if not 0 <= args.roll_max < 15:
-        sys.exit("--roll-max 要在 0–15° 之间（0 = 不解横滚，和旧版一致）")
+        sys.exit("--roll-max must be between 0–15° (0 = don't solve roll, same as the old version)")
     roll_max = math.tan(math.radians(args.roll_max))
     AZ = np.arange(naz) * az_step
     HS = np.arange(naz)
 
     centers = _load_centers(args)
     if not centers:
-        sys.exit("没有候选簇")
+        sys.exit("no candidate clusters")
 
-    # 线状设施采样点（可选）
+    # linear infrastructure sample points (optional)
     LP = None
     if args.line:
         if not args.line_dist:
-            sys.exit("给了 --line 就要给 --line-dist L:C:R（三段距离区间，如 350-750:550-900:800-1700）")
+            sys.exit("--line requires --line-dist L:C:R (three distance intervals, e.g. 350-750:550-900:800-1700)")
         wins = _parse_pairs(args.line_win, "--line-win", 3, ",", ":")
         dwin = _parse_pairs(args.line_dist, "--line-dist", 3, ":", "-")
         scales = [float(x) for x in args.line_scale.split(",")]
         if len(scales) != 3 or min(scales) <= 0:
-            sys.exit("--line-scale 要 3 个正数，逗号分隔")
+            sys.exit("--line-scale needs 3 positive numbers, comma-separated")
         skip = []
         for s_ in (args.skip_tag or ["electrified=no"]):
             if s_.lower() in ("none", "-"):
                 continue
             if "=" not in s_:
-                sys.exit(f"--skip-tag 要写成 键=值，收到 {s_!r}")
+                sys.exit(f"--skip-tag must be written as key=value, got {s_!r}")
             skip.append(tuple(s_.split("=", 1)))
         reach_deg = (args.radius + args.line_reach) / 110540 + 0.01
         lat_c = [c["lat"] for c in centers]
@@ -670,7 +668,7 @@ def _cmd_fit(args) -> None:
         gj = json.loads(Path(args.line).read_text(encoding="utf-8"))
         pts = _line_points(gj, args.line_sample, skip, bbox)
         LP = np.array([[p[0], p[1]] for p in pts], dtype=float) if pts else np.zeros((0, 2))
-        print(f"设施采样点 {len(LP)} 个（每 {args.line_sample} m）", file=sys.stderr)
+        print(f"{len(LP)} infrastructure sample points (every {args.line_sample} m)", file=sys.stderr)
 
     ring_az = np.arange(0, 360, 45.0)
     ring_d = np.array([0.0, args.cam_flat_radius / 2, args.cam_flat_radius])
@@ -688,7 +686,7 @@ def _cmd_fit(args) -> None:
         try:
             dem = DEM((lat, lon), args.radius + args.range + 500, args.zoom, args.cache, args.proxy)
         except SystemExit as e:
-            print(f"簇 {c['src_idx']} {name}：DEM 失败（{e}），跳过", file=sys.stderr)
+            print(f"cluster {c['src_idx']} {name}: DEM failed ({e}), skipped", file=sys.stderr)
             continue
         kx = 111320 * math.cos(math.radians(lat))
         sub = None
@@ -727,7 +725,7 @@ def _cmd_fit(args) -> None:
                 bx = (sub[:, 1] - clon) * 111320 * math.cos(math.radians(clat))
                 bd = np.hypot(bx, by)
                 baz = np.degrees(np.arctan2(bx, by)) % 360
-                off = (baz[None, :] - AZ[:, None] + 180) % 360 - 180            # (naz, n点)
+                off = (baz[None, :] - AZ[:, None] + 180) % 360 - 180            # (naz, n points)
                 far = bd > args.line_min
                 dmins = []
                 for lo_, hi_ in wins:
@@ -749,15 +747,15 @@ def _cmd_fit(args) -> None:
                 r_off = np.degrees(np.arctan((RX - cx) / f))
                 r_el = np.degrees(np.arctan((hrow - RY) / f))
                 ri = (HS[:, None] + np.round(r_off / az_step).astype(int)[None, :]) % naz
-                # 地平线偏移 cc（俯仰/hrow 不准）和横滚 rr 一起用最小二乘解：手持歪 1° 时画面两端的山脊
-                # 就差十几像素，不解出来真值会和一堆错候选挤在同一档 rms（实拍一例：11.1 → 6.2 px，真值才离群）
+                # solve horizon offset cc (pitch/hrow inaccurate) and roll rr together by least squares: a 1° handheld tilt puts the ridgeline at both ends of the frame
+                # off by a dozen-plus pixels; left unsolved, the ground truth gets crowded into the same rms tier as a pile of wrong candidates (one real photo: 11.1 → 6.2 px, only then did the ground truth stand out)
                 diff = hor[ri] - r_el[None, :]
                 if roll_max > 0 and (r_off != r_off.mean()).any():
                     oc = r_off - r_off.mean()
                     dmean = diff.mean(axis=1)
                     rr = np.clip(((diff - dmean[:, None]) * oc[None, :]).sum(axis=1) / (oc ** 2).sum(), -roll_max, roll_max)
                     cc = np.clip(dmean - rr * r_off.mean(), -args.cc_max, args.cc_max)
-                else:                                              # --roll-max 0：和旧版一样只减中位数
+                else:                                              # --roll-max 0: like the old version, subtract only the median
                     rr = np.zeros(naz)
                     cc = np.clip(np.median(diff, axis=1), -args.cc_max, args.cc_max)
                 rms = np.sqrt(np.mean((diff - cc[:, None] - rr[:, None] * r_off[None, :]) ** 2, axis=1))
@@ -767,7 +765,7 @@ def _cmd_fit(args) -> None:
                     pen = np.mean(np.clip(hor[fi] - cc[:, None] - args.flat_clear, 0, None), axis=1)
                 else:
                     pen = np.zeros(naz)
-                # 不同焦距之间按度比。试过折成像素比（× fs）：实拍回归里焦距偏短、机位更远，没采用
+                # compare across focal lengths in degrees. Tried converting to pixels (× fs): in the real-photo regression focal lengths came out short and camera positions farther, so not adopted
                 score = rms + args.flat_w * pen
                 total = score + args.line_w * line_pen if line_pen is not None else score
                 k = int(np.argmin(total))
@@ -795,8 +793,8 @@ def _cmd_fit(args) -> None:
                 best_c = best
         clusters_out.append({"hit": c["src_idx"], "name": name, "hit_ll": [round(lat, 5), round(lon, 5)],
                              "n": c.get("n"), "max_ang": c.get("max_ang"), "n_cams": n_c, "best": best_c})
-        print(f"簇 {ci + 1}/{len(centers)} hit{c['src_idx']} {name or '-'}：打分 {n_c} 个机位"
-              + (f"，最好 total {best_c['total']}  H {best_c['H']}  cam {best_c['cam']}" if best_c else "，没有机位通过筛选"), file=sys.stderr)
+        print(f"cluster {ci + 1}/{len(centers)} hit{c['src_idx']} {name or '-'}: scored {n_c} camera positions"
+              + (f", best total {best_c['total']}  H {best_c['H']}  cam {best_c['cam']}" if best_c else ", no camera position passed the filters"), file=sys.stderr)
 
     recs.sort(key=lambda r: r["total"])
     clusters_out.sort(key=lambda x: x["best"]["total"] if x["best"] else float("inf"))
@@ -818,7 +816,7 @@ def _cmd_fit(args) -> None:
         "cams": recs[:args.keep],
     }
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=0), encoding="utf-8")
-    print(f"簇 {len(clusters_out)}，机位 {len(recs)}，跳过 {skipped} → {args.out}", file=sys.stderr)
+    print(f"clusters {len(clusters_out)}, camera positions {len(recs)}, skipped {skipped} → {args.out}", file=sys.stderr)
     for x in clusters_out[:min(args.top, 10)]:
         b = x["best"]
         if b:
@@ -828,28 +826,28 @@ def _cmd_fit(args) -> None:
     if args.sheet:
         top = [x["best"] for x in clusters_out if x["best"]][:args.top] if len(clusters_out) > 1 else recs[:args.top]
         if not top:
-            print("没有可画的机位，不出叠图", file=sys.stderr)
+            print("no camera positions to draw, no overlay", file=sys.stderr)
             return
         photo = Path(args.photo) if args.photo else None
         if photo is None and ridge.get("photo"):
-            # ridge.json 里记的是命令行原样，可能是相对路径：先按当前目录，再按 ridge.json 所在目录
+            # ridge.json records the path exactly as given on the command line, possibly relative: try the current directory first, then the directory of ridge.json
             cands = [Path(ridge["photo"]), Path(args.ridge).parent / ridge["photo"]]
             photo = next((p for p in cands if p.exists()), cands[0])
         if photo is None or not photo.exists():
-            print("找不到照片（--overlay 没给、ridge.json 里的 photo 路径也找不到），叠图画在灰底上", file=sys.stderr)
+            print("photo not found (--overlay not given, and the photo path in ridge.json can't be found either); drawing the overlay on a gray background", file=sys.stderr)
             photo = None
         _fit_sheet(top, ridge, photo, Path(args.sheet), args, AZ, args.nsamp)
 
 
 def _neg_coords(argv: list[str]) -> list[str]:
-    """argparse 把 -1.45,-48.5 这种负坐标当成选项名；前面补个空格就当普通值（float 会忽略空格）。南半球、西半球的题都要用。
-    fit 的 --line-win -27:-21,-3:3,18:27 也是这种情况（逗号或冒号分隔的一串数）。"""
+    """argparse treats negative coordinates like -1.45,-48.5 as option names; prefixing a space makes them plain values (float ignores spaces). Needed for any photo in the southern or western hemisphere.
+    fit's --line-win -27:-21,-3:3,18:27 is the same case (a string of numbers separated by commas or colons)."""
     return [" " + a if re.match(r"^-\d[\d.]*([,:]-?[\d.]+)+$", a) else a for a in argv]
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
     ap.add_argument("--cache", type=Path, default=Path(".geo-cache/dem"))
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -858,194 +856,194 @@ def main() -> None:
     e.add_argument("--zoom", type=int, default=13)
 
     def common(sp):
-        sp.add_argument("--at", required=True, help="候选机位 lat,lon（WGS84）")
+        sp.add_argument("--at", required=True, help="candidate camera position lat,lon (WGS84)")
         g = sp.add_mutually_exclusive_group()
-        g.add_argument("--height", type=float, default=1.6, help="离地高度 m（楼上拍就填楼层×3）")
-        g.add_argument("--alt", type=float, help="绝对海拔 m（航拍、山顶机位用）")
-        sp.add_argument("--heading", type=float, required=True, help="画面中心的罗盘方位")
-        sp.add_argument("--hfov", type=float, default=65, help="水平视角，手机主摄横拍约 65，竖拍约 50")
-        sp.add_argument("--range", type=float, default=30000, help="看多远（m）")
-        sp.add_argument("--zoom", type=int, default=12, help="高程切片级别，12≈25–30 m 一格")
+        g.add_argument("--height", type=float, default=1.6, help="height above ground m (for a shot from a building, use floor × 3)")
+        g.add_argument("--alt", type=float, help="absolute altitude m (for aerial and mountaintop camera positions)")
+        sp.add_argument("--heading", type=float, required=True, help="compass bearing of the frame center")
+        sp.add_argument("--hfov", type=float, default=65, help="horizontal field of view; phone main camera about 65 landscape, about 50 portrait")
+        sp.add_argument("--range", type=float, default=30000, help="how far to look (m)")
+        sp.add_argument("--zoom", type=int, default=12, help="elevation tile zoom level, 12 ≈ 25–30 m per cell")
         sp.add_argument("--width", type=int, default=1400)
-        sp.add_argument("--near", type=float, default=40, help="从多近开始采样 m；近处出现尖刺假山脊时调大到 150–300")
+        sp.add_argument("--near", type=float, default=40, help="how near to start sampling, m; if spiky false ridgelines appear up close, raise to 150–300")
         sp.add_argument("--out", type=Path, required=True)
 
     v = sub.add_parser("view")
     common(v)
-    v.add_argument("--pitch", type=float, default=0, help="画面中心的俯仰角，抬头为正")
-    v.add_argument("--vfov", type=float, help="竖直视角，默认按 3:2 画幅从 hfov 推")
-    v.add_argument("--photo", type=Path, help="把照片缩放到同宽，放在渲染图上方对照")
-    v.add_argument("--roll", type=float, default=0, help="画面横滚角（顺时针为正），高楼俯拍、手持歪斜时用")
-    v.add_argument("--overlay", action="store_true", help="另出一张：把合成天际线（红线）按同样的朝向/俯仰/视角直接画在照片上")
+    v.add_argument("--pitch", type=float, default=0, help="pitch of the frame center, looking up is positive")
+    v.add_argument("--vfov", type=float, help="vertical field of view; default derived from hfov for a 3:2 frame")
+    v.add_argument("--photo", type=Path, help="scale the photo to the same width and place it above the render for comparison")
+    v.add_argument("--roll", type=float, default=0, help="frame roll angle (clockwise positive), for downward shots from tall buildings and handheld tilt")
+    v.add_argument("--overlay", action="store_true", help="also output a separate image: draw the synthetic skyline (red line) directly on the photo with the same heading/pitch/field of view")
 
     pr = sub.add_parser("profile")
     common(pr)
 
     sc = sub.add_parser("scan", formatter_class=argparse.RawDescriptionHelpFormatter, description="""\
-沿线状设施逐点算 360° 地平线，筛"近处平 + 有山 + 山紧挨一段平地平线"的点，再聚簇。
+Along linear infrastructure, compute the 360° horizon point by point, keep the points that are "flat nearby + a mountain + the mountain right next to a stretch of flat horizon", then cluster them.
 
-用在：画面里只有一条铁路/公路/输电线和一座认不出的山，没有任何文字。先用
-`osm.py geom '<过滤>' --bbox <大区> --out lines.geojson` 取线，再跑这一条把大区筛成几百片，
-挑出的簇进 `terrain.py fit` 做天际线打分。方法和取值理由见 references/corridors.md 4.3。
+Use when: the frame shows only one railway/road/power line and a mountain you can't recognize, with no text at all. First
+get the lines with `osm.py geom '<filter>' --bbox <large region> --out lines.geojson`, then run this to cut the large region down to a few hundred patches;
+the selected clusters go into `terrain.py fit` for skyline scoring. Method and the reasoning behind the values: references/corridors.md 4.3.
 
-阈值取照片估计值的一半左右：z10 一格约 150 m，山头被抹平，算出来的仰角比实际小。
-实战里按照片估计的 6° 设阈值，真值附近一个点都没留下，放宽到 4.5° 才进来——宁多勿漏，数量交给下一步排序。
+Set thresholds at about half of the photo estimate: one z10 cell is ~150 m, peaks get smoothed away, and the computed elevation angles come out smaller than the real ones.
+In a real case, a threshold set at the photo's estimated 6° left not a single point near the ground truth; it only got in after loosening to 4.5° — better too many than a miss; leave the count to the next ranking step.
 
-输出 JSON（--out）：
-  {"params": {...原样记下这次用的全部阈值...},
-   "n_samples": 采样点数, "n_hits": 命中点数, "n_clusters": 簇数,
-   "hits":     [{"lat","lon","h0": 点位地面高程 m, "max_ang": 最高地平线仰角°,
-                 "az": 那个方位°, "relief": 该方位最大相对高差 m, "flat_run_deg": 紧挨山体的平地平线长度°,
-                 "name","hs"(highspeed),"elec"(electrified),"id": 线的 OSM 标签}, ...],
-   "clusters": [{...同上..., "n": 簇内点数}, ...]}   # 按 max_ang 从大到小，簇代表就是最陡的那个点
---clusters-out 另写一份只有簇列表的 JSON（就是 clusters 字段本身）。""")
-    sc.add_argument("--lines", required=True, help="线状设施 GeoJSON（osm.py geom 的输出），只读 LineString")
-    sc.add_argument("--out", required=True, help="输出 JSON")
-    sc.add_argument("--clusters-out", help="另写一份只含簇列表的 JSON")
-    sc.add_argument("--bbox", help="只扫这个范围内的采样点 s,w,n,e（验证、分块跑时用；不给=整份 geojson）")
-    sc.add_argument("--step", type=float, default=400, help="沿线每多少米取一个点（默认 400；300–500 都行）")
-    sc.add_argument("--zoom", type=int, default=10, help="高程切片级别（默认 10，一格约 150 m，够看山体轮廓）")
+Output JSON (--out):
+  {"params": {...all thresholds used in this run, recorded as is...},
+   "n_samples": number of sample points, "n_hits": number of hit points, "n_clusters": number of clusters,
+   "hits":     [{"lat","lon","h0": ground elevation at the point m, "max_ang": highest horizon elevation angle °,
+                 "az": that bearing °, "relief": max relative height difference at that bearing m, "flat_run_deg": length of flat horizon right next to the mountain °,
+                 "name","hs"(highspeed),"elec"(electrified),"id": OSM tags of the line}, ...],
+   "clusters": [{...same as above..., "n": number of points in the cluster}, ...]}   # sorted by max_ang from largest to smallest; the cluster representative is the steepest point
+--clusters-out writes a separate JSON with only the cluster list (exactly the clusters field).""")
+    sc.add_argument("--lines", required=True, help="linear infrastructure GeoJSON (output of osm.py geom); only LineString is read")
+    sc.add_argument("--out", required=True, help="output JSON")
+    sc.add_argument("--clusters-out", help="also write a separate JSON with only the cluster list")
+    sc.add_argument("--bbox", help="only scan sample points inside this range s,w,n,e (for validation and chunked runs; omitted = the whole geojson)")
+    sc.add_argument("--step", type=float, default=400, help="take one point every this many meters along the line (default 400; anything in 300–500 works)")
+    sc.add_argument("--zoom", type=int, default=10, help="elevation tile zoom level (default 10, one cell ~150 m, enough for mountain outlines)")
     sc.add_argument("--near-flat", type=float, default=40,
-                    help="近处起伏上限 m：点位周围 --near-radius 内高差超过它就算不平，丢弃（默认 40；放宽版用过 60）")
-    sc.add_argument("--near-radius", type=float, default=1200, help="判断近处平不平的半径 m（默认 1200）")
-    sc.add_argument("--near-step", type=float, default=300, help="近处采样间距 m（默认 300）")
+                    help="nearby relief limit m: if the height difference within --near-radius of the point exceeds it, the point is not flat and is dropped (default 40; the loosened version used 60)")
+    sc.add_argument("--near-radius", type=float, default=1200, help="radius m for judging whether the nearby ground is flat (default 1200)")
+    sc.add_argument("--near-step", type=float, default=300, help="nearby sampling interval m (default 300)")
     sc.add_argument("--min-peak", type=float, default=4.5,
-                    help="山：地平线仰角至少多少度（默认 4.5，实战放宽后的值；原严格值 6，按那张照片估的，真值全被筛掉）")
+                    help="mountain: horizon elevation angle of at least this many degrees (default 4.5, the value after loosening in a real case; the original strict value 6, estimated from that photo, filtered out all of the ground truth)")
     sc.add_argument("--max-low", type=float, default=1.2,
-                    help="平：地平线仰角低于多少度算平地平线（默认 1.2；放宽版用过 1.5）")
+                    help="flat: a horizon elevation angle below this many degrees counts as flat horizon (default 1.2; the loosened version used 1.5)")
     sc.add_argument("--flat-run", type=float, default=20,
-                    help="紧挨山体的那段平地平线至少多少度（默认 20；原严格值 30）")
+                    help="the stretch of flat horizon right next to the mountain must be at least this many degrees (default 20; original strict value 30)")
     sc.add_argument("--min-low-deg", type=float,
-                    help="全周平地平线总量至少多少度（默认跟 --flat-run 一样）")
-    sc.add_argument("--flat-run-cap", type=float, default=100, help="平地平线长度往一侧最多数到多少度（默认 100）")
-    sc.add_argument("--eye", type=float, default=1.5, help="离地眼高 m（默认 1.5）")
-    sc.add_argument("--az-step", type=float, default=5, help="方位步长°（默认 5，要能整除 360）")
+                    help="total flat horizon around the full circle of at least this many degrees (default same as --flat-run)")
+    sc.add_argument("--flat-run-cap", type=float, default=100, help="count flat-horizon length at most this many degrees to one side (default 100)")
+    sc.add_argument("--eye", type=float, default=1.5, help="eye height above ground m (default 1.5)")
+    sc.add_argument("--az-step", type=float, default=5, help="bearing step ° (default 5, must divide 360 evenly)")
     sc.add_argument("--dist", default="1500,2000,2500,3000,3500,4000,5000,6000,7000,8000,9000",
-                    help="每个方位往外量的距离阶梯 m，逗号分隔（默认 1.5–9 km）")
+                    help="distance steps measured outward along each bearing m, comma-separated (default 1.5–9 km)")
     sc.add_argument("--skip-tag", action="append",
-                    help="跳过带这个标签的线，键=值，可重复（默认 electrified=no；写 --skip-tag none 表示一条都不跳）")
-    sc.add_argument("--cluster-km", type=float, default=3.5, help="聚簇半径 km（默认 3.5）")
-    sc.add_argument("--threads", type=int, default=24, help="切片下载并发数（默认 24）")
+                    help="skip lines carrying this tag, key=value, repeatable (default electrified=no; --skip-tag none means skip none)")
+    sc.add_argument("--cluster-km", type=float, default=3.5, help="clustering radius km (default 3.5)")
+    sc.add_argument("--threads", type=int, default=24, help="tile download concurrency (default 24)")
     sc.add_argument("--max-tiles", type=int, default=4000,
-                    help="要下的切片数上限，超了直接退出（默认 4000）。内存按这些切片的外接矩形算，"
-                         "线网稀疏时能比切片数大好几倍，拼图前会先打印实际占用")
+                    help="limit on the number of tiles to download; exits immediately if exceeded (default 4000). Memory is set by the bounding rectangle of these tiles, "
+                         "which can be several times the tile count when the line network is sparse; the actual usage is printed before the mosaic is built")
 
     rg = sub.add_parser("ridge", formatter_class=argparse.RawDescriptionHelpFormatter, description="""\
-照片山脊取点：在 --x0..--x1 每 --step 列，从上往下找天空→山体的亮度突变（上面 k 行比下面 k 行亮 --drop 以上、
-且再往下 --hold 行仍然暗），取梯度最大的行当山脊像素。输出给 terrain.py fit 用。
+Photo ridgeline sampling: in --x0..--x1, every --step columns, top to bottom, find the sky→mountain brightness jump (the k rows above are brighter than the k rows below by --drop or more,
+and the --hold rows further down are still dark), and take the maximum-gradient row as the ridge pixel. The output is for terrain.py fit.
 
---flat 给"画面里是平地平线"的列范围（左边或右边远处没山的那一段）；fit 用它罚"该平的地方被山挡住"。
-没给 --hrow 时，地平线行取 --flat 列里天空→地面突变行的中位数；没有 --flat 就取画面中线。
-注意这个估计落在远处树梢、桥面这类东西的顶上，比真正的 0° 地平线高 10–30 像素（那张照片自动估 909、
-手定 935）；fit 里的地平线偏移 cc 只吸收 ±0.7°（f≈1300 px 时约 ±16 像素），远处有高物时手动给 --hrow。
-焦距：--f0 > EXIF 35mm 等效焦距 > 按 --f35 假设（默认 26 mm，手机主摄），按对角线换算成像素，来源写进 f0_source。
+--flat gives the column range where "the frame shows flat horizon" (the stretch on the left or right with no distant mountains); fit uses it to penalize "a mountain blocking where it should be flat".
+Without --hrow, the horizon row is the median of the sky→ground jump rows in the --flat columns; without --flat, it is the frame midline.
+Note that this estimate lands on top of things like distant treetops and bridge decks, 10–30 px above the true 0° horizon (on that photo: auto estimate 909,
+hand-set 935); fit's horizon offset cc only absorbs ±0.7° (about ±16 px at f≈1300 px), so when there are tall objects in the distance, give --hrow by hand.
+Focal length: --f0 > EXIF 35mm-equivalent focal length > assumed from --f35 (default 26 mm, phone main camera), converted to pixels via the diagonal; the source is written to f0_source.
 
-输出 JSON（--out）：
-  {"photo": 照片路径（命令行给什么记什么；fit 找不到时会按 ridge.json 所在目录再试一次）,
-   "image_size": [宽, 高], "cx": 中心列,
-   "ridge": [[x, y], ...],           # 山脊像素点，x 列 y 行（y 是山体第一行）
-   "missing_cols": [x, ...],         # 没找到突变的列
-   "flat": [x0, x1] | null, "flat_rows": [该范围内每列的突变行],
-   "hrow": 地平线行, "hrow_source": "arg"|"flat"|"center",
-   "f0": 焦距 px, "f0_source": "arg"|"exif"|"assumed", "f35_equiv": 35mm 等效焦距,
-   "params": {...这次用的参数...}}
---png 另出一张检查图：黄点=山脊点，红竖线=没找到的列，蓝线=hrow，青线=平地平线列范围。先看图再进 fit。""")
-    rg.add_argument("photo", type=Path, help="照片")
-    rg.add_argument("--x0", type=int, required=True, help="山脊起始列（含）")
-    rg.add_argument("--x1", type=int, required=True, help="山脊结束列（含）")
-    rg.add_argument("--step", type=int, default=20, help="每多少列取一点（默认 20）")
-    rg.add_argument("--flat", help="平地平线的列范围 x0:x1（如 0:280）；没有就不给")
-    rg.add_argument("--hrow", type=float, help="地平线所在行；不给就按 --flat 列估，再没有就取画面中线")
-    rg.add_argument("--f0", type=float, help="焦距 px，给了就不看 EXIF")
-    rg.add_argument("--f35", type=float, default=26.0, help="没有 EXIF 时假设的 35mm 等效焦距 mm（默认 26，手机主摄；2x 长焦 48–52）")
-    rg.add_argument("--ymin", type=int, help="只在这一行以下找（默认 0；天上有云或前景挡住时用）")
-    rg.add_argument("--ymax", type=int, help="只在这一行以上找（默认画面底）")
-    rg.add_argument("--drop", type=float, default=30, help="天空比山体至少亮多少（0–255 亮度，默认 30；雾大调到 15–20）")
-    rg.add_argument("--k", type=int, default=4, help="比较亮度时上下各取几行（默认 4）")
-    rg.add_argument("--hold", type=int, default=12, help="突变以下要持续暗多少行才算山（默认 12，用来跳过电线、天线）")
-    rg.add_argument("--halfw", type=int, default=1, help="每列左右各再平均几列（默认 1，即 3 列）")
-    rg.add_argument("--out", required=True, help="输出 ridge.json")
-    rg.add_argument("--png", help="检查图路径")
+Output JSON (--out):
+  {"photo": photo path (recorded exactly as given on the command line; if fit can't find it, it retries relative to the directory of ridge.json),
+   "image_size": [width, height], "cx": center column,
+   "ridge": [[x, y], ...],           # ridge pixel points, x column y row (y is the mountain's first row)
+   "missing_cols": [x, ...],         # columns where no jump was found
+   "flat": [x0, x1] | null, "flat_rows": [jump row of each column in that range],
+   "hrow": horizon row, "hrow_source": "arg"|"flat"|"center",
+   "f0": focal length px, "f0_source": "arg"|"exif"|"assumed", "f35_equiv": 35mm-equivalent focal length,
+   "params": {...parameters used in this run...}}
+--png also outputs a check image: yellow dots = ridge points, red vertical lines = columns not found, blue line = hrow, cyan line = flat-horizon column range. Look at the image before going to fit.""")
+    rg.add_argument("photo", type=Path, help="photo")
+    rg.add_argument("--x0", type=int, required=True, help="ridge start column (inclusive)")
+    rg.add_argument("--x1", type=int, required=True, help="ridge end column (inclusive)")
+    rg.add_argument("--step", type=int, default=20, help="take one point every this many columns (default 20)")
+    rg.add_argument("--flat", help="flat-horizon column range x0:x1 (e.g. 0:280); omit if there is none")
+    rg.add_argument("--hrow", type=float, help="row of the horizon; if omitted, estimated from the --flat columns, and failing that, the frame midline")
+    rg.add_argument("--f0", type=float, help="focal length px; if given, EXIF is not read")
+    rg.add_argument("--f35", type=float, default=26.0, help="assumed 35mm-equivalent focal length mm when there is no EXIF (default 26, phone main camera; 2x telephoto 48–52)")
+    rg.add_argument("--ymin", type=int, help="only search below this row (default 0; for clouds in the sky or foreground occlusion)")
+    rg.add_argument("--ymax", type=int, help="only search above this row (default the frame bottom)")
+    rg.add_argument("--drop", type=float, default=30, help="minimum amount the sky must be brighter than the mountain (0–255 brightness, default 30; in heavy haze lower to 15–20)")
+    rg.add_argument("--k", type=int, default=4, help="rows taken above and below each when comparing brightness (default 4)")
+    rg.add_argument("--hold", type=int, default=12, help="rows that must stay dark below the jump for it to count as mountain (default 12, used to skip wires and antennas)")
+    rg.add_argument("--halfw", type=int, default=1, help="also average this many columns on each side of each column (default 1, i.e. 3 columns)")
+    rg.add_argument("--out", required=True, help="output ridge.json")
+    rg.add_argument("--png", help="check image path")
 
     ft = sub.add_parser("fit", formatter_class=argparse.RawDescriptionHelpFormatter, description="""\
-天际线批量打分：每个候选簇内摆机位网格（--radius 内每 --grid 米一个），每个机位算 360° 地平线，
-把 ridge.json 的山脊点换成（方位偏移, 仰角），在所有朝向 × --focal-scales 上一次比对：
-  rms     = 山脊仰角残差的 RMS（残差中位数当地平线偏移 cc，限 ±--cc-max）
-  flatpen = 平地平线列上 max(0, 地平线仰角 − cc − --flat-clear) 的均值
+Batch skyline scoring: in each candidate cluster, lay a camera-position grid (one every --grid meters within --radius), compute the 360° horizon at each camera position,
+convert ridge.json's ridge points to (bearing offset, elevation angle), and compare against all headings × --focal-scales at once:
+  rms     = RMS of the ridge elevation-angle residuals (the residual median serves as horizon offset cc, clamped to ±--cc-max)
+  flatpen = mean of max(0, horizon elevation angle − cc − --flat-clear) over the flat-horizon columns
   score   = rms + --flat-w × flatpen
-  rms_px  = rms 换成像素（rms × f × π/180），只用来判断分不分得开、不参与排序：前几名都和山脊取点本身的
-            误差（几个到十来个像素）差不多大，天际线就分不开它们，要靠第二条约束
-机位先过两道筛：周围 --cam-flat-radius 内高差 ≤ --cam-flat（画面里机位站在平地上），
-地平线最高仰角 ≥ --min-peak（有山可比）。
-给了 --line（osm.py geom 的 GeoJSON）再加一条独立约束：对每个朝向，设施采样点落在画面左/中/右三个方位窗
-（--line-win）内的最近距离 dL/dC/dR，落在 --line-dist 区间外按米数/--line-scale 罚分（--line-order 还能罚顺序），
-total = score + --line-w × line_pen；三个窗里有一个没设施的朝向不算。没给 --line 时 total = score。
+  rms_px  = rms converted to pixels (rms × f × π/180), only for judging whether candidates can be separated, not used in ranking: when the top few all come out about as large as
+            the error of the ridge sampling itself (a few to a dozen or so pixels), the skyline can't separate them; you need a second constraint
+Camera positions first pass two filters: height difference within --cam-flat-radius ≤ --cam-flat (the camera stands on flat ground in the frame),
+highest horizon elevation angle ≥ --min-peak (there are mountains to compare).
+With --line (GeoJSON from osm.py geom), one more independent constraint is added: for each heading, the nearest distance dL/dC/dR of infrastructure sample points inside the frame's left/center/right bearing windows
+(--line-win); distances outside the --line-dist intervals are penalized by meters/--line-scale (--line-order can also penalize the order),
+total = score + --line-w × line_pen; headings where any of the three windows has no infrastructure don't count. Without --line, total = score.
 
-粗搜默认值就是实战那次的：2 km / 250 m / z11 / 0.5°；精搜换 --radius 800 --grid 100 --zoom 13 --az-step 0.25。
-天际线只给一条视线（沿视线前后挪几百米轮廓不变），前几名一律看 --sheet 叠图，再用第二条约束定点。
+The coarse-search defaults are the ones from the real case: 2 km / 250 m / z11 / 0.5°; for fine search switch to --radius 800 --grid 100 --zoom 13 --az-step 0.25.
+The skyline only gives one sight line (moving a few hundred meters forward or back along it doesn't change the outline); always look at the --sheet overlay for the top few, then pin the point with a second constraint.
 
-两条别当结论用：
-  1. 输出的 H 和 f 有系统偏差，来源是 ridge.json 里的 hrow。同一次粗搜，hrow 手定 935 给 H 80.5 / f 1436，
-     用自动估的 909 给 H 79.0 / f 1282——差 1.5° 和 12% 焦距（cc 只能吸收 ±--cc-max）。排簇不受影响
-     （两次真值簇都排第 1），但要拿 H/f 说事就先把 hrow 定准（ridge --png 上看蓝线）。
-  2. 精搜（z13）不保证比粗搜更准。实测同一条链精搜反而比粗搜离真值更远：
-     z13 的平地筛（--cam-flat / --cam-flat-radius）会把真值附近的点筛掉，而天际线本来就只给一条视线。
-     精搜在这条链里的作用是给 geo.py spacing 一个靠谱的 --center，不是自己把误差压下去。
-方法见 references/geometry.md 7.4、corridors.md 4.3。
+Two things not to treat as conclusions:
+  1. The output H and f have a systematic bias, which comes from hrow in ridge.json. In the same coarse search, hand-set hrow 935 gave H 80.5 / f 1436,
+     and the auto-estimated 909 gave H 79.0 / f 1282 — a difference of 1.5° and 12% in focal length (cc can only absorb ±--cc-max). Cluster ranking isn't affected
+     (both runs ranked the ground-truth cluster 1st), but before you argue from H/f, get hrow right first (check the blue line on ridge --png).
+  2. Fine search (z13) is not guaranteed to be more accurate than coarse search. In tests on the same pipeline, fine search actually ended up farther from the ground truth than coarse search:
+     the z13 flat filter (--cam-flat / --cam-flat-radius) filters out the points near the ground truth, and the skyline only gives one sight line anyway.
+     In this pipeline, fine search's job is to give geo.py spacing a reliable --center, not to bring the error down by itself.
+Method in references/geometry.md 7.4, corridors.md 4.3.
 
-输出 JSON（--out）：
-  {"params": {...这次用的全部参数, 含 photo 里的 f0/hrow/cx/hfov...},
-   "n_clusters", "n_cams": 打过分的机位数, "n_skipped": {"not_flat","no_peak","no_line","dup"},
-   "clusters": [{"hit": 簇在 --hits 里的序号, "name", "hit_ll": [lat,lon], "n", "max_ang", "n_cams", "rank",
-                 "best": <机位记录>}, ...],                      # 每簇最好的机位，按 total 升序
-   "cams":     [<机位记录>, ...]}                                 # 全部机位按 total 升序，最多 --keep 条
-  机位记录：{"hit","name","hit_ll", "cam": [lat,lon], "d": 离簇中心 m, "brg": 簇中心→机位方位°,
-            "g": 地面高程 m, "H": 朝向°, "fs": 焦距倍率, "f": 焦距 px, "cc": 地平线偏移°,
-            "rms", "rms_px", "flatpen", "score", [给了 --line 时: "dL","dC","dR" m, "line_pen"], "total"}
---sheet：多簇时画每簇最佳机位的前 --top 名，单簇/--at 时画前 --top 个机位；红线=合成天际线，黄点=照片山脊点。""")
+Output JSON (--out):
+  {"params": {...all parameters used in this run, including f0/hrow/cx/hfov under photo...},
+   "n_clusters", "n_cams": number of camera positions scored, "n_skipped": {"not_flat","no_peak","no_line","dup"},
+   "clusters": [{"hit": the cluster's index in --hits, "name", "hit_ll": [lat,lon], "n", "max_ang", "n_cams", "rank",
+                 "best": <camera record>}, ...],                      # best camera position of each cluster, ascending by total
+   "cams":     [<camera record>, ...]}                                 # all camera positions ascending by total, at most --keep entries
+  camera record: {"hit","name","hit_ll", "cam": [lat,lon], "d": distance from cluster center m, "brg": bearing cluster center→camera position °,
+            "g": ground elevation m, "H": heading °, "fs": focal scale, "f": focal length px, "cc": horizon offset °,
+            "rms", "rms_px", "flatpen", "score", [with --line: "dL","dC","dR" m, "line_pen"], "total"}
+--sheet: with multiple clusters, draws the top --top of the per-cluster best camera positions; with a single cluster/--at, draws the top --top camera positions; red line = synthetic skyline, yellow dots = photo ridge points.""")
     src = ft.add_mutually_exclusive_group(required=True)
-    src.add_argument("--hits", help="scan 的输出 JSON（用 clusters 字段）或簇列表 JSON")
-    src.add_argument("--at", help="不用 --hits，直接给一个中心 lat,lon（精搜用）")
-    ft.add_argument("--select", help="只跑 --hits 里这些序号的簇，逗号分隔（验证、分块跑时用）")
-    ft.add_argument("--ridge", type=Path, required=True, help="terrain.py ridge 的输出")
-    ft.add_argument("--out", required=True, help="输出 JSON")
-    ft.add_argument("--radius", type=float, default=2000, help="每簇机位网格半径 m（默认 2000；精搜 800）")
-    ft.add_argument("--grid", type=float, default=250, help="机位网格间距 m（默认 250；精搜 100）")
-    ft.add_argument("--zoom", type=int, default=11, help="高程切片级别（默认 11，一格约 70 m；精搜 13）")
-    ft.add_argument("--focal-scales", default="0.9,1,1.12", help="焦距倍率，逗号分隔（默认 0.9,1,1.12；精搜用过 1,1.08,1.16）")
-    ft.add_argument("--az-step", type=float, default=0.5, help="朝向/方位步长°（默认 0.5；精搜 0.25；要能整除 360）")
-    ft.add_argument("--near", type=float, default=150, help="视线从多近开始采样 m（默认 150）")
-    ft.add_argument("--range", type=float, default=15000, help="视线看多远 m（默认 15000）")
-    ft.add_argument("--nsamp", type=int, default=260, help="每条视线的采样数，近密远疏（默认 260；精搜 400）")
-    ft.add_argument("--eye", type=float, default=1.6, help="离地眼高 m（默认 1.6）")
-    ft.add_argument("--cam-flat", type=float, default=8, help="机位周围高差上限 m，超过就不是平地机位（默认 8；精搜用过 6）")
-    ft.add_argument("--cam-flat-radius", type=float, default=300, help="判断机位平不平的半径 m（默认 300；精搜用过 200）")
-    ft.add_argument("--min-peak", type=float, default=6, help="地平线最高仰角至少多少度才打分（默认 6）")
-    ft.add_argument("--cc-max", type=float, default=0.7, help="地平线偏移 cc 的上限°（默认 0.7，即 hrow 允许错十几像素）")
+    src.add_argument("--hits", help="scan output JSON (uses the clusters field) or a cluster-list JSON")
+    src.add_argument("--at", help="instead of --hits, give one center lat,lon directly (for fine search)")
+    ft.add_argument("--select", help="only run the clusters at these indices in --hits, comma-separated (for validation and chunked runs)")
+    ft.add_argument("--ridge", type=Path, required=True, help="output of terrain.py ridge")
+    ft.add_argument("--out", required=True, help="output JSON")
+    ft.add_argument("--radius", type=float, default=2000, help="camera-position grid radius per cluster m (default 2000; fine search 800)")
+    ft.add_argument("--grid", type=float, default=250, help="camera-position grid spacing m (default 250; fine search 100)")
+    ft.add_argument("--zoom", type=int, default=11, help="elevation tile zoom level (default 11, one cell ~70 m; fine search 13)")
+    ft.add_argument("--focal-scales", default="0.9,1,1.12", help="focal length scales, comma-separated (default 0.9,1,1.12; fine search has used 1,1.08,1.16)")
+    ft.add_argument("--az-step", type=float, default=0.5, help="heading/bearing step ° (default 0.5; fine search 0.25; must divide 360 evenly)")
+    ft.add_argument("--near", type=float, default=150, help="how near the sight line starts sampling m (default 150)")
+    ft.add_argument("--range", type=float, default=15000, help="how far the sight line looks m (default 15000)")
+    ft.add_argument("--nsamp", type=int, default=260, help="samples per sight line, dense near and sparse far (default 260; fine search 400)")
+    ft.add_argument("--eye", type=float, default=1.6, help="eye height above ground m (default 1.6)")
+    ft.add_argument("--cam-flat", type=float, default=8, help="height difference limit around the camera position m; above it, it isn't a flat-ground camera position (default 8; fine search has used 6)")
+    ft.add_argument("--cam-flat-radius", type=float, default=300, help="radius m for judging whether the camera position is flat (default 300; fine search has used 200)")
+    ft.add_argument("--min-peak", type=float, default=6, help="minimum highest horizon elevation angle in degrees for a camera position to be scored (default 6)")
+    ft.add_argument("--cc-max", type=float, default=0.7, help="limit of horizon offset cc ° (default 0.7, i.e. hrow may be off by a dozen or so pixels)")
     ft.add_argument("--roll-max", type=float, default=1.0,
-                    help="横滚角上限°（默认 1.0，手持歪斜的常见范围；0 = 不解横滚，和旧版一致）")
-    ft.add_argument("--flat-clear", type=float, default=1.0, help="平地平线列上地平线高出 cc 多少度以内不罚（默认 1.0）")
-    ft.add_argument("--flat-w", type=float, default=1.5, help="flatpen 权重（默认 1.5）")
-    ft.add_argument("--flat-step", type=float, default=20, help="平地平线列范围内每多少像素取一列（默认 20）")
-    ft.add_argument("--line", help="线状设施 GeoJSON（osm.py geom 的输出），给了就加左/中/右距离约束")
-    ft.add_argument("--line-dist", help="左:中:右三个距离区间 m，如 350-750:550-900:800-1700（给了 --line 必填）")
+                    help="roll angle limit ° (default 1.0, the usual range of handheld tilt; 0 = don't solve roll, same as the old version)")
+    ft.add_argument("--flat-clear", type=float, default=1.0, help="on the flat-horizon columns, horizon up to this many degrees above cc is not penalized (default 1.0)")
+    ft.add_argument("--flat-w", type=float, default=1.5, help="flatpen weight (default 1.5)")
+    ft.add_argument("--flat-step", type=float, default=20, help="take one column every this many pixels in the flat-horizon column range (default 20)")
+    ft.add_argument("--line", help="linear infrastructure GeoJSON (output of osm.py geom); if given, adds the left/center/right distance constraint")
+    ft.add_argument("--line-dist", help="three distance intervals left:center:right m, e.g. 350-750:550-900:800-1700 (required with --line)")
     ft.add_argument("--line-win", default="-27:-21,-3:3,18:27",
-                    help="左/中/右三个方位窗，相对画面中心的偏角°（默认 -27:-21,-3:3,18:27，按水平视角 53° 定的；"
-                         "写成 --line-win=-27:... 或直接跟在后面都行）")
-    ft.add_argument("--line-scale", default="200,200,300", help="三个窗各自的罚分尺度 m（默认 200,200,300：出界 200 m 罚 1）")
+                    help="three bearing windows left/center/right, offset angle ° from the frame center (default -27:-21,-3:3,18:27, set for a 53° horizontal field of view; "
+                         "writing --line-win=-27:... or putting the value right after both work)")
+    ft.add_argument("--line-scale", default="200,200,300", help="penalty scale m of each of the three windows (default 200,200,300: 200 m out of bounds = penalty 1)")
     ft.add_argument("--line-order", choices=["none", "asc", "desc"], default="none",
-                    help="三个距离的顺序约束：asc = 左<中<右（设施从左近往右远斜穿画面），desc 反之；不满足罚 1（默认 none）")
-    ft.add_argument("--line-w", type=float, default=0.3, help="line_pen 权重（默认 0.3）")
-    ft.add_argument("--line-min", type=float, default=150, help="离机位近于这个距离的设施点不算（默认 150）")
-    ft.add_argument("--line-sample", type=float, default=50, help="沿设施线每多少米取一个点（默认 50）")
-    ft.add_argument("--line-reach", type=float, default=3000, help="只看机位这个距离内的设施点 m（默认 3000）")
-    ft.add_argument("--skip-tag", action="append", help="--line 里跳过带这个标签的线，键=值，可重复（默认 electrified=no；none 表示不跳）")
-    ft.add_argument("--top", type=int, default=20, help="终端打印和 --sheet 画前几名（默认 20）")
-    ft.add_argument("--keep", type=int, default=5000, help="cams 列表最多写多少条（默认 5000）")
-    ft.add_argument("--sheet", help="前 --top 名叠图 jpg")
-    ft.add_argument("--overlay", "--photo", dest="photo", help="叠图用的照片；不给就用 ridge.json 里记的路径")
-    ft.add_argument("--sheet-cols", type=int, default=4, help="叠图每行几张（默认 4）")
-    ft.add_argument("--sheet-width", type=int, default=360, help="叠图每张宽 px（默认 360）")
+                    help="order constraint on the three distances: asc = left<center<right (the infrastructure crosses the frame diagonally from near on the left to far on the right), desc the reverse; penalty 1 if not met (default none)")
+    ft.add_argument("--line-w", type=float, default=0.3, help="line_pen weight (default 0.3)")
+    ft.add_argument("--line-min", type=float, default=150, help="infrastructure points closer to the camera position than this distance don't count (default 150)")
+    ft.add_argument("--line-sample", type=float, default=50, help="take one point every this many meters along the infrastructure line (default 50)")
+    ft.add_argument("--line-reach", type=float, default=3000, help="only consider infrastructure points within this distance of the camera position m (default 3000)")
+    ft.add_argument("--skip-tag", action="append", help="in --line, skip lines carrying this tag, key=value, repeatable (default electrified=no; none means skip none)")
+    ft.add_argument("--top", type=int, default=20, help="how many top entries to print in the terminal and draw in --sheet (default 20)")
+    ft.add_argument("--keep", type=int, default=5000, help="maximum number of entries written to the cams list (default 5000)")
+    ft.add_argument("--sheet", help="overlay sheet jpg of the top --top")
+    ft.add_argument("--overlay", "--photo", dest="photo", help="photo for the overlay; if omitted, uses the path recorded in ridge.json")
+    ft.add_argument("--sheet-cols", type=int, default=4, help="overlay images per row (default 4)")
+    ft.add_argument("--sheet-width", type=int, default=360, help="width of each overlay image px (default 360)")
 
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
     if args.cmd == "scan":
@@ -1068,7 +1066,7 @@ total = score + --line-w × line_pen；三个窗里有一个没设施的朝向�
     eye = args.alt if args.alt is not None else ground + args.height
     az = np.linspace(args.heading - args.hfov / 2, args.heading + args.hfov / 2, args.width)
     if eye < ground + 1:
-        print(f"注意：眼高 {eye:.0f} m 低于该点地面 {ground:.0f} m，近处地形会被当成天际线（--alt 给错了，或该用 --height）")
+        print(f"note: eye height {eye:.0f} m is below the ground at this point {ground:.0f} m, so nearby terrain will be taken as the skyline (--alt is wrong, or you should use --height)")
     ang, dist = cast(dem, (lat, lon), eye, az % 360, args.range, near=args.near)
 
     if args.cmd == "profile":
@@ -1078,14 +1076,14 @@ total = score + --line-w × line_pen；三个窗里有一个没设施的朝向�
         out = [{"azimuth": round(float(az[i] % 360), 2), "skyline_deg": round(float(runmax[i]), 3), "skyline_dist_m": round(float(far[i]))}
                for i in range(0, args.width, step)]
         args.out.write_text(json.dumps({"at": [lat, lon], "eye_alt_m": round(eye, 1), "ground_m": round(ground, 1), "profile": out}, indent=1), encoding="utf-8")
-        print(f"地面 {ground:.0f} m，眼高 {eye:.0f} m → {args.out}")
+        print(f"ground {ground:.0f} m, eye height {eye:.0f} m → {args.out}")
         return
 
     vfov = args.vfov or 2 * math.degrees(math.atan(math.tan(math.radians(args.hfov / 2)) * 2 / 3))
     height = int(args.width * vfov / args.hfov)
     im, sky_ang, sky_dist = render(ang, dist, az, args.pitch, vfov, height)
-    title = (f"机位 {lat:.5f},{lon:.5f}  地面 {ground:.0f} m 眼高 {eye:.0f} m  朝向 {args.heading % 360:.0f}°  "
-             f"水平视角 {args.hfov:.0f}°  天际线最远 {np.nanmax(sky_dist) / 1000:.1f} km")
+    title = (f"camera {lat:.5f},{lon:.5f}  ground {ground:.0f} m eye {eye:.0f} m  heading {args.heading % 360:.0f}°  "
+             f"hfov {args.hfov:.0f}°  farthest skyline {np.nanmax(sky_dist) / 1000:.1f} km")
     im = annotate(im, az, args.pitch, vfov, title)
     if args.roll:
         im = im.rotate(-args.roll, resample=Image.BICUBIC, fillcolor=(255, 255, 255))
@@ -1103,7 +1101,7 @@ total = score + --line-w × line_pen；三个窗里有一个没设施的朝向�
         ImageDraw.Draw(ph).line(pts, fill=(255, 40, 40), width=max(2, ph.width // 400))
         ov = args.out.with_name(args.out.stem + "_overlay" + args.out.suffix)
         ph.save(ov, quality=90)
-        print(f"天际线叠到照片 -> {ov}（红线和照片山脊对不上时，先调 --heading/--pitch/--hfov/--roll，再怀疑机位）")
+        print(f"skyline overlaid on photo -> {ov} (if the red line doesn't match the photo's ridgeline, first adjust --heading/--pitch/--hfov/--roll, then suspect the camera position)")
     if args.photo:
         ph = Image.open(args.photo).convert("RGB")
         ph = ph.resize((args.width, int(ph.height * args.width / ph.width)))
@@ -1112,11 +1110,11 @@ total = score + --line-w × line_pen；三个窗里有一个没设施的朝向�
         S.paste(im, (0, ph.height))
         im = S
     im.save(args.out)
-    print(f"地面 {ground:.0f} m，眼高 {eye:.0f} m，天际线距离 {np.nanmin(sky_dist) / 1000:.1f}–{np.nanmax(sky_dist) / 1000:.1f} km → {args.out}")
+    print(f"ground {ground:.0f} m, eye height {eye:.0f} m, skyline distance {np.nanmin(sky_dist) / 1000:.1f}–{np.nanmax(sky_dist) / 1000:.1f} km → {args.out}")
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese-locale Windows outputs GBK by default: it crashes on m² or ñ, and any Chinese the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

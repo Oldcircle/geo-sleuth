@@ -3,25 +3,26 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow"]
 # ///
-"""定位第 0–3 步一条命令跑完：元数据、四边四角放大、搜图变体、OCR、以图搜图，并行执行，出一份报告。
+"""Steps 0–3 of geolocation in one command: metadata, zoomed four edges and four corners, search variants, OCR, reverse image search, run in parallel, one report.
 
-产出（都在 --out-dir 里）：
-  exif.json  edges/  variants/  ocr.json ocr.png  rev/<名>_<引擎>.png + .json  intake.md  intake.json
-intake.md 是给人（和 LLM）看的：元数据、OCR 文字、百度相似图片（数量、来源站点、编号拼图 rev/<名>_baidu_similar.jpg）、
-识图标签分级计票、疑似小区/楼盘/酒店名、产出清单、没做和失败的项。
-识图截图和相似图拼图务必打开看；"没搜到"和"没搜"在报告里分开写。
+Outputs (all in --out-dir):
+  exif.json  edges/  variants/  ocr.json ocr.png  rev/<name>_<engine>.png + .json  intake.md  intake.json
+intake.md is for humans (and the LLM): metadata, OCR text, Baidu similar images (count, source sites, numbered contact sheet rev/<name>_baidu_similar.jpg),
+tiered vote count of image-search tags, suspected residential compound / housing development / hotel names, list of outputs, items skipped and failed.
+Always open the image-search screenshots and the similar-image contact sheets; "searched, nothing found" and "not searched" are written separately in the report.
 
-  intake.py photo.jpg --out-dir intake/ [--box x0,y0,x1,y1 ...] [--engines baidu,yandex] [--exclude 词1,词2]
-            [--no-rev] [--no-ocr] [--max-variants 4] [--proxy socks5://127.0.0.1:10808（示例）]
+  intake.py photo.jpg --out-dir intake/ [--box x0,y0,x1,y1 ...] [--engines baidu,yandex] [--exclude word1,word2]
+            [--no-rev] [--no-ocr] [--max-variants 4]
 
-示例：
+Examples:
   intake.py photo.jpg --out-dir intake/
-  intake.py photo.jpg --out-dir intake/ --box 300,120,900,760 --exclude 网络迷踪,某博主      # 盲测时排除讲解帖
-  intake.py photo.jpg --out-dir intake/ --no-rev                                              # 只要元数据、边缘图、OCR（30 秒内）
+  intake.py photo.jpg --out-dir intake/ --box 300,120,900,760 --exclude 网络迷踪,<creator name>   # in blind tests, exclude walkthrough posts (网络迷踪 = photo geolocation)
+  intake.py photo.jpg --out-dir intake/ --no-rev                                                   # only metadata, edge crops, OCR (under 30 seconds)
 """
 from __future__ import annotations
 
 import argparse
+from _net import PROXY_HELP
 import json
 import os
 import re
@@ -33,7 +34,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).parent
-# uv run 会把自己的路径写进环境变量 UV：照它调子脚本，uv 不在 PATH 里（比如刚装完没重开终端）也找得到
+# uv run writes its own path into the UV env var: call child scripts with it, so uv is found even when it isn't on PATH (e.g. just installed, terminal not reopened)
 UV = os.environ.get("UV") or "uv"
 CITY_SUFFIX = ("省", "市", "区", "县", "州", "盟", "旗", "国", "府", "道", "自治区", "特别行政区", "City", "Province", "County", "Prefecture")
 PLACE_WORDS = ("公园", "大厦", "小区", "花园", "广场", "学校", "中学", "小学", "大学", "酒店", "宾馆", "景区", "寺", "塔", "桥", "大楼",
@@ -47,12 +48,12 @@ KNOWN_CITIES = ("北京", "上海", "天津", "重庆", "广州", "深圳", "成
 
 def _run(cmd: list[str], cwd: Path | None = None, timeout: int = 900) -> tuple[int, str, str]:
     try:
-        # 子脚本和这边都用 UTF-8：中文 Windows 默认按 GBK 读写，两边不一致就乱码或崩
+        # Child scripts and this one both use UTF-8: Chinese Windows reads and writes GBK by default, and if the two sides differ you get mojibake or crashes
         r = subprocess.run(cmd, text=True, encoding="utf-8", errors="replace", capture_output=True, cwd=cwd, timeout=timeout,
                            env={**os.environ, "PYTHONUTF8": "1"})
         return r.returncode, r.stdout, r.stderr
     except subprocess.TimeoutExpired:
-        return 124, "", f"超时 {timeout}s"
+        return 124, "", f"timed out after {timeout}s"
 
 
 def _script(name: str) -> str:
@@ -84,7 +85,7 @@ def _classify(tag: str) -> str:
 
 
 def _collect_rev(rev_dir: Path) -> tuple[list[dict], dict]:
-    """读 revimg 的 .json：每张图每个引擎的 guess/links，做分级计票。"""
+    """Read revimg's .json files: guess/links for each image and engine, and do the tiered vote count."""
     entries = []
     for jf in sorted(rev_dir.glob("*.json")):
         try:
@@ -112,7 +113,7 @@ def _collect_rev(rev_dir: Path) -> tuple[list[dict], dict]:
                 k = _classify(tag)
                 if k == "city":
                     key = tag
-                    if (e["engine"], key) in seen_city:      # 同一引擎多个变体说同一城只算一票
+                    if (e["engine"], key) in seen_city:      # several variants from one engine naming the same city count as one vote
                         continue
                     seen_city.add((e["engine"], key))
                     votes["city"].setdefault(key, set()).add(e["engine"])
@@ -125,13 +126,13 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("photo")
     ap.add_argument("--out-dir", type=Path, required=True)
-    ap.add_argument("--box", action="append", help="x0,y0,x1,y1：紧裁变体，可重复")
+    ap.add_argument("--box", action="append", help="x0,y0,x1,y1: tight-crop variant, repeatable")
     ap.add_argument("--engines", default="baidu,yandex")
-    ap.add_argument("--exclude", help="以图搜图结果里排除的词（盲测用）")
+    ap.add_argument("--exclude", help="words to exclude from reverse image search results (for blind tests)")
     ap.add_argument("--no-rev", action="store_true")
     ap.add_argument("--no-ocr", action="store_true")
-    ap.add_argument("--max-variants", type=int, default=4, help="每个引擎最多搜几张变体（原图之外）")
-    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+    ap.add_argument("--max-variants", type=int, default=4, help="max number of variants each engine searches (besides the original)")
+    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
     args = ap.parse_args()
 
     photo = Path(args.photo).resolve()
@@ -147,9 +148,9 @@ def main() -> None:
         t0 = time.time()
         try:
             res = fn()
-            status[name] = "ok" if res[0] == 0 else f"失败: {(res[2] or res[1])[-300:].strip()}"
+            status[name] = "ok" if res[0] == 0 else f"failed: {(res[2] or res[1])[-300:].strip()}"
         except Exception as e:  # noqa: BLE001
-            status[name] = f"异常: {e}"
+            status[name] = f"exception: {e}"
             res = (1, "", str(e))
         timings[name] = round(time.time() - t0, 1)
         return res
@@ -170,7 +171,7 @@ def main() -> None:
     def ocr():
         return _run([UV, "run", _script("ocr.py"), str(photo), "--out", str(out / "ocr.json"), "--draw", str(out / "ocr.png")])
 
-    # 第一批：元数据、边缘、变体、OCR 并行
+    # Batch 1: metadata, edges, variants, OCR in parallel
     with ThreadPoolExecutor(4) as ex:
         f_exif = ex.submit(timed, "exif", exif)
         f_edges = ex.submit(timed, "edges", edges)
@@ -187,7 +188,7 @@ def main() -> None:
         exif_json = {"raw": exif_res[1][:500]}
     (out / "exif.json").write_text(json.dumps(exif_json, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    # 第二批：以图搜图，两个引擎并行，各搜原图 + 最多 max-variants 张变体
+    # Batch 2: reverse image search, two engines in parallel, each searches the original + up to max-variants variants
     rev_dir = out / "rev"
     entries, votes = [], {"city": {}, "place": {}}
     if not args.no_rev:
@@ -200,7 +201,7 @@ def main() -> None:
             cmd = [UV, "run", _script("revimg.py"), *images, "--out-dir", str(rev_dir), "--engines", engine]
             if args.exclude:
                 cmd += ["--exclude", args.exclude]
-            if engine == "yandex" and args.proxy:
+            if args.proxy:
                 cmd += ["--proxy", args.proxy]
             return _run(cmd, timeout=900)
 
@@ -217,100 +218,100 @@ def main() -> None:
         except Exception:  # noqa: BLE001
             pass
 
-    # ---- 报告
-    L = [f"# 第 0–3 步报告：{photo.name}", "", f"总用时 {time.time() - t_all:.0f}s；各步：" + "，".join(f"{k} {v}s" for k, v in timings.items()), ""]
-    L += ["## 元数据", ""]
+    # ---- report
+    L = [f"# Steps 0–3 report: {photo.name}", "", f"Total time {time.time() - t_all:.0f}s; per step: " + ", ".join(f"{k} {v}s" for k, v in timings.items()), ""]
+    L += ["## Metadata", ""]
     gps = exif_json.get("gps") or exif_json.get("GPS")
     if exif_json and (gps or exif_json.get("datetime") or exif_json.get("DateTimeOriginal")):
         L.append("```\n" + json.dumps(exif_json, ensure_ascii=False, indent=1)[:1500] + "\n```")
-        L.append("元数据是假设（可被改、可被抹）：GPS 和时间都要用画面核对。")
+        L.append("Metadata is an assumption (it can be edited, it can be stripped): check both GPS and time against the image.")
     else:
-        L.append("无元数据（转发、截图、翻拍常见）。" + (f" 原始输出：`{json.dumps(exif_json, ensure_ascii=False)[:300]}`" if exif_json else ""))
-    L += ["", "## OCR 读到的文字（第二读者；pass=up/tile 的只有放大后才读出，算假设）", ""]
+        L.append("No metadata (common for forwarded images, screenshots, rephotographed images)." + (f" Raw output: `{json.dumps(exif_json, ensure_ascii=False)[:300]}`" if exif_json else ""))
+    L += ["", "## OCR text (second reader; pass=up/tile was only read after zooming, treat it as an assumption)", ""]
     if args.no_ocr:
-        L.append("没做（--no-ocr）。")
+        L.append("Not done (--no-ocr).")
     elif ocr_items:
-        L.append("| 置信 | 来源 | 位置(px) | 文字 |")
+        L.append("| Conf | Pass | Box (px) | Text |")
         L.append("|---|---|---|---|")
         for t in ocr_items[:40]:
             L.append(f"| {t['conf']:.2f} | {t['pass']} | {t['box']} | {t['text']} |")
         L.append("")
-        L.append("电话号码、车牌、路牌专名、发牌单位：先 `clues.py lookup`，再 `board.py apply`。")
+        L.append("Phone numbers, plates, proper names on road signs, issuing authorities: first `clues.py lookup`, then `board.py apply`.")
     else:
-        L.append("没读到文字" + (f"（OCR {status.get('ocr')}）" if status.get("ocr") != "ok" else "。可能是真没字，也可能字太小：用 imgprep.py zoom 手动放大再看"))
-    L += ["", "## 以图搜图", ""]
+        L.append("No text read" + (f" (OCR {status.get('ocr')})" if status.get("ocr") != "ok" else ". Maybe there really is no text, or it's too small: zoom in by hand with imgprep.py zoom and look again"))
+    L += ["", "## Reverse image search", ""]
     if args.no_rev:
-        L.append("没做（--no-rev）。这不是“搜过无果”。")
+        L.append("Not done (--no-rev). This is not \"searched, nothing found\".")
     else:
         for eng in args.engines.split(","):
-            st = status.get(f"rev-{eng}", "未跑")
+            st = status.get(f"rev-{eng}", "not run")
             L.append(f"- {eng}: {st}")
         refused = [e for e in entries if e["error"] or e["refused"]]
         if refused:
-            L.append("- 引擎拒绝/失败的项（不等于没搜到）：" + "，".join(f"{e['variant']}/{e['engine']}: {e['error'] or '拒绝处理'}" for e in refused))
+            L.append("- Items the engine refused or failed (not the same as nothing found): " + ", ".join(f"{e['variant']}/{e['engine']}: {e['error'] or 'refused'}" for e in refused))
         L.append("")
         baidu = sorted([e for e in entries if e["engine"] == "baidu"], key=lambda e: e["variant"] != photo.stem)
         if baidu:
-            L.append("### 相似图片（百度；先打开拼图看）")
+            L.append("### Similar images (Baidu; open the contact sheet first)")
             L.append("")
-            L.append("近重复照片是最快的定位路径：同一个物体、同一处场景常被别人拍过并发在点评、抖音、小红书上，来源页的店名、景区名、定位直接给地点。"
-                     "打开拼图，逐格和左上角的查询图比**固定特征**（构件形状、熏黑和破损、背后的山/楼/桥/电塔），只是同类物体的不算。"
-                     "有近重复的：编号 i 就是该图 JSON 里 `similar[i]`，`from` 是来源页、`site` 是站点；同一来源页的其他图也看一遍。"
-                     "要登录才能看的来源不登录、不绕验证，改用画面特征 + 站点类型做关键词搜索。先看原图那张，原图拼图里没有近重复再看变体的。")
+            L.append("A near-duplicate photo is the fastest route to a location: the same object or scene has often been photographed by others and posted on Dianping, Douyin, Xiaohongshu, and the source page's shop name, scenic-area name or location tag gives the place directly. "
+                     "Open the contact sheet and compare each cell with the query image in the top-left corner on **fixed features** (shapes of structural parts, soot and damage, the mountains/buildings/bridges/pylons behind); merely the same kind of object doesn't count. "
+                     "For a near-duplicate: number i is `similar[i]` in that image's JSON, `from` is the source page, `site` is the site; look through the other images on the same source page too. "
+                     "For sources that need a login, don't log in and don't bypass verification; instead do a keyword search from image features + site type. Look at the original image's sheet first; look at the variants' sheets only if the original's has no near-duplicate.")
             L.append("")
             for e in baidu:
-                head = f"**{e['variant']}**："
+                head = f"**{e['variant']}**: "
                 if e["error"]:
-                    L.append(f"- {head}百度出错（{e['error'][:80]}），没截到相似图片，不算搜过无果")
+                    L.append(f"- {head}Baidu error ({e['error'][:80]}), no similar images captured; doesn't count as searched with nothing found")
                 elif not e["similar_n"]:
-                    L.append(f"- {head}没截到相似图片（百度没给，或页面改版）；打开截图 `rev/{e['shot']}` 看有没有“相似图片”区")
+                    L.append(f"- {head}no similar images captured (Baidu returned none, or the page layout changed); open the screenshot `rev/{e['shot']}` and check for a \"相似图片\" (similar images) section")
                 else:
-                    sites = "、".join(f"{s} {n}" for s, n in e["similar_sites"][:8])
-                    sheet = f"拼图 `rev/{e['similar_sheet']}`（前 {min(24, e['similar_n'])} 张）" if e["similar_sheet"] else "没有拼图"
-                    note = f"；{e['similar_note']}" if e["similar_note"] else ""
-                    L.append(f"- {head}{e['similar_n']} 张（{sites}）；{sheet}{note}；来源列表 `rev/{e['json']}` 的 `similar`")
+                    sites = ", ".join(f"{s} {n}" for s, n in e["similar_sites"][:8])
+                    sheet = f"contact sheet `rev/{e['similar_sheet']}` (first {min(24, e['similar_n'])})" if e["similar_sheet"] else "no contact sheet"
+                    note = f"; {e['similar_note']}" if e["similar_note"] else ""
+                    L.append(f"- {head}{e['similar_n']} images ({sites}); {sheet}{note}; source list in `similar` of `rev/{e['json']}`")
             L.append("")
-        L.append("### 分级计票（同一引擎多个变体说同一城算一票；具体地点互相矛盾不抵消城市票）")
+        L.append("### Tiered vote count (several variants from one engine naming the same city count as one vote; conflicting specific places don't cancel city votes)")
         L.append("")
         if votes["city"]:
             for t, engs in sorted(votes["city"].items(), key=lambda kv: -len(kv[1])):
-                L.append(f"- 城市级 **{t}**：{len(engs)} 票（{', '.join(engs)}）")
+                L.append(f"- City level **{t}**: {len(engs)} votes ({', '.join(engs)})")
         else:
-            L.append("- 城市级：没有")
+            L.append("- City level: none")
         if votes["place"]:
             for t, srcs in sorted(votes["place"].items(), key=lambda kv: -len(kv[1])):
-                L.append(f"- 具体地点 **{t}**：{len(srcs)} 次（{', '.join(srcs)}）→ `poi.py \"{t}\" --city <城市>` 落坐标，同名全列出再核")
+                L.append(f"- Specific place **{t}**: {len(srcs)} times ({', '.join(srcs)}) → `poi.py \"{t}\" --city <city>` to get coordinates; list every same-name place, then verify")
         else:
-            L.append("- 具体地点级：没有")
+            L.append("- Specific place level: none")
         L.append("")
-        L.append("### 每张图每个引擎")
+        L.append("### Each image, each engine")
         L.append("")
         for e in entries:
-            L.append(f"**{e['variant']} / {e['engine']}**（截图 `rev/{e['shot']}`，务必打开看）")
+            L.append(f"**{e['variant']} / {e['engine']}** (screenshot `rev/{e['shot']}`, always open it)")
             if e["similar_sheet"]:
-                L.append(f"- 相似图片 {e['similar_n']} 张，拼图 `rev/{e['similar_sheet']}`（见上）")
+                L.append(f"- Similar images: {e['similar_n']}, contact sheet `rev/{e['similar_sheet']}` (see above)")
             for g in e["guess"]:
-                L.append(f"- 标签：{g[:200]}")
+                L.append(f"- Tag: {g[:200]}")
             for ln in e["links"][:8]:
                 L.append(f"- [{ln.get('site', '')}] {ln.get('title', '')[:80]} — {ln.get('url', '')[:100]}")
             L.append("")
-    L += ["## 产出文件", "", f"- 边缘图：`edges/`（{len(list((out / 'edges').glob('*')))} 张，四边四角逐张看）",
-          f"- 变体：`variants/`（{len(list((out / 'variants').glob('*')))} 张）", "- OCR 标注图：`ocr.png`" if not args.no_ocr else "",
-          f"- 识图截图：`rev/`（{len(list(rev_dir.glob('*.png'))) if rev_dir.exists() else 0} 张）" if not args.no_rev else "",
-          f"- 百度相似图拼图：`rev/*_baidu_similar.jpg`（{len(list(rev_dir.glob('*_baidu_similar.jpg'))) if rev_dir.exists() else 0} 张）" if not args.no_rev else "", "",
-          "## 状态", ""]
+    L += ["## Output files", "", f"- Edge crops: `edges/` ({len(list((out / 'edges').glob('*')))} images; look at the four edges and four corners one by one)",
+          f"- Variants: `variants/` ({len(list((out / 'variants').glob('*')))} images)", "- OCR annotated image: `ocr.png`" if not args.no_ocr else "",
+          f"- Image-search screenshots: `rev/` ({len(list(rev_dir.glob('*.png'))) if rev_dir.exists() else 0} images)" if not args.no_rev else "",
+          f"- Baidu similar-image contact sheets: `rev/*_baidu_similar.jpg` ({len(list(rev_dir.glob('*_baidu_similar.jpg'))) if rev_dir.exists() else 0})" if not args.no_rev else "", "",
+          "## Status", ""]
     for k, v in status.items():
         L.append(f"- {k}: {v}")
-    L += ["", "接下来：把线索登记到 board.py（`clue`），查表线索用 `apply`；候选先列全（`children`）再排。"]
+    L += ["", "Next: record clues on board.py (`clue`), lookup clues with `apply`; list the candidates in full first (`children`), then rank."]
     (out / "intake.md").write_text("\n".join(x for x in L if x is not None), encoding="utf-8")
     (out / "intake.json").write_text(json.dumps({"photo": str(photo), "exif": exif_json, "ocr": ocr_items, "rev": entries, "votes": votes,
                                                  "status": status, "timings": timings}, ensure_ascii=False, indent=1), encoding="utf-8")
     print("\n".join(L[:6]))
-    print(f"-> {out / 'intake.md'}（读这份）")
+    print(f"-> {out / 'intake.md'} (read this)")
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m², ñ, and Chinese text the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

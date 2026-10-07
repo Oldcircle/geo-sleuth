@@ -3,18 +3,18 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "numpy", "torch", "transformers", "socksio", "pysocks", "requests"]
 # ///
-"""卫星图上找某类目标（操场跑道、体育场、厂房、筒仓、水坝、桥、矿坑、光伏、大棚、港口）：
-把一片区域切成网格，每格用 CLIP 零样本打分排序，人只看前 20–30 名，不再逐页翻几十页拼图。
+"""Find a class of target on satellite imagery (running tracks, stadiums, factory buildings, silos, dams, bridges, open-pit mines, solar farms, greenhouses, ports):
+split an area into a grid, score each cell with CLIP zero-shot and sort; you look only at the top 20–30 instead of paging through dozens of contact-sheet pages.
 
-  grid     一个 bbox 铺网格逐格打分 → ranked.json + 前 N 名缩略图拼图 + 分数热图
-  points   给定候选点列表（osm.py buildings / poi.py 的 {name: [lat, lon]}）逐点打分排序
-  presets  列出预设及提示词
+  grid     tile a bbox with a grid and score cell by cell → ranked.json + contact sheet of top-N thumbnails + score heatmap
+  points   score and rank a given list of candidate points ({name: [lat, lon]} from osm.py buildings / poi.py) point by point
+  presets  list the presets and their prompts
 
-分数是"像不像"的排序依据，不是判定：前几名仍要人看缩略图，再按照片里的方位、形状核。
-格子几乎是纯色（Google 占位图、没影像）会标 blank 并打 0 分。
---seeds pois.json：离种子点（学校、工厂 POI）近的格子加分；国内 OSM 操场画得少，但 360/百度 POI 里学校很全（poi.py）。
+The score is an ordering by "how alike", not a verdict: you still have to look at the thumbnails of the top few, then check them against the bearing and shape in the photo.
+Cells that are almost a single color (Google placeholder, no imagery) are marked blank and scored 0.
+--seeds pois.json: cells near seed points (school, factory POIs) get a bonus; OSM in China maps few running tracks, but 360/Baidu POIs list schools very completely (poi.py).
 
-示例：
+Examples:
   sat_scan.py grid --bbox <s,w,n,e> --zoom 17 --cell 320 --preset track --top 30 --out ranked.json --sheet top.jpg --heat heat.jpg
   sat_scan.py grid --bbox <s,w,n,e> --preset factory --seeds factories.json --seed-radius 500 --out r.json --sheet r.jpg
   sat_scan.py points --points big_buildings.json --zoom 17 --preset silo --out r.json --sheet r.jpg
@@ -23,6 +23,8 @@
 from __future__ import annotations
 
 import argparse
+from _net import PROXY_HELP
+from _net import model_proxy_env
 import json
 import math
 import os
@@ -63,13 +65,11 @@ PRESETS = {
 
 
 def _proxy_env(proxy: str | None) -> None:
-    if proxy:
-        os.environ.setdefault("HTTPS_PROXY", proxy)
-        os.environ.setdefault("HTTP_PROXY", proxy)
+    model_proxy_env(proxy)
 
 
 def cell_image(lat: float, lon: float, zoom: int, size: int, source: str, proxy: str | None, cache: Path) -> Image.Image:
-    """以 (lat, lon) 为中心拼一张 size×size 的卫星图（复用切片缓存）。"""
+    """Stitch a size×size satellite image centered on (lat, lon) (reuses the tile cache)."""
     gx, gy = geo.ll2px(zoom, lat, lon)
     x0, y0 = gx - size / 2, gy - size / 2
     tile = Image.new("RGB", (size, size), "gray")
@@ -107,7 +107,7 @@ def _tensor(ims: list[Image.Image], torch):
 
 
 def _feat(out):
-    """transformers 5 的 get_*_features 返回 BaseModelOutputWithPooling，投影后的向量在 pooler_output；老版本直接返回张量。"""
+    """In transformers 5, get_*_features returns BaseModelOutputWithPooling with the projected vector in pooler_output; older versions return the tensor directly."""
     if hasattr(out, "shape"):
         return out
     for k in ("pooler_output", "text_embeds", "image_embeds"):
@@ -127,17 +127,17 @@ class Scorer:
             tok = CLIPTokenizer.from_pretrained(CLIP_ID)
             self.model = CLIPModel.from_pretrained(CLIP_ID).to(self.dev).eval()
         except Exception as e:  # noqa: BLE001
-            sys.exit(f"CLIP 加载失败：{str(e)[:300]}\n国内下载要代理（--proxy / GEO_PROXY），或 export HF_ENDPOINT=https://hf-mirror.com")
+            sys.exit(f"failed to load CLIP: {str(e)[:300]}\ncheck disk space, model availability and `doctor.py --network`.")
         self.torch = torch
         with torch.no_grad():
             t = tok(pos + neg, return_tensors="pt", padding=True).to(self.dev)
             tf = _feat(self.model.get_text_features(**t))
             self.text = (tf / tf.norm(dim=1, keepdim=True)).float()
         self.npos = len(pos)
-        print(f"CLIP 就绪（{self.dev}，{time.time() - t0:.1f}s），正提示 {len(pos)} 条、负提示 {len(neg)} 条", file=sys.stderr)
+        print(f"CLIP ready ({self.dev}, {time.time() - t0:.1f}s), {len(pos)} positive prompts, {len(neg)} negative prompts", file=sys.stderr)
 
     def score(self, ims: list[Image.Image], multi_scale: bool, batch: int = 48) -> np.ndarray:
-        """每张图的分数 = 正提示概率之和（softmax over 全部提示，logit scale 100）；multi_scale 再看 2×2 子块取最大。"""
+        """Score per image = sum of positive-prompt probabilities (softmax over all prompts, logit scale 100); multi_scale also looks at 2×2 sub-blocks and takes the max."""
         views_per = 5 if multi_scale else 1
         flat = []
         for im in ims:
@@ -181,7 +181,7 @@ def _sheet(rows: list[dict], ims: list[Image.Image], out: Path, cols: int, size:
             d.line([cx + c - 10, cy + c, cx + c + 10, cy + c], fill="red", width=2)
             d.line([cx + c, cy + c - 10, cx + c, cy + c + 10], fill="red", width=2)
             d.rectangle([cx, cy, cx + size, cy + 20], fill="black")
-            d.text((cx + 4, cy + 3), f"#{r['rank']} {r['score']:.2f} {r['lat']:.5f},{r['lon']:.5f}" + (" 种子" if r.get("seed_near") else ""), fill="yellow", font=f)
+            d.text((cx + 4, cy + 3), f"#{r['rank']} {r['score']:.2f} {r['lat']:.5f},{r['lon']:.5f}" + (" seed" if r.get("seed_near") else ""), fill="yellow", font=f)
         o = out if pi == 0 else out.with_name(f"{out.stem}_{pi // per + 1}{out.suffix}")
         S.save(o, quality=88)
         pages.append(o)
@@ -189,7 +189,7 @@ def _sheet(rows: list[dict], ims: list[Image.Image], out: Path, cols: int, size:
 
 
 def _heat(rows: list[dict], names: list[str], out: Path) -> None:
-    """按格名 rXXcYY 摆成矩阵，分数映射成颜色。"""
+    """Lay the cells out as a matrix by cell name rXXcYY, mapping score to color."""
     rc = {}
     for r in rows:
         m = re.match(r"r(\d+)c(\d+)", r["cell"])
@@ -219,7 +219,7 @@ def run(points: dict, args) -> None:
     pos = list(pos) + list(args.query or [])
     neg = list(neg) + list(args.neg or [])
     if not pos:
-        sys.exit("给 --preset 或 --query")
+        sys.exit("give --preset or --query")
     t0 = time.time()
     prefetch(points, args.zoom, args.size, args.source, args.proxy, cache)
     names = list(points)
@@ -246,10 +246,10 @@ def run(points: dict, args) -> None:
     rows.sort(key=lambda r: -r["score"])
     for k, r in enumerate(rows):
         r["rank"] = k + 1
-    print(f"{len(names)} 格；取图 {t1 - t0:.1f}s，打分 {t2 - t1:.1f}s；空白格 {sum(1 for r in rows if r['blank'])}")
-    print(f"{'#':>3} {'分数':>6}  格子/名字          lat,lon")
+    print(f"{len(names)} cells; fetch {t1 - t0:.1f}s, scoring {t2 - t1:.1f}s; blank cells {sum(1 for r in rows if r['blank'])}")
+    print(f"{'#':>3} {'score':>6}  cell/name          lat,lon")
     for r in rows[: min(args.top, 20)]:
-        print(f"{r['rank']:>3} {r['score']:>6.3f}  {str(r['cell'])[:18]:<18} {r['lat']:.5f},{r['lon']:.5f}" + (f"  近{r['seed_near']}" if r["seed_near"] else ""))
+        print(f"{r['rank']:>3} {r['score']:>6.3f}  {str(r['cell'])[:18]:<18} {r['lat']:.5f},{r['lon']:.5f}" + (f"  near {r['seed_near']}" if r["seed_near"] else ""))
     if args.out:
         Path(args.out).write_text(json.dumps([{k: v for k, v in r.items() if k != "_i"} for r in rows], ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"-> {args.out}")
@@ -260,7 +260,7 @@ def run(points: dict, args) -> None:
             print(f"-> {p}")
     if getattr(args, "heat", None):
         _heat(rows, names, Path(args.heat))
-        print(f"-> {args.heat}（行从北往南、列从西往东，越亮越像）")
+        print(f"-> {args.heat} (rows north to south, columns west to east; brighter = more alike)")
 
 
 def _neg_coords(argv: list[str]) -> list[str]:
@@ -273,12 +273,12 @@ def main() -> None:
 
     def common(sp):
         sp.add_argument("--preset", choices=list(PRESETS))
-        sp.add_argument("--query", action="append", help="自定义正提示词（英文），可重复")
-        sp.add_argument("--neg", action="append", help="自定义负提示词，可重复")
+        sp.add_argument("--query", action="append", help="custom positive prompt (English), repeatable")
+        sp.add_argument("--neg", action="append", help="custom negative prompt, repeatable")
         sp.add_argument("--zoom", type=int, default=17)
-        sp.add_argument("--size", "--cell", dest="size", type=int, default=320, help="每格像素")
-        sp.add_argument("--multi-scale", action="store_true", help="每格再看 2×2 子块取最大（目标小时用）")
-        sp.add_argument("--seeds", help="{name:[lat,lon]} 种子点，附近格子加分")
+        sp.add_argument("--size", "--cell", dest="size", type=int, default=320, help="pixels per cell")
+        sp.add_argument("--multi-scale", action="store_true", help="also look at 2×2 sub-blocks of each cell and take the max (for small targets)")
+        sp.add_argument("--seeds", help="{name:[lat,lon]} seed points; nearby cells get a bonus")
         sp.add_argument("--seed-radius", type=float, default=400)
         sp.add_argument("--seed-bonus", type=float, default=0.15)
         sp.add_argument("--top", type=int, default=30)
@@ -286,13 +286,13 @@ def main() -> None:
         sp.add_argument("--out")
         sp.add_argument("--sheet")
         sp.add_argument("--source", choices=list(tiles.SOURCES), default="google")
-        sp.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+        sp.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
         sp.add_argument("--cache", type=Path, default=Path(".geo-cache/tiles"))
 
     g = sub.add_parser("grid")
     g.add_argument("--bbox", required=True, help="s,w,n,e")
-    g.add_argument("--step", type=float, help="格距米，默认每格覆盖宽度的九成")
-    g.add_argument("--heat", help="分数热图输出")
+    g.add_argument("--step", type=float, help="cell spacing in meters; default is 90%% of the width each cell covers")
+    g.add_argument("--heat", help="score heatmap output")
     common(g)
 
     p = sub.add_parser("points")
@@ -304,18 +304,18 @@ def main() -> None:
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
     if args.cmd == "presets":
         for k, (pos, neg) in PRESETS.items():
-            print(f"{k}:\n  + " + "\n  + ".join(pos) + f"\n  - {len(neg)} 条负提示")
+            print(f"{k}:\n  + " + "\n  + ".join(pos) + f"\n  - {len(neg)} negative prompts")
         return
     if args.cmd == "grid":
         pts = tiles.grid_points(args.bbox, args.zoom, args.size, args.step)
-        print(f"网格 {len(pts)} 格（r 行从北往南、c 列从西往东）")
+        print(f"grid: {len(pts)} cells (r rows north to south, c columns west to east)")
     else:
         pts = json.loads(Path(args.points).read_text(encoding="utf-8"))
     run(pts, args)
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese-locale Windows writes GBK by default: m², ñ make it crash, and the Chinese the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

@@ -3,14 +3,14 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "pillow-heif"]
 # ///
-"""读照片元数据：GPS、拍摄时间、机型、焦距。定位前第一件事。
+"""Read photo metadata: GPS, capture time, camera model, focal length. The first thing to do before geolocating.
 
-  exif.py <照片> [<照片> ...]
+  exif.py <photo> [<photo> ...]
 
-- 有 GPS：直接给出 WGS84 坐标和 GCJ-02 换算（高德/腾讯用），但仍要用画面核对（元数据能被改）。
-- 有拍摄时间：可以喂给 sun.py（注意 EXIF 时间通常是拍摄地本地时间，不带时区，看 OffsetTime 字段）。
-- 有 35mm 等效焦距：可以喂给 geo.py range / geometry.md 算视角，不用猜倍率。
-- 微信、QQ、大多数社交平台转发会抹掉元数据；截图、翻拍没有元数据。输出为空是常态，不代表什么。
+- With GPS: gives WGS84 coordinates and the GCJ-02 conversion (for Amap/Tencent Maps) directly, but you still must check against the image (metadata can be edited).
+- With capture time: can be fed to sun.py (note EXIF time is usually local time at the capture location, without a time zone; see the OffsetTime field).
+- With 35mm equivalent focal length: can be fed to geo.py range / geometry.md to compute the field of view, no need to guess the zoom factor.
+- WeChat, QQ and most social platforms strip metadata when forwarding; screenshots and rephotographed images have no metadata. Empty output is normal and means nothing.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ import geo  # noqa: E402
 try:
     import pillow_heif
     pillow_heif.register_heif_opener()
-except ImportError:  # 没装 pillow-heif 时 HEIC 读不了，其它格式照常
+except ImportError:  # without pillow-heif, HEIC can't be read; other formats work as usual
     pass
 
 
@@ -64,7 +64,7 @@ def read(path: Path) -> dict:
         if 6 in g:
             out["altitude_m"] = round(float(g[6]), 1)
         if 17 in g:
-            out["image_direction_deg"] = round(float(g[17]), 1)   # 部分手机会写镜头朝向
+            out["image_direction_deg"] = round(float(g[17]), 1)   # some phones write the lens heading
     return out
 
 
@@ -79,7 +79,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m², ñ, and Chinese text the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

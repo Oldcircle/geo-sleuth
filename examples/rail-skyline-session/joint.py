@@ -2,13 +2,13 @@
 # requires-python = ">=3.10"
 # dependencies = ["numpy", "pillow"]
 # ///
-"""桥墩列位置反解机位。
+"""Solve the camera position from pier column positions.
 
-这是第 13 集案例的专用脚本，参数写死了那张照片：17 个桥墩像素列 LEFT/RIGHT、山脊点 ridge、
-候选中心 lat0/lon0 和线名都是示例参数，来自一次实战。只作复现记录，不保证在别的照片上能跑。
+This is a case-specific script for episode 13 with that photo's parameters hard-coded: the 17 pier pixel columns LEFT/RIGHT, the ridge points ridge,
+the candidate center lat0/lon0 and the line name are all example parameters from one real case. Kept only as a reproduction record; not guaranteed to run on another photo.
 
-照片里每个桥墩的像素列 → 射线方位 → 与 OSM 桥线求交 → 相邻桥墩沿线间距应恒定（32 m 箱梁）。
-在候选区网格搜机位、朝向、焦距，打分 = 间距离散度 + |log(均值/32)|。与天际线拟合互相独立。"""
+Pixel column of each pier in the photo → ray bearing → intersect with the OSM bridge line → spacing between adjacent piers along the line should be constant (32 m box girders).
+Grid-search camera position, heading, and focal length over the candidate area; score = spacing dispersion + |log(mean/32)|. Independent of the skyline fit."""
 import json, math, sys
 import numpy as np
 from pathlib import Path
@@ -19,7 +19,7 @@ LEFT = [39, 133, 219, 296, 369]
 RIGHT = [745, 788, 829, 869, 907, 944, 981, 1016, 1050, 1083, 1116, 1148]
 PIERS = np.array(LEFT + RIGHT, float)
 CX = 640.0
-lat0, lon0 = 23.736, 113.121   # 示例参数，来自一次实战：上一步 refine 给出的候选中心
+lat0, lon0 = 23.736, 113.121   # example parameters from one real case: candidate center given by the previous refine step
 kx = 111320 * math.cos(math.radians(lat0)); ky = 110540
 
 g = json.load(open("qy_rail.geojson"))
@@ -27,20 +27,20 @@ line = None
 for f in g["features"]:
     if f["properties"].get("name") == "广清城际线":
         line = np.array(f["geometry"]["coordinates"]); break
-P = np.c_[(line[:, 0] - lon0) * kx, (line[:, 1] - lat0) * ky]   # 局部米坐标 (x 东, y 北)
+P = np.c_[(line[:, 0] - lon0) * kx, (line[:, 1] - lat0) * ky]   # local metric coordinates (x east, y north)
 seg_a, seg_b = P[:-1], P[1:]
 seg_len = np.hypot(*(seg_b - seg_a).T)
 chain0 = np.r_[0, np.cumsum(seg_len)][:-1]
 
 def hits(cx, cy, az):
-    """射线与折线的最近交点：返回 (距离, 沿线里程)。"""
+    """Nearest intersection of the ray with the polyline: returns (distance, chainage along the line)."""
     d = np.array([math.sin(math.radians(az)), math.cos(math.radians(az))])
     e = seg_b - seg_a
     den = d[0] * e[:, 1] - d[1] * e[:, 0]
     w = seg_a - np.array([cx, cy])
     with np.errstate(divide="ignore", invalid="ignore"):
-        t = (w[:, 0] * e[:, 1] - w[:, 1] * e[:, 0]) / den      # 射线参数
-        u = (w[:, 0] * d[1] - w[:, 1] * d[0]) / den             # 线段参数
+        t = (w[:, 0] * e[:, 1] - w[:, 1] * e[:, 0]) / den      # ray parameter
+        u = (w[:, 0] * d[1] - w[:, 1] * d[0]) / den             # segment parameter
     ok = (t > 100) & (u >= 0) & (u <= 1)
     if not ok.any():
         return None

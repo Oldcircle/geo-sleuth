@@ -1,30 +1,30 @@
-# 线索库
+# Clue library
 
-第 2、4 步对照查。条目来源标 `vNNN`（作者拆解的博主视频编号，拆解笔记不公开）或 `case`（实战）。
+Check against it in steps 2 and 4. Entry sources are marked `vNNN` (the number of a creator video the author broke down; the breakdown notes are not public) or `case` (a real case).
 
-## 文件
+## Files
 
-| 文件 | 范围 |
+| File | Scope |
 |---|---|
-| `china.md` | 中国大陆：平台元数据、文字车牌、车辆交通、基础设施、气候物候、地形水系、城市形态 |
-| `global.md` | 国外：通用（行驶方向、车牌外形）、欧洲、北美、墨西哥、日本、东南亚 |
+| `china.md` | Mainland China: platform metadata, text and plates, vehicles and traffic, infrastructure, climate and phenology, terrain and water, urban form |
+| `global.md` | Outside China: general (driving side, plate shape), Europe, North America, Mexico, Japan, Southeast Asia |
 
-## 条目格式
+## Entry format
 
 ```markdown
-### <线索名>
-- 看什么：画面里具体找哪个东西，怎么认
-- 指向：国家 / 省 / 城市 / 城市里的片区类型
-- 强度：强（单条就能定到这一级）/ 中（要再配一条）/ 弱（只能排除或加分）
-- 反例：什么情况下会误判
-- 来源：vNNN 或 case
+### <clue name>
+- Look for: exactly what to find in the image and how to recognize it
+- Points to: country / province / city / type of area within a city
+- Strength: strong (a single clue reaches this level) / medium (needs one more) / weak (can only exclude or boost)
+- Counterexamples: when it leads to a wrong call
+- Sources: vNNN or case
 ```
 
-## 规则
+## Rules
 
-- 每条必须写强度和反例。没有反例的线索通常是还没见过误判，不代表可靠。
-- 同一条线索被三个以上来源独立提到，强度才能标"强"；单一来源的写"（单一来源）"。
-- **只收能迁移到新照片的线索**。某一个地标长什么样（某座桥、某个喷泉、某栋楼）不入库：它帮不了下一张照片，还会污染用视频题做的评测。
-- **反例、来源说明里也不写具体题目的地名和结论**（"某题 IP 在 A 省、实际在 B 市"这种写法等于把答案写进了 skill）。引用题目只写方法层面的事实（"照片在 IP 省的邻省"）。脚本示例同理，用和评测题无关的地点或 `<占位符>`。
-- 强度随场景变：同一块车牌，在街上是强证据，在停车场里是弱证据；植被没有月份时一律弱。
-- 用自己的话写方法，不照抄视频原话。
+- Every entry must state strength and counterexamples. A clue with no counterexample usually just hasn't been seen to mislead yet; that doesn't make it reliable.
+- A clue can be marked "strong" only when three or more sources mention it independently; for a single source, write "(single source)".
+- **Only include clues that transfer to new photos.** What one particular landmark looks like (a certain bridge, fountain, or building) doesn't go into the library: it won't help with the next photo, and it contaminates evaluations built from video puzzles.
+- **Counterexamples and source notes also never state a specific puzzle's place names or conclusion** (writing "puzzle X's IP was in province A, actually in city B" amounts to writing the answer into the skill). When citing a puzzle, state only method-level facts ("the photo was in a province neighboring the IP province"). The same goes for script examples: use places unrelated to eval puzzles, or `<placeholders>`.
+- Strength changes with context: the same plate is strong evidence on the street and weak evidence in a parking lot; vegetation without a month is always weak.
+- Write methods in your own words; don't copy the video's wording verbatim.

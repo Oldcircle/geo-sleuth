@@ -3,42 +3,44 @@
 # requires-python = ">=3.10"
 # dependencies = ["playwright", "pillow"]
 # ///
-"""以图搜图 + 中文关键词搜索：无头 Chrome 打开搜索引擎，保存结果截图，提取猜测文字和链接。
+"""Reverse image search + Chinese keyword search: headless Chrome or Chromium opens the search engines, saves result screenshots, extracts guess text and links.
 
-  revimg.py <图片> [<图片> ...] --out-dir rev/ [--engines baidu,yandex]      以图搜图
-  revimg.py --query "关键词" [--query ...] --out-dir q/ [--text-engines bing,baiduimg,sogouimg]   关键词搜索
+  revimg.py <image> [<image> ...] --out-dir rev/ [--engines baidu,yandex]      reverse image search
+  revimg.py --query "<keywords>" [--query ...] --out-dir q/ [--text-engines bing,baiduimg,sogouimg]   keyword search
 
-以图搜图：
-- baidu：国内主力。中文网页、微博、百家号、电商、景区内容覆盖最好；会给一句"图中可能是…"。直连。
-  "相似图片"卡片不是链接，从页面发出的 pcsimi 请求里截获（滚动几次多拿几页），按 contsign 去重后写进 JSON 的 `similar`，
-  前 --similar-sheet 张下载拼成带编号的 `<名>_baidu_similar.jpg`（第一格是查询图）：同一物体/场景的近重复照片是最快的定位路径，务必打开看。
-- yandex：建筑、街景、外国内容补充；给"Image appears to contain"标签和来源网站。需要代理（--proxy）。
-- Google Lens 从服务器出口会被要求人机验证，脚本不做；有浏览器操作工具（如 Claude in Chrome）时在用户自己的浏览器里搜，见 references/search.md。
+Reverse image search:
+- baidu: the main engine for China. Best coverage of Chinese web pages, Weibo, Baijiahao, e-commerce and scenic-area content; gives a one-line "图中可能是…" ("the image may show…").
+  The "相似图片" (similar images) cards are not links; they are captured from the pcsimi requests the page sends (it scrolls a few times to get more pages), deduplicated by contsign and written to `similar` in the JSON;
+  the first --similar-sheet of them are downloaded into a numbered contact sheet `<name>_baidu_similar.jpg` (first cell is the query image): near-duplicate photos of the same object/scene are the fastest path to a location, always open it.
+- yandex: supplement for buildings, street scenes and foreign content; gives "Image appears to contain" tags and source sites.
+- Google Lens asks for human verification from a server egress, so the script doesn't do it; when you have a browser-control tool (e.g. Claude in Chrome), search in the user's own browser, see references/search.md.
 
-关键词搜索（通用网页搜索工具搜中文国内内容常常无效时用）：
-- bing：必应国内版网页结果（标题 + 链接），直连。
-- baiduimg / sogouimg：百度图片、搜狗图片的结果页截图，看同类场景照片。
-- 百度网页搜索会弹安全验证，不做。
+Keyword search (use when general web search tools often fail on Chinese domestic content):
+- bing: Bing China web results (title + link).
+- baiduimg / sogouimg: result-page screenshots from Baidu Images and Sogou Images, for photos of similar scenes.
+- Baidu web search pops up a security check, not done.
 
-每项输出 `<名>_<引擎>.png`（结果页截图，务必打开看）和 `.json`（猜测文字 + 链接；百度另有 `similar` 和相似图拼图）。
-以图搜图前先用 `imgprep.py variants` 做紧裁 / 翻转 / 去色偏几个版本，逐个搜——整图搜不到很正常。
-依赖本机 Google Chrome（没有就先 `uvx playwright install chromium`）。
+Each item outputs `<name>_<engine>.png` (result-page screenshot, always open it) and `.json` (guess text + links; Baidu also has `similar` and the similar-images contact sheet).
+Before reverse image search, use `imgprep.py variants` to make tight-crop / flipped / color-cast-removed versions and search each one — no hit on the full image is normal.
+Requires Google Chrome or Playwright Chromium. Chrome is tried first, then Chromium.
+Run `uvx playwright install chromium` if neither is installed; `doctor.py` checks that the browser can start.
 
-示例：
+Examples:
   revimg.py photo.jpg --out-dir rev/
   revimg.py v/left_crop.jpg v/left_flip.jpg --out-dir rev/ --engines baidu
-  revimg.py photo.jpg --out-dir rev/ --engines yandex --proxy socks5://127.0.0.1:10808（示例）
-  revimg.py --query "蓝色拱形顶棚 人行天桥" --query "<城市> 出租车 颜色" --out-dir q/
+  revimg.py photo.jpg --out-dir rev/ --engines yandex
+  revimg.py --query "蓝色拱形顶棚 人行天桥" --query "<city> 出租车 颜色" --out-dir q/   (queries in Chinese: blue arched canopy footbridge; <city> taxi color)
 """
 from __future__ import annotations
 
 import argparse
+from _browser import launch_browser
+from _net import fetch_bytes, PROXY_HELP
 import asyncio
 import io
 import json
 import os
 import sys
-import urllib.request
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -50,7 +52,6 @@ OWN = {"baidu": ("baidu.com", "bdimg.com", "bdstatic.com"), "yandex": ("yandex."
 BAIDU_REFUSED = ("功能优化中", "建议您重新上传其他图片")
 TEXT_URL = {"bing": "https://cn.bing.com/search?q={q}", "baiduimg": "https://image.baidu.com/search/index?tn=baiduimage&word={q}",
             "sogouimg": "https://pic.sogou.com/pics?query={q}"}
-_direct = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # 百度缩略图必须直连
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
 
 
@@ -68,9 +69,9 @@ async def _collect(page, engine: str) -> dict:
         out.append({"title": ln["t"], "url": ln["h"], "site": host})
     lines = [s.strip() for s in text.splitlines() if s.strip()]
     guess = [s for s in lines if s.startswith("图中可能是") or "appears to contain" in s.lower()]
-    if engine == "yandex" and guess:            # 标签在"appears to contain"下一行起的几行
+    if engine == "yandex" and guess:            # the tags are the few lines right after "appears to contain"
         i = lines.index(guess[0])
-        guess = [guess[0] + "：" + " / ".join(lines[i + 1:i + 8])]
+        guess = [guess[0] + ": " + " / ".join(lines[i + 1:i + 8])]
     return {"url": page.url, "guess": guess, "links": out[:25], "text_head": "\n".join(lines[:60])[:2500]}
 
 
@@ -94,14 +95,14 @@ def _font(size: int):
     return ImageFont.load_default()
 
 
-def _similar_sheet(query: Path, items: list[dict], out: Path, cols: int = 5, tile: int = 300) -> int:
-    """查询图 + 前 N 张相似图缩略图 → 编号拼图（编号 = similar 数组下标）。返回下载成功的张数。"""
+def _similar_sheet(query: Path, items: list[dict], out: Path, cols: int = 5, tile: int = 300, proxy: str | None = None) -> int:
+    """Query image + thumbnails of the first N similar images → numbered contact sheet (number = index in the similar array). Returns how many downloaded successfully."""
     from PIL import Image, ImageDraw
 
     def fetch(url: str):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": UA, "Referer": "https://graph.baidu.com/"})
-            return Image.open(io.BytesIO(_direct.open(req, timeout=15).read())).convert("RGB")
+            data = fetch_bytes(url, proxy, 15, {"User-Agent": UA, "Referer": "https://graph.baidu.com/"})
+            return Image.open(io.BytesIO(data)).convert("RGB")
         except Exception:  # noqa: BLE001
             return None
 
@@ -111,7 +112,7 @@ def _similar_sheet(query: Path, items: list[dict], out: Path, cols: int = 5, til
         q = Image.open(query).convert("RGB")
     except Exception:  # noqa: BLE001
         q = None
-    tiles = [(q, "查询图", "cyan")] + [
+    tiles = [(q, "query", "cyan")] + [
         (im, f"{i:02d} {it['site'] or '?'}", "yellow") for i, (it, im) in enumerate(zip(items, ims))]
     bar = 24
     rows = (len(tiles) + cols - 1) // cols
@@ -123,7 +124,7 @@ def _similar_sheet(query: Path, items: list[dict], out: Path, cols: int = 5, til
         d.rectangle([x, y, x + tile - 1, y + bar - 1], fill="black")
         d.text((x + 4, y + 2), label[:30], fill=color, font=f)
         if im is None:
-            d.text((x + 10, y + bar + tile // 2), "下载失败", fill="gray", font=f)
+            d.text((x + 10, y + bar + tile // 2), "download failed", fill="gray", font=f)
             continue
         im.thumbnail((tile - 4, tile - 4))
         S.paste(im, (x + (tile - im.width) // 2, y + bar + (tile - im.height) // 2))
@@ -131,9 +132,9 @@ def _similar_sheet(query: Path, items: list[dict], out: Path, cols: int = 5, til
     return sum(im is not None for im in ims)
 
 
-async def _baidu(ctx, img: Path, shot: Path, similar_pages: int = 2, sheet_n: int = 24) -> dict:
+async def _baidu(ctx, img: Path, shot: Path, similar_pages: int = 2, sheet_n: int = 24, proxy: str | None = None) -> dict:
     page = await ctx.new_page()
-    simi: list = []                                   # "相似图片"卡片不在 DOM 链接里，来自 ajax/pcsimi 响应
+    simi: list = []                                   # "相似图片" (similar images) cards aren't DOM links; they come from ajax/pcsimi responses
 
     async def grab(resp):
         try:
@@ -149,7 +150,7 @@ async def _baidu(ctx, img: Path, shot: Path, similar_pages: int = 2, sheet_n: in
     inp = await page.query_selector("input[type=file]")
     if not inp:
         await page.screenshot(path=str(shot))
-        return {"error": "没找到上传入口（页面改版或被拦截），看截图"}
+        return {"error": "upload input not found (page redesigned or blocked); check the screenshot"}
     await inp.set_input_files(str(img))
     for _ in range(60):
         await page.wait_for_timeout(500)
@@ -158,7 +159,7 @@ async def _baidu(ctx, img: Path, shot: Path, similar_pages: int = 2, sheet_n: in
     await page.wait_for_timeout(4500)
     await page.screenshot(path=str(shot), full_page=True, clip={"x": 0, "y": 0, "width": 1400, "height": 3200})
     res = await _collect(page, "baidu")
-    misses, got = 0, 0                                # 滚到底触发下一页；连续两次没新页就停
+    misses, got = 0, 0                                # scrolling to the bottom triggers the next page; stop after two misses in a row
     while got < similar_pages and misses < 2 and pending:
         n0 = len(pending)
         await page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
@@ -180,12 +181,12 @@ async def _baidu(ctx, img: Path, shot: Path, similar_pages: int = 2, sheet_n: in
     res["similar"] = similar
     if similar and sheet_n > 0:
         sheet = shot.with_name(shot.stem + "_similar.jpg")
-        ok = await asyncio.to_thread(_similar_sheet, img, similar[:sheet_n], sheet)
+        ok = await asyncio.to_thread(_similar_sheet, img, similar[:sheet_n], sheet, proxy=proxy)
         res["similar_sheet"] = str(sheet)
         if ok < min(sheet_n, len(similar)):
-            res["similar_sheet_note"] = f"缩略图下载失败 {min(sheet_n, len(similar)) - ok} 张"
+            res["similar_sheet_note"] = f"{min(sheet_n, len(similar)) - ok} thumbnails failed to download"
     if not res["guess"] and any(w in res["text_head"] for w in BAIDU_REFUSED):
-        res["error"] = "百度拒绝处理这张图（\"功能优化中\"页面），不算搜过无果：换个裁剪、稍后重试，或只用 Yandex"
+        res["error"] = "Baidu refused to process this image (the \"功能优化中\" (\"under optimization\") page); this does not count as searched with no result: try another crop, retry later, or use only Yandex"
     return res
 
 
@@ -196,7 +197,7 @@ async def _yandex(ctx, img: Path, shot: Path) -> dict:
     inp = await page.query_selector("input[type=file]")
     if not inp:
         await page.screenshot(path=str(shot))
-        return {"error": "没找到上传入口（可能被要求验证），看截图"}
+        return {"error": "upload input not found (possibly asked for verification); check the screenshot"}
     await inp.set_input_files(str(img))
     for _ in range(60):
         await page.wait_for_timeout(500)
@@ -204,7 +205,7 @@ async def _yandex(ctx, img: Path, shot: Path) -> dict:
             break
     await page.wait_for_timeout(4500)
     for label in ("Allow essential cookies", "Only essential", "Accept essential", "Allow all", "Accept all"):
-        try:                                            # cookie 弹窗会盖住截图右下角
+        try:                                            # the cookie popup covers the bottom right of the screenshot
             btn = page.get_by_role("button", name=label)
             if await btn.count():
                 await btn.first.click(timeout=2000)
@@ -228,7 +229,7 @@ async def _text(ctx, engine: str, query: str, shot: Path) -> dict:
     if "安全验证" in head or "captcha" in page.url.lower():
         await page.screenshot(path=str(shot))
         await page.close()
-        return {"error": "被要求人机验证（不要绕），换一个引擎"}
+        return {"error": "asked for human verification (don't bypass it); switch to another engine"}
     await page.screenshot(path=str(shot), full_page=True, clip={"x": 0, "y": 0, "width": 1400, "height": 3000})
     if engine == "bing":
         rows = await page.evaluate("""() => [...document.querySelectorAll('li.b_algo')].map(li => ({
@@ -252,19 +253,12 @@ async def run(images: list[Path], engines: list[str], out_dir: Path, proxy: str 
     out_dir.mkdir(parents=True, exist_ok=True)
     results = []
     async with async_playwright() as p:
-        async def browser(use_proxy: bool):
-            kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
-            if use_proxy and proxy:
-                kw["proxy"] = {"server": proxy.replace("socks5h://", "socks5://")}
-            else:
-                kw["args"].append("--no-proxy-server")
-            try:
-                return await p.chromium.launch(channel="chrome", **kw)
-            except Exception:  # noqa: BLE001
-                return await p.chromium.launch(**kw)
+        async def browser():
+            result, _ = await launch_browser(p, proxy)
+            return result
 
         if queries:
-            b = await browser(use_proxy=False)
+            b = await browser()
             ctx = await b.new_context(viewport={"width": 1400, "height": 1000}, locale="zh-CN")
             for k, q in enumerate(queries):
                 for eng in text_engines or []:
@@ -279,7 +273,7 @@ async def run(images: list[Path], engines: list[str], out_dir: Path, proxy: str 
             await b.close()
 
         for eng in engines if images else []:
-            b = await browser(use_proxy=(eng == "yandex"))
+            b = await browser()
             ctx = await b.new_context(viewport={"width": 1400, "height": 1000},
                                       locale="zh-CN" if eng == "baidu" else "en-US")
             stems = [i.stem for i in images]
@@ -287,7 +281,7 @@ async def run(images: list[Path], engines: list[str], out_dir: Path, proxy: str 
                 name = img.stem if stems.count(img.stem) == 1 else f"{k + 1:02d}_{img.stem}"
                 shot = out_dir / f"{name}_{eng}.png"
                 try:
-                    res = await (_baidu(ctx, img, shot, similar_pages, sheet_n) if eng == "baidu" else _yandex(ctx, img, shot))
+                    res = await (_baidu(ctx, img, shot, similar_pages, sheet_n, proxy) if eng == "baidu" else _yandex(ctx, img, shot))
                 except Exception as e:  # noqa: BLE001
                     res = {"error": str(e)[:300]}
                 res.update({"image": str(img), "engine": eng, "screenshot": str(shot)})
@@ -301,47 +295,45 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("images", nargs="*", type=Path)
     ap.add_argument("--out-dir", type=Path, required=True)
-    ap.add_argument("--engines", default="baidu,yandex", help="以图搜图引擎")
-    ap.add_argument("--query", action="append", help="关键词搜索，可重复")
-    ap.add_argument("--text-engines", default="bing,baiduimg,sogouimg", help="关键词搜索引擎")
-    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help="Yandex 用，如 socks5://127.0.0.1:10808（示例）")
-    ap.add_argument("--exclude", help="逗号分隔的排除词：标题含这些词的结果不列出（例如盲测时屏蔽题目出处）")
-    ap.add_argument("--similar-pages", type=int, default=2, help="百度相似图片首页之外再滚动加载几页（每页约 30 张）")
-    ap.add_argument("--similar-sheet", type=int, default=24, help="前几张相似图下载拼图，0 不拼")
+    ap.add_argument("--engines", default="baidu,yandex", help="reverse image search engines")
+    ap.add_argument("--query", action="append", help="keyword search, repeatable")
+    ap.add_argument("--text-engines", default="bing,baiduimg,sogouimg", help="keyword search engines")
+    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
+    ap.add_argument("--exclude", help="comma-separated exclude words: results whose title contains them are not listed (e.g. to hide the puzzle's source in blind tests)")
+    ap.add_argument("--similar-pages", type=int, default=2, help="how many more pages of Baidu similar images to load by scrolling past the first (about 30 per page)")
+    ap.add_argument("--similar-sheet", type=int, default=24, help="how many of the top similar images to download into a contact sheet; 0 = no sheet")
     args = ap.parse_args()
     excl = [w for w in (args.exclude or "").split(",") if w]
     if not args.images and not args.query:
-        ap.error("给图片路径做以图搜图，或用 --query 做关键词搜索")
+        ap.error("give image paths for reverse image search, or use --query for keyword search")
     missing = [str(p) for p in args.images if not p.is_file()]
     if missing:
-        ap.error("图片不存在：" + "、".join(missing))
+        ap.error("image not found: " + ", ".join(missing))
     engines = [e for e in args.engines.split(",") if e in ("baidu", "yandex")]
     text_engines = [e for e in args.text_engines.split(",") if e in TEXT_URL]
-    if args.images and "yandex" in engines and not args.proxy:
-        print("提示：国内直连 Yandex 通常不通，建议加 --proxy socks5://127.0.0.1:10808（示例）", file=sys.stderr)
     for r in asyncio.run(run(args.images, engines, args.out_dir, args.proxy, args.query, text_engines,
                              args.similar_pages, args.similar_sheet)):
         head = f"[{r['engine']}] {r['query'] if r.get('query') else Path(r['image']).name}"
         if r.get("error"):
-            print(f"{head}  出错：{r['error']}  截图 {r['screenshot']}")
+            print(f"{head}  error: {r['error']}  screenshot {r['screenshot']}")
             continue
-        print(f"{head}  截图 {r['screenshot']}")
+        print(f"{head}  screenshot {r['screenshot']}")
         for g in r["guess"][:2]:
-            print(f"   猜测：{g[:160]}")
+            print(f"   guess: {g[:160]}")
         links = [ln for ln in r["links"] if not any(w in ln["title"] for w in excl)]
         if excl and (len(links) < len(r["links"]) or any(w in r.get("text_head", "") for w in excl)):
-            print(f"   注意：结果里出现了排除词，已隐藏 {len(r['links']) - len(links)} 条；截图里仍可能看到")
+            print(f"   note: exclude words appear in the results; {len(r['links']) - len(links)} hidden; they may still be visible in the screenshot")
         for ln in links[:8]:
             print(f"   - {ln['title'][:60]}  ({ln['site']})")
         if r.get("similar"):
-            tally = "、".join(f"{s} {n}" for s, n in Counter(x["site"] for x in r["similar"]).most_common(6))
-            print(f"   相似图片 {len(r['similar'])} 张（{tally}）" + (f"  拼图 {r['similar_sheet']}（打开找同一物体/场景）" if r.get("similar_sheet") else ""))
+            tally = ", ".join(f"{s} {n}" for s, n in Counter(x["site"] for x in r["similar"]).most_common(6))
+            print(f"   similar images: {len(r['similar'])} ({tally})" + (f"  contact sheet {r['similar_sheet']} (open it and look for the same object/scene)" if r.get("similar_sheet") else ""))
         elif r["engine"] == "baidu":
-            print("   相似图片：没截到")
+            print("   similar images: none captured")
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese-locale Windows writes GBK by default: m², ñ make it crash, and the Chinese the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

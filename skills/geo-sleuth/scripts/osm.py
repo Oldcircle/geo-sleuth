@@ -3,44 +3,44 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""OpenStreetMap Overpass 查询：按"要素组合"和"线状走廊"找候选点，而不是满地图找。
+"""OpenStreetMap Overpass queries: find candidate points by "feature combinations" and "linear corridors" instead of searching the whole map.
 
-适合"没有名字，但有结构"的照片：电塔挨着高铁桥、河湾边的教堂、四条轨道的道口……
-国外数据很全；国内道路、河流、铁路、输电线、大型建筑可用，小店和小区内部基本没有。
-国内 OSM 数据不全，结果只能当候选来源，不能当排除依据。
-国内访问 Overpass 需要代理：--proxy socks5h://127.0.0.1:10808（示例） 或环境变量 GEO_PROXY。
+Suited to photos with "no name, but structure": a power tower next to a high-speed rail bridge, a church at a river bend, a level crossing with four tracks...
+Data outside China is very complete; in China, roads, rivers, railways, power lines and large buildings are usable, while small shops and compound interiors are basically missing.
+OSM data in China is incomplete: results can only be a source of candidates, not grounds for exclusion.
 
-  find       在范围内找某类要素
-  near       找"A 附近 N 米内有 B（还可以再加 C）"的 A
-  crossings  线变点：一条河/铁路/公路上的桥、坝、渡口、道口（道口按节点数估轨道数）
-  route      公交/铁路/轮渡线路号 → 沿线采样点，把"满城找"变成"沿一条线找"
-  intersect  两类线状要素的交叉点（铁路×输电线…），可要求交点外侧有折角（转角塔、河湾）
-  street-scan 街景几何模板：顺着一条街看过去的方位 + 街两侧"有楼/没楼" → 整个城镇的候选路口
-  along      沿任意公路/河/线按步长取点（可往路的一侧偏移），给卫星缩略图或街景扫路边
-  buildings  按占地面积列大建筑（厂房、仓库、农场棚），标出周围稀疏程度
-  coverage   各候选行政区里某类要素有几个：枚举候选之前先查 OSM 覆盖
-  geom       任意过滤条件导出 GeoJSON（保留线和面的几何），做自定义分析
-  raw        跑一段自己写的 Overpass QL（{{bbox}} 会被替换成 s,w,n,e）
+  find       find features of one kind within an area
+  near       find A that has B within N meters (optionally also C)
+  crossings  line-to-point: bridges, dams, ferries, level crossings on a river / railway / road (level crossings estimate track count from node count)
+  route      bus / rail / ferry route number → sample points along the route, turning "search the whole city" into "search along one line"
+  intersect  crossing points of two kinds of linear features (railway × power line ...), optionally requiring a bend beyond the crossing (angle tower, river bend)
+  street-scan street view geometry template: bearing looking down a street + "building / no building" on each side → candidate intersections for a whole town
+  along      take points at a step along any road / river / line (optionally offset to one side of the road), for satellite thumbnails or street view scans of the roadside
+  buildings  list large buildings by footprint area (factories, warehouses, farm sheds), marking how sparse the surroundings are
+  coverage   how many features of a kind each candidate admin area has: check OSM coverage before enumerating candidates
+  geom       export GeoJSON for any filter (keeps line and polygon geometry) for custom analysis
+  raw        run your own Overpass QL ({{bbox}} is replaced with s,w,n,e)
 
-输出 JSON {名字或id: [lat, lon]}（WGS84），可以直接给 tiles.py mark --points 画到卫星图上。
+Outputs JSON {name or id: [lat, lon]} (WGS84), which can go straight to tiles.py mark --points to draw on satellite imagery.
 
-示例：
+Examples (江苏省 = Jiangsu Province, 长江 = Yangtze River):
   osm.py find --bbox 30.24,120.12,30.27,120.17 '["highway"="street_lamp"]'
   osm.py near --area 江苏省 --a '["railway"="rail"]["highspeed"="yes"]["bridge"]' --b '["power"="tower"]' --within 700 --c '["waterway"="river"]' --within-c 100
   osm.py crossings --bbox 31.9,118.4,32.3,119.0 --line '["waterway"="river"]["name"="长江"]' --kind bridge,dam,ferry
   osm.py crossings --bbox <s,w,n,e> --line '["railway"="rail"]' --kind level_crossing
-  osm.py route --bbox <s,w,n,e> --kind bus --ref <线路号> --step 150 --out route.json
-  osm.py intersect --area <省级行政区全名> --a '["railway"="rail"]["electrified"="contact_line"]' --b '["power"="line"]' --bend-min 25 --rank-near '["place"~"^(city|town)$"]'
-  osm.py street-scan --bbox <城镇 s,w,n,e> --bearing 320:80 --right building --left empty --out cands.json
+  osm.py route --bbox <s,w,n,e> --kind bus --ref <route number> --step 150 --out route.json
+  osm.py intersect --area <full name of province-level admin area> --a '["railway"="rail"]["electrified"="contact_line"]' --b '["power"="line"]' --bend-min 25 --rank-near '["place"~"^(city|town)$"]'
+  osm.py street-scan --bbox <town s,w,n,e> --bearing 320:80 --right building --left empty --out cands.json
   osm.py geom '["building"]' --bbox 30.25,120.15,30.26,120.16 --out b.geojson
-  osm.py along --bbox <s,w,n,e> --line '["highway"]["ref"="<道路编号>"]' --step 400 --side north --offset 80 --out pts.json
+  osm.py along --bbox <s,w,n,e> --line '["highway"]["ref"="<road number>"]' --step 400 --side north --offset 80 --out pts.json
   osm.py buildings --bbox <s,w,n,e> --min-area 1500 --sort sparse --out big.json
-  osm.py coverage --areas <区县A>,<区县B>,<区县C> --filter '["leisure"~"^(pitch|track)$"]'
+  osm.py coverage --areas <district A>,<district B>,<district C> --filter '["leisure"~"^(pitch|track)$"]'
   osm.py raw query.overpassql --bbox 30.2,120.1,30.3,120.2
 """
 from __future__ import annotations
 
 import argparse
+from _net import curl_args, PROXY_HELP
 import hashlib
 import json
 import math
@@ -60,7 +60,7 @@ ENDPOINTS = [
 
 
 def run(ql: str, proxy: str | None, cache: Path, timeout: int = 180, rounds: int = 3) -> dict:
-    """依次试各个镜像；服务器忙（公共 Overpass 常见）时隔一会儿整轮重试。结果按查询缓存。"""
+    """Try each mirror in turn; when servers are busy (common for public Overpass), wait a while and retry the whole round. Results are cached per query."""
     cache.mkdir(parents=True, exist_ok=True)
     key = cache / (hashlib.sha1(ql.encode()).hexdigest()[:16] + ".json")
     if key.exists():
@@ -68,9 +68,8 @@ def run(ql: str, proxy: str | None, cache: Path, timeout: int = 180, rounds: int
     last = ""
     for rnd in range(rounds):
         for ep in ENDPOINTS:
-            cmd = ["curl", "-s", "-m", str(timeout + 30), "--data-urlencode", f"data={ql}", ep]
-            if proxy:
-                cmd[1:1] = ["-x", proxy]
+            cmd = ["curl", "-q", "-s", "-m", str(timeout + 30), "--data-urlencode", f"data={ql}", ep]
+            cmd += curl_args(proxy)
             r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
             try:
                 data = json.loads(r.stdout)
@@ -78,20 +77,20 @@ def run(ql: str, proxy: str | None, cache: Path, timeout: int = 180, rounds: int
                 last = " ".join(re.sub(r"<[^>]+>", " ", r.stdout or r.stderr).split())[-240:]
                 continue
             if data.get("remark"):
-                print(f"Overpass 提示（结果可能不全）：{data['remark'][:200]}", file=sys.stderr)
+                print(f"Overpass remark (results may be incomplete): {data['remark'][:200]}", file=sys.stderr)
             key.write_text(json.dumps(data), encoding="utf-8")
             return data
         if rnd < rounds - 1:
-            print(f"Overpass 各镜像都没返回结果，{15 * (rnd + 1)} 秒后重试：{last}", file=sys.stderr)
+            print(f"No Overpass mirror returned a result, retrying in {15 * (rnd + 1)} s: {last}", file=sys.stderr)
             time.sleep(15 * (rnd + 1))
-    sys.exit(f"Overpass 查询失败（公共服务器忙就换个时间，查询报错就检查写法、缩小范围）：{last}")
+    sys.exit(f"Overpass query failed (if public servers are busy, try another time; if the query errors, check the syntax and shrink the area): {last}")
 
 
 def _area_sel(name: str, var: str, loose: bool = False) -> str:
-    """按名字取 OSM 区域，存进集合 var。
-    国内民族自治区在 OSM 里是双语名（"新疆维吾尔自治区 شىنجاڭ…"、"西藏自治区 བོད་…"、内蒙古带蒙文），
-    只写 ["name"="…"] 会静默查到 0 条；所以同时认 name:zh / name:zh-Hans（走索引，快）。
-    loose=True 再加"名字 + 空格 + 别的文字"的前缀正则，兜底没有 name:zh 的双语名；要扫全部区域名，慢，只在前面查不到时用。"""
+    """Get OSM areas by name and store them in set var.
+    Chinese ethnic autonomous regions have bilingual names in OSM ("新疆维吾尔自治区 شىنجاڭ…" (Xinjiang), "西藏自治区 བོད་…" (Tibet), Inner Mongolia with Mongolian script),
+    so ["name"="…"] alone silently returns 0 results; that's why name:zh / name:zh-Hans are matched too (indexed, fast).
+    loose=True also adds a prefix regex "name + space + other text" as a fallback for bilingual names without name:zh; it scans all area names, which is slow, so use it only when the lookup above finds nothing."""
     q = name.replace("\\", "\\\\").replace('"', '\\"')
     sel = f'area["name"="{q}"];area["name:zh"="{q}"];area["name:zh-Hans"="{q}"];'
     if loose:
@@ -101,19 +100,19 @@ def _area_sel(name: str, var: str, loose: bool = False) -> str:
 
 
 def _area_count(name: str, args, loose: bool = False) -> int:
-    """OSM 里能按这个名字取到几个区域（查到 0 条结果时用来区分"真没有"和"名字不对"）。"""
+    """How many areas OSM returns for this name (used after a 0-result query to tell "really none" from "wrong name")."""
     els = run(f"[out:json][timeout:120];{_area_sel(name, 'a', loose)}.a out count;", args.proxy, args.cache).get("elements") or []
     return int(((els[0].get("tags") or {}).get("total", 0)) if els else 0)
 
 
 def _scope(args) -> tuple[str, str]:
-    """返回 (前置语句, 过滤后缀)。"""
+    """Returns (preamble statement, filter suffix)."""
     if args.area:
         return _area_sel(args.area, "searchArea", getattr(args, "area_loose", False)), "(area.searchArea)"
     if args.bbox:
         s, w, n, e = args.bbox
         return "", f"({s},{w},{n},{e})"
-    sys.exit("需要 --bbox 或 --area")
+    sys.exit("Need --bbox or --area")
 
 
 def _center(el: dict) -> list[float] | None:
@@ -143,7 +142,7 @@ def _dist(a, b) -> float:
 
 
 def _cluster(items: list[tuple[str, list[float], dict]], radius: float) -> list[dict]:
-    """相距 radius 米以内的结果并成一处（一座桥常被切成几段 way；一个道口每条轨道一个节点）。"""
+    """Merge results within radius meters into one place (a bridge is often split into several ways; a level crossing has one node per track)."""
     groups: list[dict] = []
     for name, ll, tags in items:
         for g in groups:
@@ -158,7 +157,7 @@ def _cluster(items: list[tuple[str, list[float], dict]], radius: float) -> list[
 
 
 def _sample(elements: list[dict], step: float) -> list[list[float]]:
-    """把 out geom 的线沿线每隔 step 米取一个点。"""
+    """Take a point every step meters along the lines from out geom."""
     pts = []
     for el in elements:
         geom = el.get("geometry") or []
@@ -188,7 +187,7 @@ def cmd_crossings(args) -> dict:
     if "level_crossing" in kinds:
         parts.append(f'node["railway"~"^(level_crossing|crossing)$"](around.L:{buf}){sc};')
     if not parts:
-        sys.exit("--kind 只支持 bridge,dam,ferry,level_crossing")
+        sys.exit("--kind only supports bridge,dam,ferry,level_crossing")
     ql = f"[out:json][timeout:180];{pre}way{args.line}{sc}->.L;(" + "".join(parts) + ");out center tags;"
     items = []
     for el in run(ql, args.proxy, args.cache).get("elements", []):
@@ -198,21 +197,21 @@ def cmd_crossings(args) -> dict:
         tags = el.get("tags") or {}
         items.append((tags.get("name") or "", ll, tags))
     groups = _cluster(items, 25 if kinds == {"level_crossing"} else 150)
-    print(f"{len(groups)} 处（由 {len(items)} 个 OSM 要素合并）")
+    print(f"{len(groups)} places (merged from {len(items)} OSM features)")
     pts = {}
     for i, g in enumerate(groups, 1):
         tags = [m[2] for m in g["members"]]
         names = sorted({m[0] for m in g["members"] if m[0]})
         if any(t.get("railway") in ("level_crossing", "crossing") for t in tags):
-            kind = f"道口·约{len(g['members'])}轨"
+            kind = f"level crossing·~{len(g['members'])} tracks"
         elif any(t.get("waterway") in ("dam", "weir") for t in tags):
-            kind = "坝/堰"
+            kind = "dam/weir"
         elif any(t.get("route") == "ferry" for t in tags):
-            kind = "渡口航线"
+            kind = "ferry route"
         else:
-            use = {("铁路" if t.get("railway") else "公路" if t.get("highway") else "其他") for t in tags}
-            kind = "桥·" + "/".join(sorted(use))
-        label = f"{i:02d} {kind} {'、'.join(names)[:40]}".strip()
+            use = {("railway" if t.get("railway") else "road" if t.get("highway") else "other") for t in tags}
+            kind = "bridge·" + "/".join(sorted(use))
+        label = f"{i:02d} {kind} {', '.join(names)[:40]}".strip()
         pts[label] = [round(g["center"][0], 6), round(g["center"][1], 6)]
     return pts
 
@@ -230,17 +229,17 @@ def cmd_route(args) -> dict:
     ways = [e for e in data.get("elements", []) if e["type"] == "way"]
     for rel in rels:
         t = rel.get("tags") or {}
-        print(f"  线路 {t.get('ref', '')} {t.get('name', '')} {t.get('from', '')}→{t.get('to', '')}")
+        print(f"  route {t.get('ref', '')} {t.get('name', '')} {t.get('from', '')}→{t.get('to', '')}")
     pts = _sample(ways, args.step)
-    print(f"{len(rels)} 条线路关系、{len(ways)} 段路，沿线每 {args.step:.0f} m 取点共 {len(pts)} 个")
+    print(f"{len(rels)} route relations, {len(ways)} ways; one point every {args.step:.0f} m along the route, {len(pts)} points total")
     if pts:
         lats, lons = [p[0] for p in pts], [p[1] for p in pts]
-        print(f"  线路范围 bbox: {min(lats):.4f},{min(lons):.4f},{max(lats):.4f},{max(lons):.4f}")
+        print(f"  route extent bbox: {min(lats):.4f},{min(lons):.4f},{max(lats):.4f},{max(lons):.4f}")
     return {f"R{i}": p for i, p in enumerate(pts)}
 
 
 def cmd_intersect(args) -> dict:
-    """两类线状要素的交叉点（铁路×输电线、河×公路…），可要求 B 在交点外侧有折角（转角塔、河湾）。"""
+    """Crossing points of two kinds of linear features (railway × power line, river × road ...), optionally requiring B to bend beyond the crossing (angle tower, river bend)."""
     pre, sc = _scope(args)
     ql = (f"[out:json][timeout:280];{pre}way{args.a}{sc}->.a;way{args.b}(around.a:30){sc}->.b;"
           f".a out geom tags;.b out geom tags;")
@@ -248,7 +247,7 @@ def cmd_intersect(args) -> dict:
     A = [e for e in data.get("elements", []) if e.get("geometry") and _match(e, args.a)]
     B = [e for e in data.get("elements", []) if e.get("geometry") and e not in A]
     if not A or not B:
-        print(f"A {len(A)} 条、B {len(B)} 条，凑不出交点（换范围或标签）")
+        print(f"A {len(A)} lines, B {len(B)} lines: no crossing points possible (change the area or tags)")
         return {}
     lat0 = A[0]["geometry"][0]["lat"]
     kx, ky = 111320 * math.cos(math.radians(lat0)), 110540
@@ -274,7 +273,7 @@ def cmd_intersect(args) -> dict:
         return None
 
     def find_bend(el, hit):
-        """B 在交点外 bend_within 范围内的第一个 ≥bend_min 的折角：返回 (距离m, 转角°) 或 None。"""
+        """First bend ≥bend_min in B within bend_within beyond the crossing: returns (distance m, turn angle °) or None."""
         if args.bend_min <= 0:
             return None
         lo, hi = _band(args.bend_within)
@@ -323,22 +322,22 @@ def cmd_intersect(args) -> dict:
         c = tuple(map(float, c_ll.split(",")))
         before = len(rows)
         rows = [r for r in rows if float(rmin) <= _dist(c, r["ll"]) <= float(rmax)]
-        print(f"--ring：离 {c_ll} {rmin}–{rmax} m 的环带内留下 {len(rows)}/{before} 处")
-    print(f"A {len(A)} 条 × B {len(B)} 条 → {len(hits)} 个交点，合并成 {len(groups)} 簇")
+        print(f"--ring: {len(rows)}/{before} places kept in the ring {rmin}–{rmax} m from {c_ll}")
+    print(f"A {len(A)} lines × B {len(B)} lines → {len(hits)} crossing points, merged into {len(groups)} clusters")
     if args.bend_min > 0:
         with_bend = [r for r in rows if r["bend"]]
-        print(f"  其中 {len(with_bend)} 处 B 在交点外 {args.bend_within} m 内有 ≥{args.bend_min:g}° 折角"
-              f"（标\"折角\"；只作排序参考，见 --bend-filter）")
+        print(f"  of these, {len(with_bend)} have a bend ≥{args.bend_min:g}° in B within {args.bend_within} m beyond the crossing"
+              f" (labeled \"bend\"; used only for ranking, see --bend-filter)")
         if args.bend_filter:
             dropped = [r for r in rows if not r["bend"]]
             rows = with_bend
-            print(f"  --bend-filter：丢掉 {len(dropped)} 处没有折角的交点。折角来自对画面的解读，"
-                  f"候选全部没对上时先回头看被丢掉的这批")
+            print(f"  --bend-filter: dropped {len(dropped)} crossing points without a bend. The bend comes from interpreting the photo; "
+                  f"if none of the candidates match, look back at this dropped batch first")
             if args.out and dropped:
                 dp = args.out.with_name(args.out.stem + "_dropped.json")
                 dp.write_text(json.dumps({f"{i:03d} {r['label']}".strip(): r["ll"] for i, r in enumerate(dropped, 1)},
                                          ensure_ascii=False, indent=1), encoding="utf-8")
-                print(f"  被丢掉的 -> {dp}")
+                print(f"  dropped -> {dp}")
     if args.rank_near:
         rows = _rank_rows(rows, args.rank_near, args)
     elif args.bend_min > 0:
@@ -347,9 +346,9 @@ def cmd_intersect(args) -> dict:
     for i, r in enumerate(rows, 1):
         extra = []
         if r["bend"]:
-            extra.append(f"折角{r['bend'][0]}m/{r['bend'][1]}°")
+            extra.append(f"bend {r['bend'][0]}m/{r['bend'][1]}°")
         if r.get("near_m") is not None:
-            extra.append(f"距{r['near_name'][:6]}{r['near_m'] / 1000:.1f}km")
+            extra.append(f"{r['near_m'] / 1000:.1f}km from {r['near_name'][:6]}")
         out[f"{i:03d} {r['label']} {' '.join(extra)}".strip()] = r["ll"]
     return out
 
@@ -359,10 +358,10 @@ _SIDES = {"north": (0.0, 1.0), "south": (0.0, -1.0), "east": (1.0, 0.0), "west":
 
 
 def cmd_along(args) -> dict:
-    """沿任意线状要素（按 ref / 名字过滤的公路、河、输电线）每隔 step 米取点，可整体往路的某一侧偏移。
-    给了 --bbox 时只留框内的点（Overpass 会把穿过框的整条路都返回）。
+    """Take a point every step meters along any linear feature (road, river, power line filtered by ref / name), optionally shifting all points to one side of the road.
+    With --bbox, only points inside the box are kept (Overpass returns the whole length of any road that crosses the box).
 
-    给 tiles.py sheet（卫星缩略图扫路边的厂、店、田）、gsv.py / baidu_pano.py sheet --points（街景扫门脸）用。
+    For tiles.py sheet (satellite thumbnails scanning roadside factories, shops, fields) and gsv.py / baidu_pano.py sheet --points (street view scanning storefronts).
     """
     pre, sc = _scope(args)
     data = run(f"[out:json][timeout:180];{pre}way{args.line}{sc};out geom;", args.proxy, args.cache)
@@ -377,12 +376,12 @@ def cmd_along(args) -> dict:
             if seg <= 0:
                 continue
             kx = 111320 * math.cos(math.radians(a[0]))
-            ux, uy = (b[1] - a[1]) * kx / seg, (b[0] - a[0]) * 110574 / seg  # 东、北方向的单位向量
+            ux, uy = (b[1] - a[1]) * kx / seg, (b[0] - a[0]) * 110574 / seg  # unit vector (east, north components)
             while acc <= seg:
                 t = acc / seg
                 lat, lon = a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t
                 if side and args.offset:
-                    nx, ny = -uy, ux  # 左法线
+                    nx, ny = -uy, ux  # left normal
                     if nx * side[0] + ny * side[1] < 0:
                         nx, ny = uy, -ux
                     lat += ny * args.offset / 110574
@@ -395,10 +394,10 @@ def cmd_along(args) -> dict:
                     pts[f"{len(pts):04d} {name}"] = list(ll)
                 acc += args.step
             acc -= seg
-    print(f"{len(ways)} 段线，每 {args.step:.0f} m 取点共 {len(pts)} 个" + (f"，往{args.side}侧偏 {args.offset:.0f} m" if side else ""))
+    print(f"{len(ways)} ways, one point every {args.step:.0f} m, {len(pts)} points total" + (f", offset {args.offset:.0f} m to the {args.side} side" if side else ""))
     if pts:
         lats, lons = [v[0] for v in pts.values()], [v[1] for v in pts.values()]
-        print(f"  范围 bbox: {min(lats):.4f},{min(lons):.4f},{max(lats):.4f},{max(lons):.4f}")
+        print(f"  extent bbox: {min(lats):.4f},{min(lons):.4f},{max(lats):.4f},{max(lons):.4f}")
     return pts
 
 
@@ -412,10 +411,10 @@ def _ring_area(coords: list[tuple[float, float]]) -> float:
 
 
 def cmd_buildings(args) -> dict:
-    """找占地大的建筑（厂房、仓库、农场棚、矿场设施）：按占地面积筛，标出周围有几栋别的建筑。
+    """Find buildings with large footprints (factories, warehouses, farm sheds, mine facilities): filter by footprint area and mark how many other buildings are around.
 
-    OSM 在很多国家的乡间建筑轮廓来自卫星描图，没有名字也有面积；国内县乡建筑常常为空，不能当排除依据。
-    "周围稀疏"只用来排序（--sort sparse），不当过滤：厂区自己常被拆成一堆小棚子。
+    In many countries OSM's rural building outlines are traced from satellite imagery, so they have an area even without a name; in China, county and township buildings are often missing, so this can't be grounds for exclusion.
+    "Sparse surroundings" is used only for ranking (--sort sparse), not for filtering: a factory site itself is often split into a pile of small sheds.
     """
     pre, sc = _scope(args)
     flt = args.filter or '["building"]'
@@ -438,21 +437,21 @@ def cmd_buildings(args) -> dict:
         r["neighbors"] = sum(1 for di in (-1, 0, 1) for dj in (-1, 0, 1) for o in cells.get((ci + di, cj + dj), [])
                              if o is not r and _dist(r["c"], o["c"]) <= args.within)
     big.sort(key=(lambda r: (r["neighbors"], -r["area"])) if args.sort == "sparse" else (lambda r: -r["area"]))
-    print(f"{len(rows)} 栋建筑，占地 ≥{args.min_area:.0f} m² 的 {len(big)} 栋（按{'周围稀疏' if args.sort == 'sparse' else '面积'}排序；邻=周围 {args.within:.0f} m 内其他建筑数）")
+    print(f"{len(rows)} buildings, {len(big)} with footprint ≥{args.min_area:.0f} m² (sorted by {'sparse surroundings' if args.sort == 'sparse' else 'area'}; nb=number of other buildings within {args.within:.0f} m)")
     pts = {}
     for i, r in enumerate(big, 1):
         t = r["tags"]
         kind = t.get("building", "")
-        label = f"{i:03d} {int(r['area'])}m² 邻{r['neighbors']} {kind if kind != 'yes' else ''} {t.get('name', '')}"
+        label = f"{i:03d} {int(r['area'])}m² nb{r['neighbors']} {kind if kind != 'yes' else ''} {t.get('name', '')}"
         pts[" ".join(label.split())] = [round(r["c"][0], 6), round(r["c"][1], 6)]
     return pts
 
 
 def cmd_coverage(args) -> dict:
-    """各候选行政区里某类要素有几个。用 OSM 枚举候选之前先跑：数量明显偏少的区县不能靠 OSM 结果排除，要单独用卫星图网格扫。"""
+    """How many features of a kind each candidate admin area has. Run it before enumerating candidates with OSM: districts with clearly low counts can't be excluded on OSM results and must be scanned separately with a satellite imagery grid."""
     rows = []
     for name in [a for a in args.areas.split(",") if a]:
-        for loose in (False, True):                       # 双语名又没有 name:zh 的，第二轮按名字前缀兜底
+        for loose in (False, True):                       # bilingual names without name:zh: the second round falls back to the name prefix
             ql = f'[out:json][timeout:120];{_area_sel(name, "a", loose)}.a out count;nwr{args.filter}(area.a);out count;'
             els = run(ql, args.proxy, args.cache).get("elements") or []
             counts = [int((e.get("tags") or {}).get("total", 0)) for e in els]
@@ -460,12 +459,12 @@ def cmd_coverage(args) -> dict:
                 break
         rows.append((name, counts[1] if len(counts) > 1 and counts[0] > 0 else -1))
     top = max((n for _, n in rows), default=0)
-    print(f"OSM 里 {args.filter} 的数量（只比同类行政区；数量少可能是真的少，也可能是没人画）：")
+    print(f"Count of {args.filter} in OSM (compare only admin areas of the same level; a low count may be truly low, or just unmapped):")
     for name, n in rows:
         if n < 0:
-            flag = "  ← OSM 里没有叫这个名字的行政区，换写法（带不带\"区/县/市\"）"
+            flag = "  ← no admin area with this name in OSM; try another spelling (with or without the \"区/县/市\" suffix)"
         elif n < max(5, top * 0.25):
-            flag = "  ← 偏少：不能用 OSM 结果排除这里，改用 tiles.py sheet --grid 扫"
+            flag = "  ← low: OSM results can't exclude this area; scan it with tiles.py sheet --grid instead"
         else:
             flag = ""
         print(f"  {name}: {'?' if n < 0 else n}{flag}")
@@ -473,9 +472,9 @@ def cmd_coverage(args) -> dict:
 
 
 def _rank_rows(rows: list[dict], flt: str, args) -> list[dict]:
-    """按"离最近的某类要素（城镇、服务区、车站…）多远"给候选排序，近的在前。只排序，不删。"""
+    """Rank candidates by "distance to the nearest feature of a kind (town, service area, station ...)", nearest first. Ranks only, never deletes."""
     pre, sc = _scope(args)
-    if args.bbox:                                         # bbox 边上的城镇也要算进来
+    if args.bbox:                                         # towns just outside the bbox edge count too
         s, w, n, e = args.bbox
         sc = f"({s - 0.2},{w - 0.2},{n + 0.2},{e + 0.2})"
     data = run(f"[out:json][timeout:180];{pre}nwr{flt}{sc};out center tags;", args.proxy, args.cache)
@@ -485,18 +484,18 @@ def _rank_rows(rows: list[dict], flt: str, args) -> list[dict]:
         if ll and ll[0] is not None:
             refs.append(((el.get("tags") or {}).get("name", "?"), ll))
     if not refs:
-        print(f"--rank-near {flt} 没查到要素，不排序")
+        print(f"--rank-near {flt} found no features; not ranking")
         return rows
     for r in rows:
         name, ll = min(refs, key=lambda t: _dist(r["ll"], t[1]))
         r["near_m"], r["near_name"] = _dist(r["ll"], ll), name
     rows.sort(key=lambda r: r["near_m"])
-    print(f"  已按离最近的 {flt}（{len(refs)} 个）排序，近的在前")
+    print(f"  ranked by distance to the nearest {flt} ({len(refs)} found), nearest first")
     return rows
 
 
 def _match(el: dict, flt: str) -> bool:
-    """粗略判断一个要素是否满足 A 的标签过滤（只看 key=value 形式的条件）。"""
+    """Roughly check whether a feature matches A's tag filter (looks only at key=value conditions)."""
     tags = el.get("tags") or {}
     for k, v in re.findall(r'\["([^"]+)"="([^"]+)"\]', flt):
         if tags.get(k) != v:
@@ -508,7 +507,7 @@ def _match(el: dict, flt: str) -> bool:
 
 
 def cmd_geom(args) -> dict:
-    """任意过滤条件 → GeoJSON（线、面、点都保留几何），给自定义分析或叠图用。"""
+    """Any filter → GeoJSON (keeps geometry for lines, polygons and points), for custom analysis or overlays."""
     pre, sc = _scope(args)
     data = run(f"[out:json][timeout:180];{pre}nwr{args.filter}{sc};out geom tags;", args.proxy, args.cache)
     feats = []
@@ -529,11 +528,11 @@ def cmd_geom(args) -> dict:
     out.write_text(json.dumps(gj, ensure_ascii=False), encoding="utf-8")
     if not feats and args.area and not getattr(args, "area_loose", False) and _area_count(args.area, args) == 0:
         if _area_count(args.area, args, loose=True) > 0:
-            print(f"「{args.area}」在 OSM 里是双语名、没有 name:zh，按名字前缀重查", file=sys.stderr)
+            print(f"\"{args.area}\" has a bilingual name in OSM and no name:zh; retrying by name prefix", file=sys.stderr)
             args.area_loose = True
             return cmd_geom(args)
-        print(f"注意：OSM 里按名字找不到区域「{args.area}」，0 条不代表这里没有；换写法或改用 --bbox", file=sys.stderr)
-    print(f"{len(feats)} 个要素 -> {out}")
+        print(f"Note: no area named \"{args.area}\" found in OSM; 0 results doesn't mean there is nothing here; try another spelling or use --bbox", file=sys.stderr)
+    print(f"{len(feats)} features -> {out}")
     args.out = None
     return {}
 
@@ -544,12 +543,12 @@ def _band(s: str) -> tuple[float, float]:
 
 
 def cmd_street_scan(args) -> dict:
-    """街景几何模板：镜头站在路口（或路上），顺着一条街看过去，街两侧"有楼 / 没楼"的格局 → 全城候选点。"""
+    """Street view geometry template: camera standing at an intersection (or on a road), looking down a street, with a "building / no building" pattern on each side → candidate points across the whole town."""
     if not args.bbox:
-        sys.exit("street-scan 只支持 --bbox（一个城镇的范围，边长别超过 ~15 km）")
+        sys.exit("street-scan only supports --bbox (the extent of one town, sides no longer than ~15 km)")
     s, w, n, e = args.bbox
     if (n - s) > 0.2 or (e - w) > 0.25:
-        print("提示：范围很大，查询可能超时；按城镇分几次跑更稳", file=sys.stderr)
+        print("Tip: the area is large and the query may time out; running it town by town in several passes is more reliable", file=sys.stderr)
     excl = "footway|path|cycleway|steps|track|pedestrian|bridleway|corridor|platform|proposed|construction|elevator"
     ql = (f'[out:json][timeout:280];way["highway"]["highway"!~"^({excl})$"]({s},{w},{n},{e});out body geom;'
           f'way["building"]({s},{w},{n},{e});out body geom;')
@@ -600,7 +599,7 @@ def cmd_street_scan(args) -> dict:
     def side_ok(J, ux, uy, want, sign):
         if want == "any":
             return True
-        nx, ny = uy * sign, -ux * sign            # sign=+1 右侧，-1 左侧
+        nx, ny = uy * sign, -ux * sign            # sign=+1 right side, -1 left side
         cx, cy = int(J[0] // 50), int(J[1] // 50)
         hits = set()
         blocked = False
@@ -643,115 +642,115 @@ def cmd_street_scan(args) -> dict:
             if not bearing_ok(brg):
                 continue
             b_mid = math.degrees(math.atan2(p_mid[0] - J[0], p_mid[1] - J[1])) % 360
-            if abs((b_mid - brg + 180) % 360 - 180) > 15:                    # 前半段要够直
+            if abs((b_mid - brg + 180) % 360 - 180) > 15:                    # the first half must be straight enough
                 continue
             if side_ok(J, ux, uy, args.right, +1) and side_ok(J, ux, uy, args.left, -1):
                 name = (wy.get("tags") or {}).get("name", "")
-                key = f"{len(cands) + 1:03d} {name[:20]} 朝{brg:.0f}° way{wy['id']}{tag}".strip()
+                key = f"{len(cands) + 1:03d} {name[:20]} heading {brg:.0f}° way{wy['id']}{tag}".strip()
                 cands[key] = [round(J[1] / ky + lat0, 6), round(J[0] / kx + lon0, 6)]
-    print(f"道路 {len(hw)} 条、建筑 {len(bl)} 栋 → 候选 {len(cands)} 个（点位 = 镜头所在的路口/路上位置）")
+    print(f"{len(hw)} roads, {len(bl)} buildings → {len(cands)} candidates (point = camera position at the intersection / on the road)")
     return cands
 
 
 
 def _neg_coords(argv: list[str]) -> list[str]:
-    """argparse 把 -1.45,-48.5 这种负坐标当成选项名；前面补个空格就当普通值（float 会忽略空格）。南半球、西半球的题都要用。"""
+    """argparse treats negative coordinates like -1.45,-48.5 as option names; a leading space makes them plain values (float ignores the space). Every southern- or western-hemisphere case needs this."""
     return [" " + a if re.match(r"^-\d[\d.]*(,-?[\d.]+)+$", a) else a for a in argv]
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
     ap.add_argument("--cache", type=Path, default=Path(".geo-cache/osm"))
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     def scope(sp):
-        sp.add_argument("--proxy", default=argparse.SUPPRESS, help="子命令后面写也行")
+        sp.add_argument("--proxy", default=argparse.SUPPRESS, help="can also go after the subcommand")
         sp.add_argument("--cache", type=Path, default=argparse.SUPPRESS)
         sp.add_argument("--bbox", type=lambda s: tuple(map(float, s.split(","))), help="south,west,north,east")
-        sp.add_argument("--area", help='OSM 行政区名，如 "Bayern"、"江苏省"、"深圳市"')
-        sp.add_argument("--out", type=Path, help="写出 {name:[lat,lon]}")
-        sp.add_argument("--limit", type=int, default=30, help="终端最多打印几条")
+        sp.add_argument("--area", help='OSM admin area name, e.g. "Bayern", "江苏省" (Jiangsu Province), "深圳市" (Shenzhen)')
+        sp.add_argument("--out", type=Path, help="write {name:[lat,lon]}")
+        sp.add_argument("--limit", type=int, default=30, help="max rows printed to the terminal")
 
     f = sub.add_parser("find")
-    f.add_argument("filter", help='Overpass 标签过滤，如 \'["amenity"="fuel"]\'')
+    f.add_argument("filter", help='Overpass tag filter, e.g. \'["amenity"="fuel"]\'')
     scope(f)
 
     n = sub.add_parser("near")
-    n.add_argument("--a", required=True, help="要找的主体")
-    n.add_argument("--b", required=True, help="主体附近必须有的要素")
-    n.add_argument("--within", type=float, default=200, help="B 离 A 的最大距离（米）")
-    n.add_argument("--c", help="可选：第三个必须有的要素")
+    n.add_argument("--a", required=True, help="the main feature to find")
+    n.add_argument("--b", required=True, help="feature that must be near the main feature")
+    n.add_argument("--within", type=float, default=200, help="max distance from A to B (meters)")
+    n.add_argument("--c", help="optional: a third required feature")
     n.add_argument("--within-c", type=float, default=200)
-    n.add_argument("--report", type=Path, help="写出逐个 A 的 B/C 实际距离和关键标签（JSON），用来排序")
-    n.add_argument("--rank-near", help='按离最近的某类要素排序，如 \'["place"~"^(city|town)$"]\'（只排序不删）')
+    n.add_argument("--report", type=Path, help="write the actual B/C distances and key tags for each A (JSON), for ranking")
+    n.add_argument("--rank-near", help='rank by distance to the nearest feature of a kind, e.g. \'["place"~"^(city|town)$"]\' (ranks only, never deletes)')
     scope(n)
 
     c = sub.add_parser("crossings")
-    c.add_argument("--line", required=True, help='线状要素标签，如 \'["waterway"="river"]["name"="长江"]\'、\'["railway"="rail"]\'')
-    c.add_argument("--kind", default="bridge,dam,ferry", help="bridge,dam,ferry,level_crossing，逗号分隔")
-    c.add_argument("--buffer", type=float, default=40, help="离线状要素多少米内算在线上")
+    c.add_argument("--line", required=True, help='linear feature tags, e.g. \'["waterway"="river"]["name"="长江"]\' (Yangtze), \'["railway"="rail"]\'')
+    c.add_argument("--kind", default="bridge,dam,ferry", help="bridge,dam,ferry,level_crossing, comma-separated")
+    c.add_argument("--buffer", type=float, default=40, help="how many meters from the linear feature still counts as on the line")
     scope(c)
 
     ro = sub.add_parser("route")
     ro.add_argument("--kind", default="bus", help="bus / trolleybus / tram / subway / train / light_rail / ferry")
-    ro.add_argument("--ref", help="线路号，如 79")
-    ro.add_argument("--name", help="线路名的正则片段")
-    ro.add_argument("--step", type=float, default=200, help="沿线每隔多少米取一个点")
+    ro.add_argument("--ref", help="route number, e.g. 79")
+    ro.add_argument("--name", help="regex fragment of the route name")
+    ro.add_argument("--step", type=float, default=200, help="take a point every this many meters along the route")
     scope(ro)
 
     r = sub.add_parser("raw")
-    r.add_argument("file", type=Path, help="Overpass QL 文件")
+    r.add_argument("file", type=Path, help="Overpass QL file")
     scope(r)
 
     it = sub.add_parser("intersect")
-    it.add_argument("--a", required=True, help='第一类线，如 \'["railway"="rail"]["electrified"="contact_line"]\'')
-    it.add_argument("--b", required=True, help='第二类线，如 \'["power"="line"]\'')
+    it.add_argument("--a", required=True, help='first kind of line, e.g. \'["railway"="rail"]["electrified"="contact_line"]\'')
+    it.add_argument("--b", required=True, help='second kind of line, e.g. \'["power"="line"]\'')
     it.add_argument("--bend-min", type=float, default=0,
-                    help="标出 B 在交点外有 ≥这么多度折角（转角塔/河湾）的交点，并排在前面；0=不看折角。默认只标注不删")
-    it.add_argument("--bend-within", default="100:1000", help="折角离交点的距离范围 m")
+                    help="mark crossing points where B bends ≥ this many degrees beyond the crossing (angle tower / river bend) and rank them first; 0 = ignore bends. By default only marks, never deletes")
+    it.add_argument("--bend-within", default="100:1000", help="distance range of the bend from the crossing, m")
     it.add_argument("--bend-filter", action="store_true",
-                    help="真的删掉没有折角的交点（被删的写到 <out>_dropped.json）。只在折角是画面里亲眼确认的事实时用")
-    it.add_argument("--rank-near", help='按离最近的某类要素排序，如 \'["place"~"^(city|town)$"]\'、\'["highway"="services"]\'')
-    it.add_argument("--ring", help="lat,lon:最小m:最大m —— 只留离某点这个距离环带里的交点（如按地标像素大小算出的距离区间）")
-    it.add_argument("--cluster", type=float, default=100, help="多少米内的交点合成一处")
+                    help="actually delete crossing points without a bend (deleted ones go to <out>_dropped.json). Use only when the bend is a fact you confirmed with your own eyes in the photo")
+    it.add_argument("--rank-near", help='rank by distance to the nearest feature of a kind, e.g. \'["place"~"^(city|town)$"]\', \'["highway"="services"]\'')
+    it.add_argument("--ring", help="lat,lon:min_m:max_m — keep only crossing points in this distance ring around a point (e.g. a distance range computed from a landmark's pixel size)")
+    it.add_argument("--cluster", type=float, default=100, help="crossing points within this many meters merge into one place")
     scope(it)
 
-    cv = sub.add_parser("coverage", help="各候选行政区里某类要素有几个：枚举前先查 OSM 覆盖，空白区不能当排除")
-    cv.add_argument("--areas", required=True, help='逗号分隔的 OSM 行政区名，如 "某某区,某某县"')
-    cv.add_argument("--filter", required=True, help='要素过滤，如 \'["leisure"~"^(pitch|track)$"]\'、\'["building"]\'')
+    cv = sub.add_parser("coverage", help="how many features of a kind each candidate admin area has: check OSM coverage before enumerating; blank areas can't be grounds for exclusion")
+    cv.add_argument("--areas", required=True, help='comma-separated OSM admin area names, e.g. "<name>区,<name>县"')
+    cv.add_argument("--filter", required=True, help='feature filter, e.g. \'["leisure"~"^(pitch|track)$"]\', \'["building"]\'')
     cv.add_argument("--proxy", default=argparse.SUPPRESS)
     cv.add_argument("--cache", type=Path, default=argparse.SUPPRESS)
 
-    al = sub.add_parser("along", help="沿公路/河/输电线按步长取点（可往一侧偏移），给卫星缩略图或街景扫路边")
-    al.add_argument("--line", required=True, help='线状要素过滤，如 \'["highway"]["ref"="<道路编号>"]\'、\'["highway"]["name"~"<路名片段>"]\'')
-    al.add_argument("--step", type=float, default=150, help="每隔多少米取一个点；街景找门脸 ≤150，卫星缩略图可 300–500")
-    al.add_argument("--side", choices=list(_SIDES), help="往路的哪一侧偏移（按罗盘方向）")
-    al.add_argument("--offset", type=float, default=0, help="偏移米数，看路一侧的厂房时取建筑到路的距离")
+    al = sub.add_parser("along", help="take points at a step along a road / river / power line (optionally offset to one side), for satellite thumbnails or street view scans of the roadside")
+    al.add_argument("--line", required=True, help='linear feature filter, e.g. \'["highway"]["ref"="<road number>"]\', \'["highway"]["name"~"<road name fragment>"]\'')
+    al.add_argument("--step", type=float, default=150, help="take a point every this many meters; ≤150 for finding storefronts in street view, 300–500 is fine for satellite thumbnails")
+    al.add_argument("--side", choices=list(_SIDES), help="which side of the road to offset to (by compass direction)")
+    al.add_argument("--offset", type=float, default=0, help="offset in meters; when looking at factories on one side of the road, use the building-to-road distance")
     scope(al)
 
-    bu = sub.add_parser("buildings", help="按占地面积找大建筑（厂房、仓库、农场棚），标出周围稀疏程度")
-    bu.add_argument("--min-area", type=float, default=1000, help="最小占地 m²")
-    bu.add_argument("--within", type=float, default=200, help="数周围建筑用的半径 m")
-    bu.add_argument("--sort", choices=["area", "sparse"], default="area", help="sparse：周围建筑少的排前面（乡间孤立的厂房），只排序不删")
-    bu.add_argument("--filter", help='建筑过滤，默认 \'["building"]\'，如 \'["building"~"industrial|warehouse|farm_auxiliary"]\'')
+    bu = sub.add_parser("buildings", help="find large buildings by footprint area (factories, warehouses, farm sheds), marking how sparse the surroundings are")
+    bu.add_argument("--min-area", type=float, default=1000, help="minimum footprint m²")
+    bu.add_argument("--within", type=float, default=200, help="radius for counting surrounding buildings, m")
+    bu.add_argument("--sort", choices=["area", "sparse"], default="area", help="sparse: fewer surrounding buildings first (isolated rural factories); ranks only, never deletes")
+    bu.add_argument("--filter", help='building filter, default \'["building"]\', e.g. \'["building"~"industrial|warehouse|farm_auxiliary"]\'')
     scope(bu)
 
     gm = sub.add_parser("geom")
-    gm.add_argument("filter", help='标签过滤，如 \'["building"]\'、\'["highway"]\'')
+    gm.add_argument("filter", help='tag filter, e.g. \'["building"]\', \'["highway"]\'')
     scope(gm)
 
     ss = sub.add_parser("street-scan")
-    ss.add_argument("--bearing", required=True, help="镜头顺着看的那条街的方位范围，如 320:80（可跨北）")
-    ss.add_argument("--right", choices=["building", "empty", "any"], default="any", help="街的右侧")
-    ss.add_argument("--left", choices=["building", "empty", "any"], default="any", help="街的左侧")
-    ss.add_argument("--band", default="4:22", help="'有楼'的判定带：离街中线的横向距离 m")
-    ss.add_argument("--clear", default="3:10", help="'没楼'的判定带：这个横向范围里不能有楼 m")
-    ss.add_argument("--ahead", default="0:40", help="沿街往前看多远 m")
-    ss.add_argument("--min-area", type=float, default=150, help="'有楼'要求的最小占地面积 m²")
-    ss.add_argument("--look", type=float, default=60, help="用前多少米算街的方位")
+    ss.add_argument("--bearing", required=True, help="bearing range of the street the camera looks down, e.g. 320:80 (may cross north)")
+    ss.add_argument("--right", choices=["building", "empty", "any"], default="any", help="right side of the street")
+    ss.add_argument("--left", choices=["building", "empty", "any"], default="any", help="left side of the street")
+    ss.add_argument("--band", default="4:22", help="'building' test band: lateral distance from the street centerline, m")
+    ss.add_argument("--clear", default="3:10", help="'empty' test band: no building may be in this lateral range, m")
+    ss.add_argument("--ahead", default="0:40", help="how far ahead along the street to look, m")
+    ss.add_argument("--min-area", type=float, default=150, help="minimum footprint m² required for 'building'")
+    ss.add_argument("--look", type=float, default=60, help="how many meters ahead are used to compute the street bearing")
     ss.add_argument("--types", default="residential,unclassified,living_street,tertiary,secondary,service")
-    ss.add_argument("--anywhere", action="store_true", help="镜头不一定在路口：沿街每隔 --every 米都试")
+    ss.add_argument("--anywhere", action="store_true", help="the camera isn't necessarily at an intersection: try every --every meters along the street")
     ss.add_argument("--every", type=float, default=30)
     scope(ss)
 
@@ -788,12 +787,12 @@ def main() -> None:
                     ql += f"nwr{args.c}{sc}->.c;nwr.a(around.c:{args.within_c:.0f})->.a;"
                 ql += ".a out center tags;"
         pts = _points(run(ql, args.proxy, args.cache))
-        print(f"{len(pts)} 个结果")
+        print(f"{len(pts)} results")
         if not pts:
-            print("  0 个不等于没有：这一片 OSM 可能根本没画（国内县乡常见），不能当排除依据；先 osm.py coverage 比一比，或改用 tiles.py sheet --grid")
+            print("  0 doesn't mean none: OSM may not have mapped this area at all (common for counties and townships in China), so it can't be grounds for exclusion; compare first with osm.py coverage, or use tiles.py sheet --grid instead")
         if args.cmd == "near" and args.rank_near and pts:
             rows = _rank_rows([{"label": k, "ll": v, "bend": None} for k, v in pts.items()], args.rank_near, args)
-            pts = {f"{r['label']} 距{r['near_name'][:6]}{r['near_m'] / 1000:.1f}km" if r.get("near_m") is not None
+            pts = {f"{r['label']} {r['near_m'] / 1000:.1f}km from {r['near_name'][:6]}" if r.get("near_m") is not None
                    else r["label"]: r["ll"] for r in rows}
         if args.cmd == "near" and args.report and pts:
             pre2, sc2 = _scope(args)
@@ -821,7 +820,7 @@ def main() -> None:
                 near_list.sort(key=lambda x: x["dist_m"])
                 rep[name] = {"ll": ll, "nearest": near_list[:4]}
             args.report.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
-            print(f"报告 -> {args.report}")
+            print(f"report -> {args.report}")
     for k, (name, ll) in enumerate(pts.items()):
         if k >= args.limit:
             print("  …")
@@ -833,7 +832,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m² or ñ, and the Chinese the agent reads is garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

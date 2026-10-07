@@ -1,131 +1,131 @@
-# 天空线索：太阳、影子、卫星锅
+# Sky clues: sun, shadows, satellite dishes
 
-脚本：`scripts/sun.py`（`pos` / `ratio` / `locate` / `when` / `street` / `facing` / `compass` / `dish`）。算法和 NREL SPA 对比误差 ≤0.02°。
-没有地标、文字只能定到省或国家时，这是把几百公里缩到几十公里的主要手段（v001：从几百公里缩到几十公里）。
+Scripts: `scripts/sun.py` (`pos` / `ratio` / `locate` / `when` / `street` / `facing` / `compass` / `dish`). Compared with NREL SPA, the algorithm's error is ≤0.02°.
+When there are no landmarks and text only gets you to a province or country, this is the main way to shrink hundreds of kilometers to tens of kilometers (v001: from hundreds of kilometers down to tens).
 
-## 什么时候走这条分支
+## When to take this branch
 
-| 条件 | 能得到什么 |
+| Condition | What you get |
 |---|---|
-| 有清晰影子 + 知道拍摄时刻（出题人提示、EXIF、截图状态栏、聊天记录时间） | 太阳高度角 → 地图上的一条带；再有方向 → 带上的一段 |
-| 有清晰影子 + 地点已确定 | 拍摄时刻、日期（两组候选） |
-| 画面里有卫星电视锅 | 照片朝向（当指南针）；锅的方位角 → 经度范围 |
-| 太阳本身在画面里（日出日落、逆光） | 镜头朝向和画面里物体的真实方位（`sun.py compass`）；给了钟表时刻还能排除用错时区的国家 |
-| 阴天、夜景、室内 | 用不上，别硬算 |
+| Clear shadows + known capture time (puzzle setter's hint, EXIF, screenshot status bar, chat log timestamps) | Sun elevation angle → a band on the map; plus direction → a segment of the band |
+| Clear shadows + location already fixed | Capture time and date (two candidate sets) |
+| Satellite TV dishes in the frame | Photo heading (use them as a compass); dish azimuth → longitude range |
+| The sun itself in the frame (sunrise/sunset, backlight) | Lens heading and the true bearings of objects in the frame (`sun.py compass`); given a clock time, you can also exclude countries with the wrong time zone |
+| Overcast, night, indoors | Not usable; don't force a calculation |
 
-拍摄时刻要分清：发帖时间、IP 属地都不等于拍摄时刻和地点，只能当待验证的假设。
+Be clear about the capture time: posting time and IP location are not the capture time and place; treat them only as hypotheses to verify.
 
-**没有时刻时，不从太阳方向推路向、河流走向、航向**。太阳在画面侧面只说明镜头和太阳方位大致垂直，上午、正午、下午对应的方向完全不同（v002、v008、v012 的博主都这样推过，碰巧没错，方法不成立）。
+**Without a time, don't infer road direction, river direction or course from the sun's direction**. The sun at the side of the frame only says the lens is roughly perpendicular to the sun's azimuth; morning, noon and afternoon correspond to completely different directions (the creators in v002, v008 and v012 all reasoned this way and happened to be right; the method doesn't hold).
 
-## 1. 先定照片朝向
+## 1. Determine the photo heading first
 
-按可靠程度：
-1. **卫星锅**：同一片区的锅朝同一方向。国内户户通小锅对中星9号，东部城市朝西南（约 215°–227°），西部朝南甚至东南（见第 5 节表）。欧洲的锅整体朝南略偏东。
-2. **影子或受光面 + 时刻**：北回归线以北，正午影子指正北，上午朝西北、下午朝东北，一天里顺时针转。有日期时刻就算，不要估：
-   `python3 scripts/sun.py pos --at <大致位置> --time 2025-01-26T08:53 --tz Asia/Shanghai`
-   冬季早上 9 点前太阳方位约 120°，不是正东（v006 把太阳当正东，河流走向可能差 30°）。楼的哪一面最亮，那一面就大致朝太阳。
-3. **受光面**（没有可量的影子时）：一面墙受光，当且仅当太阳方位和墙面法向的夹角小于 90°。几面墙的明暗一交，就得到镜头朝向区间：
-   `python3 scripts/sun.py facing --at <大致位置> --time <时刻> --tz <时区> --lit left --shaded camera`
-   墙面按在画面里朝哪边写：`camera` 正对镜头、`left` 朝画面左、`right` 朝画面右。区间边界处墙面几乎平行于阳光，别当硬边界。
-   **影子方向和墙面明暗、树干受光面冲突时，以影子为准**（两例都是看墙面明暗判反了太阳在哪一侧）：白墙、浅色树皮在散射光下也显亮。最好读的是路边停着的车：车长约 4.5 m 当尺，影子超出车头多远、偏向车哪一侧，直接给出太阳在前还是在后、在左还是在右，以及高度角大致多低。人行道上的树影条纹来自画面外的树，方向难判，只作参考。
-4. **太阳本身在画面里**：它就是指南针。按太阳的像素位置算镜头朝向，还能算画面里任意物体（塔、烟囱、楼角）的真实方位，用来判断候选厂区里"哪个方块是照片里的塔"、机位在建筑哪一侧：
-   `python3 scripts/sun.py compass --at <候选区> --time <钟表时刻> --dates <可能的日期区间> --tz <时区> --sun-x <像素> --width <图宽> --hfov <视角区间> --x <物体像素>`
-   - 只给了时刻、没给日期：按可能的日期区间算，方位跟着变成区间；再按画面里太阳离地平线多高加 `--elev lo:hi`，高度对不上的日期自动剔掉，区间会收窄。
-   - 时刻、日期都没有：`compass` 默认按全年分日出、日落两组。北纬 30° 左右，一年里日落方位在约 240°–300° 之间摆动，差出去的角度足以让俯视模板对不上。**发帖时间不是拍摄时间**，不要拿发帖月份去缩日期。
-   - 分日出日落：发帖人的说法、天色、影子变化、路上车流和路灯。"学校里没人 → 放学后"这类会被假期、周末推翻的理由不用（v014）。分不开就两个朝向都建模板。
-5. **卫星图上的路**：地点候选已有时，用画面里的路、墙、河岸和卫星图对走向。
-6. 苔藓、树冠偏向这类说法不可靠，不用。
+In order of reliability:
+1. **Satellite dishes**: dishes in the same area point the same way. China's Hu Hu Tong (direct-to-home) small dishes point at ChinaSat 9; in eastern cities they face southwest (about 215°–227°), in the west south or even southeast (see the table in section 5). In Europe dishes generally face south, slightly east.
+2. **Shadows or lit faces + time**: north of the Tropic of Cancer, the noon shadow points due north, northwest in the morning and northeast in the afternoon, turning clockwise through the day. With a date and time, compute it; don't estimate:
+   `uv run scripts/sun.py pos --at <approx. location> --time 2025-01-26T08:53 --tz Asia/Shanghai`
+   On winter mornings before 9 a.m. the sun's azimuth is about 120°, not due east (v006 took the sun as due east; the river direction could be off by 30°). Whichever face of a building is brightest faces roughly toward the sun.
+3. **Lit faces** (when there's no measurable shadow): a wall is lit if and only if the angle between the sun's azimuth and the wall's normal is less than 90°. Intersect the lit/shaded state of several walls and you get a range for the lens heading:
+   `uv run scripts/sun.py facing --at <approx. location> --time <time> --tz <time zone> --lit left --shaded camera`
+   Describe walls by which way they face in the frame: `camera` faces the lens, `left` faces frame left, `right` faces frame right. At the range boundaries the wall is nearly parallel to the sunlight; don't treat them as hard boundaries.
+   **When shadow direction conflicts with wall brightness or the lit side of tree trunks, trust the shadow** (in two cases, reading wall brightness put the sun on the wrong side): white walls and pale bark also look bright in diffuse light. The easiest thing to read is a car parked at the roadside: use the car length of about 4.5 m as a ruler; how far the shadow extends beyond the front of the car and which side of the car it falls toward directly tell you whether the sun is in front or behind, left or right, and roughly how low its elevation angle is. Tree-shadow stripes on sidewalks come from trees outside the frame and their direction is hard to judge; use them only as a reference.
+4. **The sun itself in the frame**: it is the compass. Compute the lens heading from the sun's pixel position; you can also compute the true bearing of any object in the frame (tower, chimney, building corner), to judge "which block is the tower in the photo" within a candidate factory site and which side of the building the camera position is on:
+   `uv run scripts/sun.py compass --at <candidate area> --time <clock time> --dates <possible date range> --tz <time zone> --sun-x <pixels> --width <image width> --hfov <FOV range> --x <object pixels>`
+   - Only a time given, no date: compute over the possible date range, and the bearings become ranges; then add `--elev lo:hi` from how high the sun is above the horizon in the frame; dates whose elevation doesn't match are dropped automatically and the range narrows.
+   - Neither time nor date: `compass` defaults to the whole year, split into a sunrise set and a sunset set. Around 30°N, the sunset azimuth swings between about 240° and 300° over a year; the difference is enough to make a top-down template not match. **Posting time is not capture time**; don't use the posting month to narrow the date.
+   - Telling sunrise from sunset: what the poster says, sky color, shadow changes, road traffic and streetlights. Don't use reasons like "nobody at the school → after school", which holidays and weekends overturn (v014). If you can't tell, build templates for both headings.
+5. **Roads on satellite imagery**: once you have location candidates, match the directions of roads, walls and riverbanks in the frame against satellite imagery.
+6. Claims like moss or tree crowns leaning one way are unreliable; don't use them.
 
-## 2. 量影长比
+## 2. Measure the shadow length ratio
 
-`太阳高度角 = atan(物体高 / 影长)`。只要比例，不需要真实尺寸。
+`sun elevation angle = atan(object height / shadow length)`. Only the ratio is needed, not real sizes.
 
-- 选**竖直**物体（墙角、电线杆、路灯杆、竖直的墙边）和它落在**平地**上的影子。
-- 影子最好和画面平行（横向铺开）；影子朝镜头或背向镜头时透视压缩严重，换一个物体。
-- 广角照片先校正桶形畸变，再沿透视方向引辅助线量（v001 博主就是先修正再量）。
-- 同一张图里竖直物体在平地上的影子必须互相平行。不平行 = 地面不平、物体不直、人工光源或拼图。
-- 至少用两个物体各量一次，取区间。影长误差 20%，在 45° 附近会带来 6–8° 高度角误差。
+- Pick **vertical** objects (wall corners, utility poles, lamp posts, vertical wall edges) and their shadows on **flat** ground.
+- Prefer shadows parallel to the image plane (spread sideways); a shadow pointing toward or away from the lens is heavily foreshortened, so pick another object.
+- For wide-angle photos, first correct barrel distortion, then draw guide lines along the perspective direction to measure (the v001 creator corrected first, then measured).
+- In the same image, the shadows of vertical objects on flat ground must be parallel to each other. Not parallel = uneven ground, a non-vertical object, an artificial light source or a composite image.
+- Measure with at least two objects and take a range. A 20% shadow-length error gives a 6–8° elevation-angle error near 45°.
 
 ```bash
-python3 scripts/sun.py ratio --shadow 1.2           # 1:1.2 → 39.8°
+uv run scripts/sun.py ratio --shadow 1.2           # 1:1.2 → 39.8°
 ```
 
-## 3. 已知时刻 → 地图上的地带
+## 3. Known time → a band on the map
 
-同一时刻太阳高度角相同的点，是以太阳直射点为圆心的一个大圆；加上容差就是一条带。和已有候选区相交。
+The points where the sun's elevation angle is the same at the same moment form a large circle centered on the subsolar point; adding tolerance makes it a band. Intersect it with the existing candidate areas.
 
 ```bash
-# 北京时间 2023-08-15 16:20，影长比 1.2，±1°，候选区在华北
-python3 scripts/sun.py locate --time 2023-08-15T16:20 --tz Asia/Shanghai --ratio 1.2 --tol 1 \
+# Beijing time 2023-08-15 16:20, shadow ratio 1.2, ±1°, candidate area in North China
+uv run scripts/sun.py locate --time 2023-08-15T16:20 --tz Asia/Shanghai --ratio 1.2 --tol 1 \
         --bbox 34,110,42,122 --step 0.05 --mosaic north.jpg --out band.jpg
-# 再加影子朝向（东北 60°±10°），带会缩成一段
-python3 scripts/sun.py locate ... --shadow-bearing 60 --az-tol 10
+# Add the shadow bearing (northeast, 60°±10°) and the band shrinks to a segment
+uv run scripts/sun.py locate ... --shadow-bearing 60 --az-tol 10
 ```
 
-- 时刻不确定时加 `--time-tol 30`（±30 分钟）。
-- `--mosaic` 用 `tiles.py fetch` 出的低缩放底图（7–9 级）直接画出地带，放进证据图。
-- 验证过：代入视频题的已知答案点和出题人给的时刻，算出的影长比和博主实测一致。
+- When the time is uncertain, add `--time-tol 30` (±30 minutes).
+- `--mosaic` draws the band directly on a low-zoom base map from `tiles.py fetch` (zoom 7–9), for the evidence image.
+- Verified: plugging in a video puzzle's known answer point and the time the puzzle setter gave, the computed shadow ratio matched the creator's measurement.
 
-### 国内特有：统一北京时间 = 经度线索
+### China-specific: a single Beijing time = a longitude clue
 
-全国用东八区时间，国土却横跨东经 73°–135°。太阳正午（影子指正北）的北京时间：上海约 11:56，兰州约 13:06，拉萨约 13:57，乌鲁木齐约 14:11（6 月，全年再浮动约 ±15 分钟）。
-所以**知道钟表时间 + 看得出影子方向**，就能直接卡经度：下午两点影子还指正北，不可能在东部。
+The whole country uses UTC+8, yet spans 73°E–135°E. Beijing time of solar noon (shadow pointing due north): Shanghai about 11:56, Lanzhou about 13:06, Lhasa about 13:57, Urumqi about 14:11 (June; it shifts by about another ±15 minutes over the year).
+So **knowing the clock time + being able to see the shadow direction** directly constrains longitude: if the shadow still points due north at 2 p.m., it can't be in the east.
 
-## 4. 已知地点 → 拍摄时刻和日期
+## 4. Known location → capture time and date
 
 ```bash
-python3 scripts/sun.py when --at 30.25,120.16 --date 2024-10-01 --tz Asia/Shanghai --ratio 1.2 --shadow-bearing 30
-python3 scripts/sun.py when --at 30.25,120.16 --dates 2024-01-01:2024-12-31 --tz Asia/Shanghai --elev 40 --shadow-bearing 330
+uv run scripts/sun.py when --at 30.25,120.16 --date 2024-10-01 --tz Asia/Shanghai --ratio 1.2 --shadow-bearing 30
+uv run scripts/sun.py when --at 30.25,120.16 --dates 2024-01-01:2024-12-31 --tz Asia/Shanghai --elev 40 --shadow-bearing 330
 ```
 
-- 一年里同一太阳位置会出现两次（关于夏至或冬至对称），结果总是两组日期；用植被（落叶、开花、稻田颜色）和衣着选一组。
-- 春分秋分前后日期分辨率高，夏至冬至前后几周几乎分不开，报结果时说明。
-- 一天里同一高度角有上午、下午两个时刻，用影子**方向**分开（v007：08:39 影子朝西北、15:03 影子朝东北）。
-- **先报敏感度再报时刻**：`when` 会输出"差 1° ≈ N 分钟"。物高估错 1 m、影长量错 1 m 各对应多少分钟要写出来（v007 物高每差 1 m 时刻差约 13 分钟，博主报 ±5 分钟是运气）。
-- 影子末端要对齐真正投影的边缘（檐口、雨棚、栏杆顶），不是墙根。
+- The same sun position occurs twice a year (symmetric about the summer or winter solstice), so results always come in two sets of dates; pick one using vegetation (fallen leaves, flowering, rice-paddy color) and clothing.
+- Date resolution is high around the equinoxes; for several weeks around the solstices dates are nearly indistinguishable; say so when reporting.
+- The same elevation angle occurs at two times in a day, morning and afternoon; separate them by shadow **direction** (v007: 08:39 shadow to the northwest, 15:03 shadow to the northeast).
+- **Report the sensitivity before the time**: `when` prints "1° off ≈ N minutes". Write out how many minutes a 1 m error in object height and a 1 m error in shadow length each correspond to (v007: each 1 m of object-height error shifted the time by about 13 minutes; the creator's ±5 minutes was luck).
+- Align the shadow tip with the edge that actually casts it (eave, canopy, railing top), not with the base of the wall.
 
-### 已知城市和日期 → 街道走向
+### Known city and date → street orientation
 
-影子**方向**相对街道的夹角才能推走向，影长不能（v009 用影长推走向，推导不成立）。
+Only the angle of the shadow's **direction** relative to the street lets you infer the street orientation; shadow length doesn't (v009 inferred the orientation from shadow length; the reasoning doesn't hold).
 
 ```bash
-# 俯视图里从街道方向顺时针转到影子方向是 90°（影子垂直于街道）；分不清顺逆时针加 --both
-python3 scripts/sun.py street --at 49.25,-123.10 --date 2025-04-01 --tz America/Vancouver --ratio 1.5 --tol 4 --shadow-rel 90
+# In the top-down view, turning clockwise from the street direction to the shadow direction is 90° (shadow perpendicular to the street); if you can't tell clockwise from counterclockwise, add --both
+uv run scripts/sun.py street --at 49.25,-123.10 --date 2025-04-01 --tz America/Vancouver --ratio 1.5 --tol 4 --shadow-rel 90
 ```
 
-输出上午、下午两组走向。网格城市里一个走向就能砍掉一半街道；日期不确定时多试几天看走向变化多大。
+Outputs two sets of directions, morning and afternoon. In a grid city one direction cuts out half the streets; when the date is uncertain, try several days and see how much the direction changes.
 
-## 5. 卫星电视锅
+## 5. Satellite TV dishes
 
-锅对准赤道上空的地球静止卫星，方位角由"所在经度和卫星经度之差"决定。
+Dishes point at geostationary satellites above the equator; the azimuth is determined by "the difference between the local longitude and the satellite's longitude".
 
-国内户户通 / 村村通小锅（直径 35–60 cm，农村和城中村屋顶常见）几乎都对中星9号（东经 92.2°）：
+China's Hu Hu Tong / Cun Cun Tong (direct-to-home / village coverage) small dishes (35–60 cm diameter, common on rooftops in rural areas and urban villages) almost all point at ChinaSat 9 (92.2°E):
 
-| 城市 | 方位角 | 仰角 |
+| City | Azimuth | Elevation |
 |---|---|---|
-| 哈尔滨 | 224° | 27° |
-| 北京 | 215° | 38° |
-| 上海 | 227° | 42° |
-| 广州 | 225° | 54° |
-| 兰州 | 199° | 46° |
-| 成都 | 202° | 52° |
-| 昆明 | 204° | 59° |
-| 拉萨 | 178° | 55° |
-| 乌鲁木齐 | 173° | 39° |
-| 喀什 | 156° | 41° |
+| Harbin | 224° | 27° |
+| Beijing | 215° | 38° |
+| Shanghai | 227° | 42° |
+| Guangzhou | 225° | 54° |
+| Lanzhou | 199° | 46° |
+| Chengdu | 202° | 52° |
+| Kunming | 204° | 59° |
+| Lhasa | 178° | 55° |
+| Urumqi | 173° | 39° |
+| Kashgar | 156° | 41° |
 
 ```bash
-python3 scripts/sun.py dish --at 31.2,121.5 --sat 92.2               # 正算
-python3 scripts/sun.py dish --lat 31.2 --sat 92.2 --azimuth 213       # 锅朝 213° → 经度约 109°–113°
+uv run scripts/sun.py dish --at 31.2,121.5 --sat 92.2               # forward
+uv run scripts/sun.py dish --lat 31.2 --sat 92.2 --azimuth 213       # dish faces 213° → longitude about 109°–113°
 ```
 
-- 方位角读数比仰角可靠。小锅多是偏馈锅，锅面看起来比实际指向更"立"（偏馈角 20°–25°），别直接拿锅面倾角当仰角。
-- 单位、有线电视站的大锅（1.5 m 以上）可能对中星6B（115.5°）或亚洲卫星，不能套户户通的表。
-- 欧洲常见：Astra 1（19.2°E，德奥）、Hot Bird（13°E，意大利）、Astra 2（28.2°E，英国）。`sun.py` 里有列表。
+- Azimuth readings are more reliable than elevation. Small dishes are mostly offset-feed; the dish face looks more "upright" than its actual pointing (offset angle 20°–25°), so don't take the dish face tilt as the elevation angle.
+- Large dishes (1.5 m and up) at institutions and cable TV stations may point at ChinaSat 6B (115.5°) or an AsiaSat satellite; you can't apply the Hu Hu Tong table to them.
+- Common in Europe: Astra 1 (19.2°E, Germany/Austria), Hot Bird (13°E, Italy), Astra 2 (28.2°E, UK). There's a list in `sun.py`.
 
-## 常见错误
+## Common mistakes
 
-- 时区和夏令时弄错：`--tz` 用 IANA 名（`Europe/Berlin` 会自动处理夏令时），不要手写 +1/+2。
-- 把发帖时间当拍摄时间。
-- 在坡地、台阶上量影长；把斜拉的影子（物体不竖直）当竖直物体的影子。
-- 算出一条带就只看带的中线：容差内整条带都要看，优先和其他线索相交的部分。
+- Wrong time zone or DST: use an IANA name for `--tz` (`Europe/Berlin` handles DST automatically); don't hand-write +1/+2.
+- Taking posting time as capture time.
+- Measuring shadow length on slopes or steps; taking a slanted shadow (from a non-vertical object) as the shadow of a vertical object.
+- Computing a band and looking only at its center line: the whole band within tolerance must be checked; prioritize the parts that intersect other clues.

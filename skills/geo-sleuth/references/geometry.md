@@ -1,27 +1,27 @@
-# 相机几何：从画面反推方位、距离、高度
+# Camera geometry: recovering bearing, distance and height from the frame
 
-脚本：`scripts/geo.py`（`range` / `bearing` / `dest` / `fov` / `line` / `intersect` / `frame`）、`scripts/pose.py`（多点反解机位、候选机位打分）、`scripts/terrain.py`（天际线渲染）。
-所有结果都是估算，写结论时要把用到的假设（镜头倍率、物体尺寸）一并写出来。
+Scripts: `scripts/geo.py` (`range` / `bearing` / `dest` / `fov` / `line` / `intersect` / `frame`), `scripts/pose.py` (solving the camera position from multiple points, scoring candidate camera positions), `scripts/terrain.py` (skyline rendering).
+All results are estimates. When you write a conclusion, write out the assumptions you used (lens zoom, object size) with it.
 
-## 1. 先确定视角
+## 1. Determine the field of view first
 
-手机照片默认按主摄估算，35mm 等效焦距约 24–26mm：
+By default, estimate phone photos as taken with the main camera, 35mm-equivalent focal length about 24–26mm:
 
-| 等效焦距 | 4:3 长边视角 | 4:3 短边视角 |
+| Equivalent focal length | 4:3 long-side FOV | 4:3 short-side FOV |
 |---|---|---|
-| 13mm（0.5x 超广角） | ≈107° | ≈88° |
+| 13mm (0.5x ultra-wide) | ≈107° | ≈88° |
 | 24mm | ≈71° | ≈57° |
-| 26mm（1x 常见） | ≈67° | ≈53° |
-| 48–52mm（2x） | ≈38° | ≈29° |
-| 77mm（3x） | ≈26° | ≈19° |
+| 26mm (common 1x) | ≈67° | ≈53° |
+| 48–52mm (2x) | ≈38° | ≈29° |
+| 77mm (3x) | ≈26° | ≈19° |
 
-- 竖拍时，照片宽度对应短边视角；横拍对应长边视角。
-- 判断倍率：画面边缘有明显拉伸、近处物体很大 → 超广角；近景和远景大小差距小、背景显得"压过来" → 长焦。
-- 截图、裁剪过的照片视角会变小，按保守区间算。
+- In portrait orientation, the photo width corresponds to the short-side FOV; in landscape, to the long-side FOV.
+- Judging zoom: obvious stretching at the frame edges, nearby objects very large → ultra-wide; small size difference between near and far, background looks "pressed in" → telephoto.
+- Screenshots and cropped photos have a smaller FOV; use a conservative range.
 
-**视频截图更窄**：手机录像是 16:9，竖屏视频的画面宽度对应 16:9 的短边，防抖还会再裁掉一圈。
+**Video screenshots are narrower**: phone video is 16:9; the frame width of a vertical video corresponds to the short side of 16:9, and stabilization crops off another margin.
 
-| 倍率 | 横屏视频 水平视角 | 竖屏视频 水平视角 |
+| Zoom | Landscape video horizontal FOV | Vertical video horizontal FOV |
 |---|---|---|
 | 0.5x | ≈95–106° | ≈65–73° |
 | 1x | ≈58–67° | ≈35–41° |
@@ -29,120 +29,120 @@
 | 3x | ≈22–25° | ≈12–14° |
 | 5x | ≈14–16° | ≈8–9° |
 
-倍率看不出来时不要猜一个值：`geo.py range --real <物体尺寸> --pixels <像素> --image-width <宽> --hfov 8:70` 给出整个距离区间，候选按区间找；再用第 11 节检查"画面里没有某地标"能不能排除。
-倍率能反推：认出两个以上已知位置的地标，它们在画面里的水平像素间距对应的夹角，由候选机位算出来，两者一比就是焦距（点够 4 个直接用第 10 节 `pose.py`，hfov 不固定）。
+When you can't tell the zoom, don't guess a single value: `geo.py range --real <object size> --pixels <pixels> --image-width <width> --hfov 8:70` gives the whole distance range; search for candidates over that range. Then use section 11 to check whether "landmark X is not in the frame" can exclude anything.
+The zoom can be backed out: identify two or more landmarks with known positions; the angle spanned by their horizontal pixel spacing in the frame can be computed from the candidate camera position; comparing the two gives the focal length (with 4 or more points, use `pose.py` from section 10 directly, with hfov not fixed).
 
-焦距（像素）：`f = (画面宽度像素 / 2) / tan(视角 / 2)`
+Focal length (pixels): `f = (image width in px / 2) / tan(FOV / 2)`
 
-## 2. 找地平线
+## 2. Find the horizon
 
-**高楼俯拍、仰拍、手持歪斜时，地平线不在画面中线**（按这条默认值算过一次，山脊高差估错 2–3 倍）。这时：
-- 用竖直楼边的收敛估俯仰：楼边往下收拢 = 俯拍，往上收拢 = 仰拍；左右楼边倾斜不对称 = 有横滚。
-- 能认出 ≥4 个已知位置的点时，直接用第 10 节的 `pose.py` 把俯仰、横滚、高度一起解出来。
+**When shooting down from a tall building, shooting up, or holding the phone tilted, the horizon is not at the middle of the frame** (one calculation using that default got the ridge height difference wrong by 2–3×). In that case:
+- Estimate pitch from the convergence of vertical building edges: edges converging downward = shooting down, converging upward = shooting up; asymmetric tilt of the left and right building edges = roll.
+- When you can identify ≥4 points with known positions, use `pose.py` from section 10 to solve pitch, roll and height together.
 
-手机端平时，地平线在画面垂直中线。验证方法：
-- 竖直的楼边基本平行、没有明显向上收拢 → 手机端平
-- 远处和拍摄者同高的物体（例如远处几层楼的楼顶，拍摄者也在几楼）落在哪一行，那一行就是地平线
+When the phone is held level, the horizon is at the vertical middle of the frame. To verify:
+- Vertical building edges are basically parallel, with no obvious upward convergence → phone is level
+- The row on which a distant object at the photographer's height lands (e.g., the roof of a distant building a few floors high, when the photographer is also a few floors up) is the horizon
 
-## 3. 用已知尺寸估距离
+## 3. Estimate distance from a known size
 
-`距离 ≈ 真实尺寸 × f / 像素尺寸`
+`distance ≈ real size × f / size in pixels`
 
-常用参照尺寸：
+Common reference sizes:
 
-| 物体 | 尺寸 |
+| Object | Size |
 |---|---|
-| 住宅层高 | 2.9–3.0 m |
-| 办公/厂房层高 | 3.3–4.5 m |
-| 小汽车宽 / 长 | 1.8 m / 4.7 m；MPV 长约 5 m |
-| 城市车道宽 | 3.5 m |
-| 标准停车位 | 2.5 × 5.3 m |
-| 阳台栏杆竖杆间距 | 约 0.11 m |
-| 国内高铁、城际简支箱梁跨度（墩距） | 多数 32 m，也有 24 m、40 m；数得清桥墩时一排墩就是一把尺 |
-| 超高层塔楼宽度 | 查资料，没有就在卫星图上量楼顶 |
+| Residential floor height | 2.9–3.0 m |
+| Office/factory floor height | 3.3–4.5 m |
+| Car width / length | 1.8 m / 4.7 m; MPV length about 5 m |
+| Urban lane width | 3.5 m |
+| Standard parking space | 2.5 × 5.3 m |
+| Balcony railing baluster spacing | about 0.11 m |
+| Chinese high-speed and intercity rail simply supported box girder span (pier spacing) | mostly 32 m, also 24 m and 40 m; when you can count the piers, a row of piers is a ruler |
+| Supertall tower width | look it up; if you can't find it, measure the roof on satellite imagery |
 
-同一个物体用两种方法各估一次（例如楼宽和层高），差距大就说明倍率或尺寸假设错了。
+Estimate the same object two ways (e.g., building width and floor height). A large gap means the zoom or size assumption is wrong.
 
-## 4. 两个地标反推拍摄方向（最有用）
+## 4. Recover the shooting direction from two landmarks (most useful)
 
-条件：两个地标位置已知（从卫星图上量），在照片里能分出谁近谁远、谁左谁右。
+Conditions: the positions of two landmarks are known (measured on satellite imagery), and in the photo you can tell which is nearer/farther and which is left/right.
 
-1. 在卫星图上确定两个地标的连线方向。
-2. 等高的物体，画面里顶部位置更低的那个更远。有已知宽度时用第 3 节算出各自距离。
-3. 只有少数方向满足"近的在左、远的在右"：从连线的某一侧斜着看过去。
-   例：两塔东西排列，近塔在左、远塔在右 → 拍摄者在西南偏西或东北偏东；
-   从正南/正北看两塔一样远；从东南/西北看左右远近会反过来。
-4. 两塔在画面里的水平夹角，结合两塔实际间距，可以进一步求出视线和连线的夹角。
-5. 候选方向一般剩两个，用卫星图看哪边的建筑格局像照片，排除掉另一个。
+1. On satellite imagery, determine the direction of the line connecting the two landmarks.
+2. For objects of equal height, the one whose top sits lower in the frame is farther. With a known width, use section 3 to compute each distance.
+3. Only a few directions satisfy "near one on the left, far one on the right": looking obliquely from one side of the connecting line.
+   Example: two towers lie east–west, near tower on the left, far tower on the right → the photographer is west-southwest or east-northeast;
+   from due south/north the two towers are equally far; from the southeast/northwest the left/right near/far relation reverses.
+4. The horizontal angle between the two towers in the frame, combined with their actual spacing, further gives the angle between the sight line and the connecting line.
+5. Usually two candidate directions remain; use satellite imagery to see which side's building layout looks like the photo, and exclude the other.
 
-## 5. 路的走向
+## 5. Road direction
 
-- 找出街道的消失点（两侧楼的檐口线、路边线延长后的交点）。
-- 地标和消失点在画面里的水平像素差 → 夹角：`角度 = atan((x地标 − x中心) / f) − atan((x消失点 − x中心) / f)`
-- 路的方位 = 地标方位 − 夹角。在卫星图上找这个走向的路。
+- Find the street's vanishing point (the intersection of the extended eave lines of buildings on both sides and the road edges).
+- Horizontal pixel difference between a landmark and the vanishing point in the frame → angle: `angle = atan((x_landmark − x_center) / f) − atan((x_vanishing − x_center) / f)`
+- Road bearing = landmark bearing − angle. Look for a road with this direction on satellite imagery.
 
-## 6. 拍摄高度
+## 6. Camera height
 
-- 画面里某栋楼某一层落在地平线上 → 拍摄者和那一层同高。
-- 或者：某物体上沿、下沿到地平线的像素距离之比 = 高于拍摄者的部分 : 低于拍摄者的部分。
-  例：玻璃幕墙上沿在地平线上方 283 px、下沿在下方 157 px，幕墙离地 4–20 m → 拍摄者约离地 10 m。
-- 俯视地面近处物体：`俯角 = atan(像素到中线距离 / f)`，已知水平距离就能求高度。
-- 至少用两种参照交叉验证，给楼层区间（例如"3–6 楼"），不要给单个数。
+- A certain floor of a building in the frame lies on the horizon → the photographer is at the same height as that floor.
+- Or: the ratio of the pixel distances from an object's top edge and bottom edge to the horizon = part above the photographer : part below the photographer.
+  Example: a glass curtain wall's top edge is 283 px above the horizon and its bottom edge 157 px below; the wall spans 4–20 m above ground → the photographer is about 10 m above ground.
+- Looking down at nearby objects on the ground: `depression angle = atan(pixel distance to the center line / f)`; with a known horizontal distance you can get the height.
+- Cross-check with at least two references and give a floor range (e.g., "floors 3–6"), not a single number.
 
-## 7. 视线几何：不用焦距和尺寸也能定机位
+## 7. Sight-line geometry: fixing the camera position without focal length or sizes
 
-这一节是视频里人赢 AI 的主要手段（v006、v010-1/2/3/7）。认出锚点之后、街景比对之前做。
+This section is the main way humans beat the AI in the videos (v006, v010-1/2/3/7). Do it after identifying an anchor and before street view comparison.
 
-### 7.1 对齐线（两点一线延长）
+### 7.1 Alignment line (extend the line through two points)
 
-画面里一个近物和一个远物上下对齐或一个挡住另一个（塔尖正好在房子上方、球场对角线正对镜头），机位就在"远物 → 近物"的延长线上、近物之外。
+When a near object and a far object in the frame are vertically aligned or one hides the other (a spire right above a house, a court's diagonal pointing straight at the lens), the camera position is on the extension of the line "far object → near object", beyond the near object.
 
 ```bash
-python3 scripts/geo.py line --near <近物lat,lon> --far <远物lat,lon> --range 50:2000 --step 100 --out line.json
-python3 scripts/tiles.py mark area.jpg --points line.json --out area_line.jpg
+uv run scripts/geo.py line --near <near object lat,lon> --far <far object lat,lon> --range 50:2000 --step 100 --out line.json
+uv run scripts/tiles.py mark area.jpg --points line.json --out area_line.jpg
 ```
 
-线上再用第三个约束截出机位：河岸、道路、够高的楼、拍摄高度。
+Then cut the camera position out of the line with a third constraint: riverbank, road, a tall-enough building, camera height.
 
-### 7.2 视线交会（两条线定一个点）
+### 7.2 Sight-line intersection (two lines fix a point)
 
 ```bash
-python3 scripts/geo.py intersect --align1 <近物1>:<远物1> --align2 <近物2>:<远物2> --sigma 1
-python3 scripts/geo.py intersect --sight1 <地标lat,lon>@<从机位看它的方位> --sight2 ... --sigma 2
+uv run scripts/geo.py intersect --align1 <near1>:<far1> --align2 <near2>:<far2> --sigma 1
+uv run scripts/geo.py intersect --sight1 <landmark lat,lon>@<bearing to it from the camera position> --sight2 ... --sigma 2
 ```
 
-- 输出交点、两线夹角、误差半径（每条线方位偏 ±sigma 时交点移动的最大距离）。
-- 夹角 <15° 时交点对误差极敏感，再找一条夹角大的线。
-- 误差半径就是结论里该写的半径，不要自己编小数位。
+- Outputs the intersection, the angle between the two lines, and the error radius (the maximum distance the intersection moves when each line's bearing is off by ±sigma).
+- When the angle is <15°, the intersection is extremely sensitive to error; find another line at a large angle.
+- The error radius is the radius to write in the conclusion; don't make up decimal places.
 
-### 7.3 切线
+### 7.3 Tangent line
 
-山脊、崖边和近处地物的边缘（农田边、河岸线、屋檐）在画面里刚好相切 → 在卫星图上画同一条切线，机位在线上（v010-2）。
+A ridge or cliff edge is exactly tangent in the frame to the edge of a nearby feature (field edge, riverbank line, eave) → draw the same tangent line on satellite imagery; the camera position is on that line (v010-2).
 
-### 7.4 天际线只给一条视线
+### 7.4 A skyline gives only one sight line
 
-机位沿视线方向前后挪几百米，远处山脊轮廓几乎不变。所以"山形对上了"只说明机位在某条视线附近，**不能定点，更不能报米级**（v010-1：AI 只凭山轮廓报 ±7 m，落在错的镇上）。
+Moving the camera position a few hundred meters forward or back along the sight line barely changes the outline of a distant ridge. So "the mountain shape matches" only says the camera position is near some sight line; **it can't fix a point, much less give meter-level precision** (v010-1: the AI reported ±7 m from the mountain outline alone and landed in the wrong town).
 
 ```bash
-python3 scripts/terrain.py view --at <候选机位> --heading <朝向> --hfov 60 --range 25000 --out v.png --photo photo.jpg
+uv run scripts/terrain.py view --at <candidate camera position> --heading <heading> --hfov 60 --range 25000 --out v.png --photo photo.jpg
 ```
 
-用它筛候选机位、确定视线方位；定点要再加一条独立约束（另一组近物—远物对齐、路或河岸、拍摄高度）。
-渲染时视角要和照片一致：竖拍手机主摄水平视角约 50°，横拍约 65°；长焦要按倍率缩小（2x 约减半）。
+Use it to screen candidate camera positions and fix the sight-line bearing; to fix a point, add another independent constraint (another near–far alignment, a road or riverbank, camera height).
+When rendering, the FOV must match the photo: portrait phone main camera horizontal FOV about 50°, landscape about 65°; for telephoto shrink it by the zoom (2x roughly halves it).
 
-- 加 `--overlay` 会另出一张图，把合成天际线按针孔投影直接画在照片上，比上下并排好对；对不上时先调 `--heading / --pitch / --hfov / --roll`，再怀疑机位。
-- 近处出现尖刺状假山脊（高程采样伪影）时，把 `--near` 调到 150–300 m。
-- 城市周边山脊平缓时，天际线只能帮你定朝向和视角，分不出几百米内的机位。
+- `--overlay` outputs an extra image that draws the synthetic skyline directly on the photo by pinhole projection; easier to match than stacking them top and bottom. When it doesn't match, adjust `--heading / --pitch / --hfov / --roll` first, before doubting the camera position.
+- When spiky false ridges appear close by (elevation sampling artifacts), set `--near` to 150–300 m.
+- When the ridges around a city are gentle, the skyline only helps you fix heading and FOV; it can't separate camera positions within a few hundred meters.
 
-**候选机位很多时批量打分，再看前几名的叠图**（单一来源，实战一例）。两步：先 `terrain.py ridge` 把照片山脊读成一串像素点，再 `terrain.py fit` 在候选点周围摆网格机位搜朝向 × 焦距 × 地平线行。
+**When there are many candidate camera positions, score them in batch, then look at overlays of the top few** (single source; one real case). Two steps: first `terrain.py ridge` reads the photo's ridge into a sequence of pixel points, then `terrain.py fit` places grids of camera positions around the candidate points and searches heading × focal length × horizon row.
 
 ```bash
-# 1) 读照片山脊：逐列找天空到山体的亮度突变
+# 1) Read the photo ridge: per column, find the brightness drop from sky to mountain
 uv run ${CLAUDE_SKILL_DIR}/scripts/terrain.py ridge photo.jpg --x0 X0 --x1 X1 --out ridge.json \
-  [--step 20] [--flat x0:x1] [--hrow 行] [--f0 px] [--f35 26.0] [--ymin 0] [--ymax 画面高] \
+  [--step 20] [--flat x0:x1] [--hrow ROW] [--f0 px] [--f35 26.0] [--ymin 0] [--ymax IMAGE_HEIGHT] \
   [--drop 30] [--k 4] [--hold 12] [--halfw 1] [--png check.png]
 
-# 2) 批量打分（精搜 = 同一命令换 --radius 800 --grid 100 --zoom 13 --az-step 0.25 --nsamp 400）
+# 2) Batch scoring (fine search = the same command with --radius 800 --grid 100 --zoom 13 --az-step 0.25 --nsamp 400)
 uv run ${CLAUDE_SKILL_DIR}/scripts/terrain.py fit (--hits hits.json | --at lat,lon) --ridge ridge.json --out fit.json \
   [--select 11,87,...] [--radius 2000] [--grid 250] [--zoom 11] [--focal-scales 0.9,1,1.12] [--az-step 0.5] \
   [--near 150] [--range 15000] [--nsamp 260] [--eye 1.6] [--cam-flat 8] [--cam-flat-radius 300] \
@@ -152,140 +152,140 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/terrain.py fit (--hits hits.json | --at lat,l
   [--top 20] [--keep 5000] [--sheet top.jpg] [--overlay|--photo photo.jpg] [--sheet-cols 4] [--sheet-width 360]
 ```
 
-- `ridge`：`--x0/--x1` 是山脊所在的列范围，`--step` 取点间距，`--flat x0:x1` 是平地平线（没有山的那段）的列范围，`--hrow` 是地平线所在行（不给则按画面中线估）。`--drop/--k/--hold/--halfw` 是找亮度突变的阈值（下降幅度、倍数、连续行数、横向平滑半宽）。输出 `{size, ridge:[[x,y]...], flat:[x0,x1], hrow, f0, f0_source}`；照片没有 EXIF 焦距时按 `--f35` 等效焦距和画幅估 `f0` 并标 `f0_source=assumed`，`--png` 出一张核对图。
-- `fit`：候选来自 `--hits`（`corridors.md` 4.3 的扫描结果，`--select` 只取指定簇号）或 `--at` 单点。每个候选点周围 `--radius` 米、`--grid` 米网格摆机位，朝向按 `--az-step` 扫，焦距按 `--focal-scales` 倍率试，地平线行也搜——**不要写死"竖拍 50°、地平线在中线"**。机位本身要求近处平（`--cam-flat` 米 / `--cam-flat-radius` 米内起伏），山要够高（`--min-peak`）。打分 = 山脊仰角 RMS + 平地平线段被山挡住的罚分（`--flat-clear` 容差、`--flat-w` 权重）。输出里的 `rms_px` 是 RMS 换成的像素数，要和照片山脊的取点误差比：前几名的 `rms_px` 都和取点误差差不多大（几到十来个像素）时，天际线分不开这些机位，要靠第二条约束。焦距有 EXIF 就只给 `--focal-scales 1`；没有时最优焦距常落在搜索范围的边上，这个焦距别拿来当结论。
-- **横滚一起解**（`--roll-max`，默认 1.0°，写 0 就是旧版行为）：手持拍歪 1°，画面两端的山脊就差十几像素，不解出来真值会和一堆错候选挤在同一档 RMS。每个朝向下把"地形仰角 − 照片仰角"对水平方位做最小二乘，截距是地平线偏移 `cc`、斜率是 tan(横滚)，结果写进机位记录的 `roll`。上限要收紧：合成题和实拍里 ±1° 的效果都比 ±2.5° 好（放宽后错候选也能靠歪斜吸噪声，真值和第二名的差距被抹平）。解出来的 `roll` 顶到上限说明这个自由度在补别的误差（机位不对、焦距不对），别当成真的拍摄歪斜。
-- 设施距离约束可选：`--line` 给线数据，`--line-dist` 给左/中/右三处距离区间（米），`--line-win` 是三处对应的画面方位窗（度，相对朝向），`--line-order` 要求三处距离单调（asc/desc）。落窗外按 `--line-scale` 和 `--line-w` 罚分。
-- 输出 `fit.json`：`{params, n_clusters, n_cams, n_skipped:{not_flat, no_peak, no_line, dup}, clusters:[{hit, name, hit_ll, n, max_ang, n_cams, rank, best}...], cams:[{hit, name, hit_ll, cam:[lat,lon], d, brg, g, H, fs, f, cc, roll, rms, rms_px, flatpen, score, (dL/dC/dR/line_pen), total}...]}`；`--sheet` 出前 N 名缩略图，配 `--photo` 时是照片叠合成天际线（红线按该机位解出的 `roll` 画，不然两端会差出十几像素）。
-- `ridge` / `fit` 都用 `terrain.py` 的全局参数：`--proxy`（默认读 `GEO_PROXY`）、`--cache`（默认 `.geo-cache/dem`）。
-- 近处出现尖刺状假山脊（高程采样伪影）时，把 `--near` 调到 150–300 m。
-- **精搜（z13）不保证比粗搜更准**：复跑里同一条链精搜反而比粗搜离真值更远。z13 的平地筛会把真值附近的点筛掉，天际线本身也只给一条视线。精搜的作用是给 7.7 的等间距构件一个靠谱的 `--center`，不是自己把误差压下去。
-- `fit` 输出的 `H` 和 `f` 有系统偏差，来源是 `ridge.json` 的 `hrow`：同一次粗搜，hrow 手定 935 给 H 80.5 / f 1436，自动估的 909 给 H 79.0 / f 1282。排簇不受影响（两次真值簇都第 1），要拿朝向和焦距说事就先在 `ridge --png` 上把蓝线定准。
-- **只靠天际线分不开**：实战里 171 个候选真值排第 2，但前 20 名 RMS 都挤在 0.10–0.20°。要和第二条数值约束一起排（例如设施离画面左、中、右各多远，`corridors.md` 4.3）。
-- 被前景（人、车、树、近处物件）挡住的那段山脊进不了打分，而山脚从哪里起坡往往最能区分候选。**前 3–5 名一律 `--overlay` 叠图看**：实战里总分第 1 的候选山脊在遮挡段鼓起、山脚对不上，第 2 名才是真值。
+- `ridge`: `--x0/--x1` is the column range of the ridge, `--step` the spacing between sampled points, `--flat x0:x1` the column range of the flat horizon (the stretch with no mountains), `--hrow` the horizon row (if omitted, estimated from the middle of the frame). `--drop/--k/--hold/--halfw` are the thresholds for finding the brightness drop (drop size, multiple, consecutive rows, horizontal smoothing half-width). Outputs `{size, ridge:[[x,y]...], flat:[x0,x1], hrow, f0, f0_source}`; when the photo has no EXIF focal length, `f0` is estimated from the `--f35` equivalent focal length and the image dimensions and marked `f0_source=assumed`. `--png` outputs a check image.
+- `fit`: candidates come from `--hits` (the scan results of `corridors.md` 4.3; `--select` takes only the given cluster numbers) or a single point via `--at`. Around each candidate point, camera positions are placed on a `--grid`-meter grid within `--radius` meters; heading is scanned in `--az-step` steps, focal length is tried at the `--focal-scales` multipliers, and the horizon row is searched too — **don't hard-code "portrait 50°, horizon at the middle"**. The camera position itself must be flat close by (relief of at most `--cam-flat` m within `--cam-flat-radius` m), and the mountains must be high enough (`--min-peak`). Score = ridge elevation-angle RMS + a penalty for the flat-horizon stretch being blocked by mountains (`--flat-clear` tolerance, `--flat-w` weight). `rms_px` in the output is the RMS converted to pixels; compare it with the point-picking error of the photo ridge: when the top few all have `rms_px` about as large as the picking error (a few to a dozen or so pixels), the skyline can't separate these camera positions and you need a second constraint. If you have the EXIF focal length, pass only `--focal-scales 1`; without it, the best focal length often lands on the edge of the search range — don't use that focal length as a conclusion.
+- **Solve roll too** (`--roll-max`, default 1.0°; 0 gives the old behavior): a 1° handheld tilt makes the ridge at the two ends of the frame differ by a dozen or so pixels; if roll isn't solved, the ground truth gets crowded into the same RMS tier as a pile of wrong candidates. For each heading, a least-squares fit of "terrain elevation angle − photo elevation angle" against horizontal azimuth gives the horizon offset `cc` as the intercept and tan(roll) as the slope; the result is written into the camera-position record's `roll`. Keep the cap tight: in both synthetic tests and real photos ±1° works better than ±2.5° (when loosened, wrong candidates can also absorb noise through tilt, and the gap between the ground truth and second place is flattened). A solved `roll` that hits the cap means this degree of freedom is compensating for other errors (wrong camera position, wrong focal length); don't treat it as real tilt in the shot.
+- The facility-distance constraint is optional: `--line` gives the line data, `--line-dist` gives distance ranges (meters) at three places, left/center/right, `--line-win` the frame bearing windows for those three places (degrees, relative to heading), and `--line-order` requires the three distances to be monotonic (asc/desc). Falling outside a window is penalized by `--line-scale` and `--line-w`.
+- Output `fit.json`: `{params, n_clusters, n_cams, n_skipped:{not_flat, no_peak, no_line, dup}, clusters:[{hit, name, hit_ll, n, max_ang, n_cams, rank, best}...], cams:[{hit, name, hit_ll, cam:[lat,lon], d, brg, g, H, fs, f, cc, roll, rms, rms_px, flatpen, score, (dL/dC/dR/line_pen), total}...]}`; `--sheet` outputs thumbnails of the top N; with `--photo` they are the photo overlaid with the synthetic skyline (the red line is drawn with the `roll` solved for that camera position; otherwise the two ends would be off by a dozen or so pixels).
+- `ridge` / `fit` both use `terrain.py`'s `--cache` parameter (default `.geo-cache/dem`).
+- When spiky false ridges appear close by (elevation sampling artifacts), set `--near` to 150–300 m.
+- **Fine search (z13) is not guaranteed to be more accurate than coarse search**: in reruns, fine search on the same chain ended up farther from the ground truth than coarse search. The z13 flatness filter removes points near the ground truth, and the skyline itself gives only one sight line. Fine search exists to give 7.7's evenly spaced structures a reliable `--center`, not to push the error down by itself.
+- `H` and `f` in the `fit` output have a systematic bias that comes from `hrow` in `ridge.json`: in the same coarse search, hrow set by hand to 935 gave H 80.5 / f 1436, while the auto-estimated 909 gave H 79.0 / f 1282. Cluster ranking is unaffected (the ground-truth cluster ranked 1st both times); if you want to make claims from heading and focal length, first pin down the blue line on `ridge --png`.
+- **Skyline alone can't separate them**: in a real case with 171 candidates the ground truth ranked 2nd, but the top 20 all had RMS crowded into 0.10–0.20°. Rank together with a second numeric constraint (e.g., how far the facility is from the left, center and right of the frame, `corridors.md` 4.3).
+- The stretch of ridge hidden by the foreground (people, cars, trees, nearby objects) doesn't enter the score, yet where the mountain foot starts to rise is often what best separates candidates. **Always `--overlay` the top 3–5 and look**: in a real case, the candidate ranked 1st overall had its ridge bulge in the occluded stretch and its mountain foot didn't match; the 2nd was the ground truth.
 
-### 7.6 近处线缆在画面里接近竖直
+### 7.6 A nearby cable close to vertical in the frame
 
-画面里一根离镜头很近的缆绳、电线、拉索如果几乎竖直，说明机位就在这根线的竖直面附近（从正下方或正侧面看过去）。
-线在画面里偏离竖直、横向跨过的方位差 Δ（度）和线离机位的距离 s 满足：横向偏移 d ≈ s · tan(Δ)。线的位置用 `osm.py find '["aerialway"]'`、`'["power"="line"]'` 取。
-盲测里靠这一条把横向误差压到过十几米。
+If a cable, wire or stay very close to the lens looks almost vertical in the frame, the camera position is near the vertical plane of that line (looking from directly below or straight from the side).
+The bearing difference Δ (degrees) by which the line departs from vertical and spans horizontally in the frame, and the distance s from the line to the camera position, satisfy: lateral offset d ≈ s · tan(Δ). Get the line's position with `osm.py find '["aerialway"]'` or `'["power"="line"]'`.
+In a blind test, this alone once brought the lateral error down to a dozen or so meters.
 
-### 7.5 俯视草图验方位
+### 7.5 Verify bearings with a top-down sketch
 
-把"机位 → 前景 → 中景 → 远景 → 太阳"画成带方位的俯视示意，候选点必须在地图上复现同样的左右、远近和朝向。规则见 `verify.md` 第 3 节。日落只说明镜头朝西，不说明海岸朝西（v010-7）。
+Draw "camera position → foreground → midground → background → sun" as a top-down sketch with bearings; the candidate point must reproduce the same left/right, near/far and heading on the map. Rules in `verify.md` section 3. A sunset only says the lens faces west, not that the coast faces west (v010-7).
 
-### 7.7 等间距构件：到线的距离和斜角
+### 7.7 Evenly spaced structures: distance to the line and oblique angle
 
-画面里一排等间距的东西（高架桥墩、电杆、路灯、护栏立柱）落在一条地图上已知的线上时，可以反解机位离这条线多远、斜着看过去多少度。单一来源（实战一例）。
+When a row of evenly spaced things in the frame (viaduct piers, utility poles, streetlights, guardrail posts) lies on a line known on the map, you can solve for how far the camera position is from that line and at how many degrees it looks across it obliquely. Single source (one real case).
 
-1. `imgprep.py piers` 读出每个构件的像素列（沿构件所在的那几行取亮度剖面找峰），≥6 个，被前景挡成几段也可以。
+1. `imgprep.py piers` reads the pixel column of each structure (it takes a brightness profile along the rows where the structures are and finds peaks); ≥6 of them, and it's fine if the foreground breaks them into several segments.
 
 ```bash
 uv run ${CLAUDE_SKILL_DIR}/scripts/imgprep.py piers <image> --rows R0:R1 --out cols.json \
   [--cols X0:X1] [--min-gap 20] [--min-prominence 12] [--baseline 61] [--polarity auto|bright|dark] [--sheet piers.jpg]
 ```
 
-`--rows` 是取剖面的行范围（构件所在的那几行），`--cols` 限定列范围，`--min-gap` 是相邻峰最小间隔像素，`--min-prominence` 是峰的最小显著度，`--baseline` 是估背景用的滑动窗宽（奇数），`--polarity` 说构件比背景亮还是暗。输出 `{image, size, rows:[r0,r1], cols:[x0,x1]（列的搜索范围，不是构件列）, polarity, params, count, piers:[{col, prominence, dev, level}...]}`；构件列在 `piers` 里，`geo.py spacing --cols @cols.json` 直接读这个字段。**`--sheet` 出的核对图必须人眼过一遍**：草地亮斑、前景管线边缘都会冒出假峰，删掉再进下一步。
+`--rows` is the row range for the profile (the rows the structures are in), `--cols` limits the column range, `--min-gap` is the minimum spacing in pixels between adjacent peaks, `--min-prominence` the minimum peak prominence, `--baseline` the sliding-window width (odd) used to estimate the background, and `--polarity` says whether the structures are brighter or darker than the background. Outputs `{image, size, rows:[r0,r1], cols:[x0,x1] (the column search range, not the structure columns), polarity, params, count, piers:[{col, prominence, dev, level}...]}`; the structure columns are in `piers`, and `geo.py spacing --cols @cols.json` reads that field directly. **You must eyeball the check image from `--sheet`**: bright patches of grass and the edges of foreground pipes produce false peaks; delete them before the next step.
 
-2. `geo.py spacing`：对每个候选机位、朝向、焦距，把像素列换成方位射线，和 OSM 折线求交，得到每个构件的沿线里程；正确的机位上相邻里程差恒定，且等于标准间距。
+2. `geo.py spacing`: for each candidate camera position, heading and focal length, convert the pixel columns into bearing rays and intersect them with the OSM polyline to get each structure's along-line distance; at the correct camera position the differences between adjacent along-line distances are constant and equal the standard spacing.
 
 ```bash
 uv run ${CLAUDE_SKILL_DIR}/scripts/geo.py spacing --cols '39,133,219,296,369;745,788,...,1148' \
-  --line rail.geojson [--line-name <线名>] [--line-index 0] --span 32 --center lat,lon \
+  --line rail.geojson [--line-name <line name>] [--line-index 0] --span 32 --center lat,lon \
   [--radius 1500] [--grid 50] [--headings 0:360] [--heading-step 0.25] \
-  --focals 1200,1281,1350,1430,1500|1200:1500[:步长] [--focal-step 50] [--cx 640] \
+  --focals 1200,1281,1350,1430,1500|1200:1500[:step] [--focal-step 50] [--cx 640] \
   [--min-dist 100] [--pier-max 0.08] [--mono-penalty 1.0] [--top 25] [--progress 10] [--out spacing.json] \
   [--ridge ridge.json] [--hrow 935] [--flat 0:280] [--flat-step 20] [--flat-margin 1.0] [--flat-weight 1.5] \
   [--ridge-weight/--pier-weight 2.0] [--cc-max 0.8] [--eye 1.6] [--dem-zoom 13] [--dem-range 18000] \
-  [--sky-range 16000] [--sky-near 100] [--sky-samples 400] [--az-step 0.1] [--cache .geo-cache/dem] [--proxy $GEO_PROXY]
+  [--sky-range 16000] [--sky-near 100] [--sky-samples 400] [--az-step 0.1] [--cache .geo-cache/dem]
 ```
 
-- `--cols` 是像素列，被前景挡成几段时用 `;` 分组（只在组内比相邻里程差）；至少 3 个。`--cx` 是画面中心列。
-- `--line` 里有多条线时用 `--line-name` 或 `--line-index` 指定（名字不存在会把可选名字列出来）。`--span` 是标准间距（米）。
-- 机位在 `--center` 周围 `--radius` 米、`--grid` 米网格里搜，朝向按 `--headings a:b` + `--heading-step` 扫，焦距按 `--focals` 列表或 `低:高[:步长]` 试。打分 = 间距离散度（CV）+ |log(平均间距 / 标准间距)|，`--pier-max` 是入选上限，`--mono-penalty` 罚里程不单调的解。
-- 给 `--ridge` 就和 7.4 的天际线联合打分（DEM 按 `--dem-zoom`/`--dem-range` 取，权重 `--ridge-weight`，平地平线段用 `--flat*`）。输出 `{line, params, n_fit, best, candidates:[{tot, rms, pier, cam:[lat,lon], f, H, cc, span_m, d_first, d_last}...]}`。
-- 只用这一条，解是沿线的一条带（实战里散在约 800 m 内）；和天际线联合打分后收到约 300 m。适合最后定机位，不适合选城市。
-- 标准间距是假设：解出来的平均间距等于标准值是打分逼出来的，不算核验；真正的信号是离散度小（实战 CV 2–7%）。间距没把握时换几个标准值各跑一次。
+- `--cols` are pixel columns; when the foreground breaks them into segments, group them with `;` (adjacent along-line differences are compared only within a group); at least 3. `--cx` is the center column of the frame.
+- When `--line` contains several lines, pick one with `--line-name` or `--line-index` (a name that doesn't exist lists the available names). `--span` is the standard spacing (meters).
+- Camera positions are searched on a `--grid`-meter grid within `--radius` meters of `--center`; heading is scanned by `--headings a:b` + `--heading-step`, and focal length is tried from the `--focals` list or `low:high[:step]`. Score = spacing dispersion (CV) + |log(mean spacing / standard spacing)|; `--pier-max` is the cutoff for inclusion, and `--mono-penalty` penalizes solutions whose along-line distances aren't monotonic.
+- Passing `--ridge` scores jointly with the 7.4 skyline (DEM fetched per `--dem-zoom`/`--dem-range`, weight `--ridge-weight`, flat-horizon stretch via `--flat*`). Outputs `{line, params, n_fit, best, candidates:[{tot, rms, pier, cam:[lat,lon], f, H, cc, span_m, d_first, d_last}...]}`.
+- With this alone, the solution is a band along the line (spread over about 800 m in a real case); scoring jointly with the skyline narrows it to about 300 m. Suited to fixing the camera position at the end, not to choosing a city.
+- The standard spacing is an assumption: a solved mean spacing equal to the standard value is forced by the scoring and doesn't count as verification; the real signal is low dispersion (CV 2–7% in a real case). When unsure of the spacing, run once with each of a few standard values.
 
-## 8. 估物体高度
+## 8. Estimate object height
 
-太阳反推时刻、按比例估距离都要物高。至少用两种尺交叉：
+Back-computing the time from the sun and estimating distance by proportion both need object height. Cross-check with at least two rulers:
 
-| 尺 | 尺寸 |
+| Ruler | Size |
 |---|---|
-| 成年人 | 约 1.7 m（姿势、鞋有几厘米误差） |
-| 室内门 / 入户门 | 约 2.0–2.1 m |
-| 住宅层高 | 2.9–3.0 m；商业楼 4–5 m；厂房 3.3–4.5 m |
-| 标准集装箱 | 2.59 m，高柜 2.90 m |
-| 交通标志、信号灯安装高度 | 查该国标准，不要猜 |
+| Adult | about 1.7 m (posture and shoes add a few cm of error) |
+| Interior door / entrance door | about 2.0–2.1 m |
+| Residential floor height | 2.9–3.0 m; commercial buildings 4–5 m; factories 3.3–4.5 m |
+| Standard shipping container | 2.59 m; high cube 2.90 m |
+| Mounting height of traffic signs and signals | look up that country's standard; don't guess |
 
-有楼名时直接查层数、层高资料，比按行人比例估可靠。
+When you have the building name, look up its floor count and floor height directly; that is more reliable than estimating from pedestrian proportions.
 
-## 9. 按拍摄高度筛楼
+## 9. Screen buildings by camera height
 
-- 能俯视周边二三十层住宅的楼顶 → 机位在全城最高那一档楼里，候选常只有几栋；画面里看不到城里最高的楼，可能正因为拍摄者站在它上面（v006）。
-- 游客照片的楼上稳定俯拍机位，多半是住的酒店（v011）：沿候选区优先看带停车场的酒店。
-- 楼层用两种参照交叉估（第 6 节），给区间。
+- Can look down on the roofs of surrounding 20–30-story residential towers → the camera position is in the city's tallest tier of buildings, often only a few candidates; not seeing the city's tallest building in the frame may be precisely because the photographer is standing on it (v006).
+- In a tourist's photo, a steady elevated downward shot from a building is most likely from their hotel (v011): within the candidate area, look first at hotels with parking lots.
+- Estimate the floor by cross-checking two references (section 6); give a range.
 
-## 10. 多点反解机位（pose.py）
+## 10. Solving the camera position from multiple points (pose.py)
 
-窗景、高楼俯拍、隔江远眺，只要能在卫星图上认出 ≥4 个点（桥头、塔尖、楼角、路口、球场角），就能一次解出机位经纬度、高度、朝向、俯仰、横滚和视角，比两条视线交会多用了高度信息，还能直接算楼层。
+Window views, downward shots from tall buildings, views across a river: as long as you can identify ≥4 points on satellite imagery (bridgeheads, spires, building corners, intersections, sports-field corners), you can solve the camera position's lat/lon, height, heading, pitch, roll and FOV in one go. It uses height information that a two-sight-line intersection doesn't, and can compute the floor directly.
 
 ```bash
-# spec.json：{"image_size":[W,H], "points":[{"name":…,"px":[x,y],"ll":[lat,lon],"h":海拔}...],
-#             "init":{"at":[lat,lon],"height":海拔,"heading":…,"pitch":…,"hfov":65}, "fix":["hfov"]}
-python3 scripts/pose.py solve spec.json --photo photo.jpg --out pose_check.jpg --search-radius 500
-python3 scripts/pose.py project --pose pose.json --points river_bank.json --photo photo.jpg --out bank_check.jpg
+# spec.json: {"image_size":[W,H], "points":[{"name":…,"px":[x,y],"ll":[lat,lon],"h":<elevation ASL>}...],
+#             "init":{"at":[lat,lon],"height":<elevation ASL>,"heading":…,"pitch":…,"hfov":65}, "fix":["hfov"]}
+uv run scripts/pose.py solve spec.json --photo photo.jpg --out pose_check.jpg --search-radius 500
+uv run scripts/pose.py project --pose pose.json --points river_bank.json --photo photo.jpg --out bank_check.jpg
 ```
 
-- 点的高度和机位高度必须同一基准，一律用海拔：地面点 `terrain.py elev`，楼顶 = 地面海拔 + 楼高。
-- 点要分散在画面不同方向、不同远近；都在一条线上会解不稳（脚本会提示）。
-- 看输出的 `rms_px`（重投影误差，>15 px 说明有点对错或高度基准不一致）和 `radius_m`（95% 误差半径，直接当结论里的半径）。
-- **`--pt-sigma` 必须按实情给**（默认 5 m）：你在卫星图上点那些控制点，本身有多少米误差。楼角、桥头这种边界清楚的 3–5 m，树丛里的塔、只能估中心的圆形建筑 10–15 m。控制点坐标误差传不进重投影残差（所有点同向挪一点，相机跟着挪、残差不变），所以它只能靠 `--pt-sigma` 蒙特卡洛传播，光看 rms 是看不出来的。给小了半径就报小：合成题里真实 15 m 却填 5 m，覆盖率从 95% 掉到 53%。
-- 输出里的 `radius_px_only_m` 是旧口径（只算像素噪声的 3σ），留着做对照，**别拿它当结论半径**：坐标噪声 ≥5 m 时它覆盖真值只剩约 70%。
-- 解出来以后用 `project` 把河岸、路、楼角投回照片，逐项核对，这是独立的第二步验证。
-- 合成数据验算：8 个点、1.5 px 噪声时，位置误差约 30 m（600 m 高度、几公里外的点），朝向俯仰误差 <0.1°。
-- **平视也能用**：站在地上拍远处的塔、桥、码头，`fix` 加 `height`，`init.height` 给眼高（和点同一基准）。精度看点在方位上散得多开：合成题（像素 4 px、坐标 5–15 m 噪声）点都挤在 10° 以内，中位误差约 50 m、差的到 200 m；散开到 40°，约 25 m。挤在一起时结论里的半径按 `radius_m` 报，别按"对上了"缩小。
-- **误差大头是认错点，不是解算**：一个点认错（地物认错、取了院子轮廓当楼角、地图上同类的塔不是画面里那座）就能把机位拉偏几十到上百米。`solve` 输出里的 `leave_one_out` 逐个去掉一个点重解：`pred_err_px` 是这个点被其余点预测差多少，`suspect` 只在"去掉它后其余点明显拟合得更好"时标一个（门槛保守，合成题：俯拍 7 点误报约 1/20、检出约 12/20；平视 6 点不稳，检出 6–17/20；去掉一个点后没有冗余时做不了）；`most_improved` 不管过没过门槛都列出"去掉哪个点改善最多"，实战里标错的点就排在这里但没过门槛。没标出来不代表没有认错的点。
+- The heights of the points and of the camera position must use the same datum; always use elevation above sea level: ground points via `terrain.py elev`, rooftop = ground elevation + building height.
+- Spread the points across different directions and distances in the frame; if they all lie on one line the solution is unstable (the script warns).
+- Check `rms_px` in the output (reprojection error; >15 px means a point is misidentified or the height datums are inconsistent) and `radius_m` (95% error radius; use it directly as the radius in the conclusion).
+- **`--pt-sigma` must be set to match reality** (default 5 m): how many meters of error the control points you clicked on satellite imagery carry. Sharp-edged ones like building corners and bridgeheads 3–5 m; a tower in a cluster of trees or a round building whose center you can only estimate 10–15 m. Control-point coordinate error doesn't propagate into the reprojection residual (if all points shift the same way, the camera shifts with them and the residual stays the same), so it can only be propagated by the `--pt-sigma` Monte Carlo; you can't see it from rms alone. Set it too small and the reported radius is too small: in synthetic tests with a true 15 m but 5 m entered, coverage dropped from 95% to 53%.
+- `radius_px_only_m` in the output is the old measure (3σ of pixel noise only), kept for comparison; **don't use it as the conclusion's radius**: with coordinate noise ≥5 m it covers the ground truth only about 70% of the time.
+- After solving, use `project` to project riverbanks, roads and building corners back onto the photo and check them item by item; this is an independent second verification step.
+- Check on synthetic data: 8 points, 1.5 px noise, position error about 30 m (600 m height, points several km away); heading and pitch error <0.1°.
+- **Works for level shots too**: standing on the ground shooting distant towers, bridges or piers, add `height` to `fix` and give the eye height as `init.height` (same datum as the points). Accuracy depends on how widely the points spread in bearing: in synthetic tests (4 px pixel noise, 5–15 m coordinate noise) with the points all crowded within 10°, the median error is about 50 m and bad ones reach 200 m; spread to 40°, about 25 m. When they're crowded, report the conclusion's radius from `radius_m`; don't shrink it because "it matches".
+- **The main source of error is misidentified points, not the solver**: one misidentified point (wrong feature, a courtyard outline taken as a building corner, a tower of the same kind on the map that isn't the one in the frame) can pull the camera position off by tens of meters to over a hundred. `leave_one_out` in the `solve` output re-solves with each point removed in turn: `pred_err_px` is how far off this point is when predicted from the other points; `suspect` flags one only when "the remaining points fit clearly better without it" (the threshold is conservative; synthetic tests: downward shots with 7 points, false alarms about 1/20, detection about 12/20; level shots with 6 points unstable, detection 6–17/20; not possible when there is no redundancy after removing a point); `most_improved` lists "which point's removal improves things most" whether or not it passes the threshold — in a real case the mislabeled point was right there but didn't pass the threshold. Nothing flagged doesn't mean no point is misidentified.
 
-几处候选机位都说得通、要挑一个（地图上标的观景台 vs 卫星图上另一段岸边、同一条对齐线上的几栋楼）时用 `check`：
+When several candidate camera positions all make sense and you need to pick one (a viewing platform marked on the map vs another stretch of shore on satellite imagery, several buildings on the same alignment line), use `check`:
 
 ```bash
-# cands.json：{"候选A": [lat, lon], "候选B": [lat, lon, 眼高海拔]}；不给高度用 init.height
-python3 scripts/pose.py check spec.json --cands cands.json
+# cands.json: {"candA": [lat, lon], "candB": [lat, lon, <eye elevation ASL>]}; without a height, init.height is used
+uv run scripts/pose.py check spec.json --cands cands.json
 ```
 
-- 每个候选机位固定，只解朝向、俯仰、横滚（和没固定的焦距），比重投影误差；再逐个去掉一个点重打一次分，`robust_delta_chi2` 取所有去法里最小的。**只有 `robust_delta_chi2` > 9 才算和照片对不上**，可以当 `board.py exclude --computed` 的文件；只看全部点的 `delta_chi2` 会被一个认错的点翻盘（合成题：混进一个认错点，真值排第一从 15/15 掉到 1/15）。
-- 合成题实测（90 次，含混进一个认错点的情况）：真机位从没被稳健判为对不上；点都认对时，120 m 外的诱饵 10–15/15 被排除，60 m 外 6–8/15。
-- **它是用来排掉明显对不上的，不是用来挑出真值的**：160 次合成题里误杀真值只有 1 次（而按 `solve` 的机位 + 半径去排除会误杀 35 次，所以排除要用 `check` 不要用半径）；但 `solve` 自己解崩的场景里（点都挤在 10–12° 内、标点又粗），它把真值排第一只有约一半。排名第一不等于定案，仍要回到街景/卫星图核不变特征。
-- 顺带一条：点少不致命（4 个点散开照样解到十几米），**致命的是点都挤在一个方位上**——宁可少几个点也要往两边找。
-- 两个候选只差在某一个点上（`robust_by` 是同一个"去掉 X"）时，几何分不开，先回头核 X；还分不开就靠场景（前景是不是开阔草坪、能不能看见水面），并在结论里写明是场景定的。
+- Each candidate camera position is held fixed; only heading, pitch, roll (and the focal length if not fixed) are solved, and reprojection errors are compared; then it re-scores with each point removed in turn, and `robust_delta_chi2` takes the minimum over all removals. **Only `robust_delta_chi2` > 9 counts as not matching the photo**, and then it can be the file for `board.py exclude --computed`; looking only at `delta_chi2` over all points can be flipped by one misidentified point (synthetic tests: with one misidentified point mixed in, the ground truth ranked first dropped from 15/15 to 1/15).
+- Measured on synthetic tests (90 runs, including ones with a misidentified point mixed in): the true camera position was never robustly judged a mismatch; with all points correct, decoys 120 m away were excluded 10–15/15, and 60 m away 6–8/15.
+- **It is for removing clear mismatches, not for picking out the ground truth**: in 160 synthetic tests it wrongly eliminated the ground truth only once (excluding by `solve`'s camera position + radius would wrongly eliminate it 35 times, so exclude with `check`, not with the radius); but in scenarios where `solve` itself breaks down (points all crowded within 10–12°, coarse point marking), it ranks the ground truth first only about half the time. Ranking first isn't final; still go back to street view/satellite imagery and check invariant features.
+- One more thing: few points isn't fatal (4 well-spread points still solve to a dozen or so meters); **what's fatal is all the points crowded in one bearing** — better to use fewer points and look for them on both sides.
+- When two candidates differ only on one point (`robust_by` is the same "drop X"), the geometry can't separate them; first go back and check X. If they still can't be separated, rely on the scene (is the foreground an open lawn, can you see water), and state in the conclusion that the scene decided it.
 
-## 11. 排除前算视野：画面外、被挡、太小 ≠ 不存在
+## 11. Compute the view before excluding: out of frame, occluded or too small ≠ absent
 
-想用"画面里没有 X"排除一个机位或一整个方向之前，必须先算。常见错法：地标贴着画框边，就认为"旁边那栋名楼要是在就该看见"；视频截图按主摄视角想象画面有多宽；远处的塔只有几个像素，就说"没看到"。
+Before you use "X is not in the frame" to exclude a camera position or a whole direction, you must compute it first. Common mistakes: a landmark sits right at the frame edge, so you assume "that famous building next to it would be visible if it were there"; imagining how wide a video screenshot's frame is using the main camera's FOV; a distant tower is only a few pixels, and you say "not seen".
 
 ```bash
-# 已认出的地标 A 在画面 x=1000 处（宽 1080），视角未知，检查候选机位上 B、C 该不该出现
-python3 scripts/geo.py frame --at <机位lat,lon> --anchor A:<lat,lon>:px=1000:h=<高>:w=<宽> \
-    --width 1080 --hfov 8:70 --pt B:<lat,lon>:h=<高>:w=<宽> --pt C:<lat,lon>:h=<高>:w=<宽> --cam-h <机位高度>
-# 围着 A 一圈圈摆候选机位（半径 1–13 km、每 15°），一次算出哪些方向能靠"没有 B"排除
-python3 scripts/geo.py frame --ring <A的lat,lon>:1000:13000:1000:15 --anchor A:<lat,lon>:px=1000:h=<高>:w=<宽> \
+# Identified landmark A is at x=1000 in the frame (width 1080), FOV unknown; check whether B and C should appear from the candidate camera position
+uv run scripts/geo.py frame --at <camera position lat,lon> --anchor A:<lat,lon>:px=1000:h=<height>:w=<width> \
+    --width 1080 --hfov 8:70 --pt B:<lat,lon>:h=<height>:w=<width> --pt C:<lat,lon>:h=<height>:w=<width> --cam-h <camera height>
+# Place candidate camera positions in rings around A (radius 1–13 km, every 15°) and compute in one go which directions "no B" can exclude
+uv run scripts/geo.py frame --ring <A's lat,lon>:1000:13000:1000:15 --anchor A:<lat,lon>:px=1000:h=<height>:w=<width> \
     --width 1080 --hfov 8:70 --pt B:... --out ring.json
-python3 scripts/tiles.py mark area.jpg --points ring_keep.json --geojson ... --out ring_keep.jpg
+uv run scripts/tiles.py mark area.jpg --points ring_keep.json --geojson ... --out ring_keep.jpg
 ```
 
-- `--anchor` 让朝向随视角变化：视角越窄，画框越窄，A 旁边的地标越容易出框。
-- 每个地标给出结论：整个视角区间都在框内 / 只在某段视角进框 / 都不在框内；外加"可能被挡"（近处地标的宽高挡得住远处地标）和"太小看不出"（`--min-px`，默认 12 px）。
-- **只有"整个视角区间都全在框内、够大、没被挡"的地标，缺席才能排除这个机位**。脚本不知道的近处楼房也会挡，画面前景有高楼的方向照样不能排除。
-- 地标的 h、w 查资料或在卫星图上量；h 和 `--cam-h` 用同一个基准。
+- `--anchor` makes the heading change with the FOV: the narrower the FOV, the narrower the frame, and the more easily landmarks next to A fall out of frame.
+- Each landmark gets a verdict: "in frame over the whole field-of-view range" / "in frame at field of view a–b°, out of frame otherwise" / "not in frame over the whole field-of-view range"; plus "may be blocked" (the height and width of a nearer landmark can block a farther one) and "may not be visible" when it is too small (`--min-px`, default 12 px).
+- **Only a landmark that is "in frame over the whole field-of-view range, large enough and not blocked" can exclude this camera position by its absence**. Nearby buildings the script doesn't know about also occlude; a direction with tall buildings in the foreground still can't be excluded.
+- Look up the landmarks' h and w or measure them on satellite imagery; h and `--cam-h` use the same datum.
 
-## 常见误差来源
+## Common sources of error
 
-- 把 2x、3x 拍的照片按 1x 算，距离会少一半到三分之二。
-- 卫星图上高楼楼顶偏离楼底，量位置时量错点。
-- 透过窗玻璃拍，反光和窗框容易被当成画面内容。
-- 只有一条对齐线就宣布到楼（v006）；只凭天际线轮廓报米级精度（v010-1）。
-- 把"画面外""被近处的楼挡住""远到只有几个像素"当成"那里没有"，排除掉正确的方向（第 11 节）。
-- 视频截图按手机拍照的视角算：竖屏视频 1x 只有约 40°，再加变焦，距离能差好几倍。
-- SunCalc 类工具里把影子末端钉在墙根，而真正投影的是檐口、雨棚边缘，差几米时刻就偏几分钟（v007）。
+- Computing a 2x or 3x photo as 1x underestimates distance by half to two-thirds.
+- On satellite imagery the roof of a tall building is offset from its base, so you measure the wrong point.
+- When shooting through window glass, reflections and window frames are easily taken as scene content.
+- Declaring building level with only one alignment line (v006); reporting meter-level precision from the skyline outline alone (v010-1).
+- Treating "out of frame", "hidden by a nearby building" or "so far away it's only a few pixels" as "not there", and excluding the correct direction (section 11).
+- Computing video screenshots with the FOV of a phone photo: vertical video at 1x is only about 40°; add zoom and distances can be off several-fold.
+- In SunCalc-style tools, pinning the shadow tip at the base of the wall when what actually casts it is the eave or canopy edge; a few meters off shifts the time by several minutes (v007).

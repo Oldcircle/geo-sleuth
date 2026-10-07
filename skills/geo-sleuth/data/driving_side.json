@@ -1004,223 +1004,223 @@
  "Hong Kong": {
   "side": "left",
   "switched": "",
-  "note": "沿用英治时期，与内地相反",
+  "note": "kept from British rule, opposite to the mainland",
   "curated": true
  },
  "Macau": {
   "side": "left",
   "switched": "",
-  "note": "沿用葡治时期，与内地相反",
+  "note": "kept from Portuguese rule, opposite to the mainland",
   "curated": true
  },
  "French Guiana": {
   "side": "right",
   "switched": "",
-  "note": "法国海外省",
+  "note": "French overseas department",
   "curated": true
  },
  "Guadeloupe": {
   "side": "right",
   "switched": "",
-  "note": "法国海外省",
+  "note": "French overseas department",
   "curated": true
  },
  "Martinique": {
   "side": "right",
   "switched": "",
-  "note": "法国海外省",
+  "note": "French overseas department",
   "curated": true
  },
  "Réunion": {
   "side": "right",
   "switched": "",
-  "note": "法国海外省",
+  "note": "French overseas department",
   "curated": true
  },
  "Mayotte": {
   "side": "right",
   "switched": "",
-  "note": "法国海外省",
+  "note": "French overseas department",
   "curated": true
  },
  "New Caledonia": {
   "side": "right",
   "switched": "",
-  "note": "法国属地",
+  "note": "French territory",
   "curated": true
  },
  "French Polynesia": {
   "side": "right",
   "switched": "",
-  "note": "法国属地",
+  "note": "French territory",
   "curated": true
  },
  "Puerto Rico": {
   "side": "right",
   "switched": "",
-  "note": "美国属地",
+  "note": "US territory",
   "curated": true
  },
  "Guam": {
   "side": "right",
   "switched": "",
-  "note": "美国属地",
+  "note": "US territory",
   "curated": true
  },
  "U.S. Virgin Islands": {
   "side": "left",
   "switched": "",
-  "note": "美国属地，少见的靠左",
+  "note": "US territory, a rare left-hand one",
   "curated": true
  },
  "American Samoa": {
   "side": "right",
   "switched": "",
-  "note": "美国属地",
+  "note": "US territory",
   "curated": true
  },
  "Northern Mariana Islands": {
   "side": "right",
   "switched": "",
-  "note": "美国属地",
+  "note": "US territory",
   "curated": true
  },
  "Greenland": {
   "side": "right",
   "switched": "",
-  "note": "丹麦",
+  "note": "Denmark",
   "curated": true
  },
  "Faroe Islands": {
   "side": "right",
   "switched": "",
-  "note": "丹麦",
+  "note": "Denmark",
   "curated": true
  },
  "Aruba": {
   "side": "right",
   "switched": "",
-  "note": "荷兰",
+  "note": "Netherlands",
   "curated": true
  },
  "Curaçao": {
   "side": "right",
   "switched": "",
-  "note": "荷兰",
+  "note": "Netherlands",
   "curated": true
  },
  "Sint Maarten": {
   "side": "right",
   "switched": "",
-  "note": "荷兰",
+  "note": "Netherlands",
   "curated": true
  },
  "Bermuda": {
   "side": "left",
   "switched": "",
-  "note": "英国属地",
+  "note": "British territory",
   "curated": true
  },
  "Cayman Islands": {
   "side": "left",
   "switched": "",
-  "note": "英国属地",
+  "note": "British territory",
   "curated": true
  },
  "British Virgin Islands": {
   "side": "left",
   "switched": "",
-  "note": "英国属地",
+  "note": "British territory",
   "curated": true
  },
  "Anguilla": {
   "side": "left",
   "switched": "",
-  "note": "英国属地",
+  "note": "British territory",
   "curated": true
  },
  "Montserrat": {
   "side": "left",
   "switched": "",
-  "note": "英国属地",
+  "note": "British territory",
   "curated": true
  },
  "Turks and Caicos Islands": {
   "side": "left",
   "switched": "",
-  "note": "英国属地",
+  "note": "British territory",
   "curated": true
  },
  "Falkland Islands": {
   "side": "left",
   "switched": "",
-  "note": "英国属地",
+  "note": "British territory",
   "curated": true
  },
  "Saint Helena": {
   "side": "left",
   "switched": "",
-  "note": "英国属地",
+  "note": "British territory",
   "curated": true
  },
  "Isle of Man": {
   "side": "left",
   "switched": "",
-  "note": "英国王室属地",
+  "note": "British Crown Dependency",
   "curated": true
  },
  "Jersey": {
   "side": "left",
   "switched": "",
-  "note": "英国王室属地",
+  "note": "British Crown Dependency",
   "curated": true
  },
  "Guernsey": {
   "side": "left",
   "switched": "",
-  "note": "英国王室属地",
+  "note": "British Crown Dependency",
   "curated": true
  },
  "Cook Islands": {
   "side": "left",
   "switched": "",
-  "note": "新西兰联系邦",
+  "note": "New Zealand associated state",
   "curated": true
  },
  "Niue": {
   "side": "left",
   "switched": "",
-  "note": "新西兰联系邦",
+  "note": "New Zealand associated state",
   "curated": true
  },
  "Tokelau": {
   "side": "left",
   "switched": "",
-  "note": "新西兰属地",
+  "note": "New Zealand territory",
   "curated": true
  },
  "Canary Islands": {
   "side": "right",
   "switched": "",
-  "note": "西班牙",
+  "note": "Spain",
   "curated": true
  },
  "Azores": {
   "side": "right",
   "switched": "",
-  "note": "葡萄牙",
+  "note": "Portugal",
   "curated": true
  },
  "Madeira": {
   "side": "right",
   "switched": "",
-  "note": "葡萄牙",
+  "note": "Portugal",
   "curated": true
  },
  "Svalbard": {
   "side": "right",
   "switched": "",
-  "note": "挪威",
+  "note": "Norway",
   "curated": true
  }
 }

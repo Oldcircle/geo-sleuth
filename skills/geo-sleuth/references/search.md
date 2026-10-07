@@ -1,109 +1,111 @@
-# 搜索：以图搜图、关键词搜图、社媒检索
+# Search: reverse image search, keyword image search, social media search
 
-第 3 步用，和查表类线索并行做。视频 20 道题里有 5 道是靠这一步破局的，成本却最低。
+Use at step 3, in parallel with lookup-table clues. In 5 of the 20 puzzles in the videos this step was the breakthrough, yet it costs the least.
 
-## 1. 以图搜图
-
-```bash
-# 先做变体：紧裁独特物件 / 水平翻转 / 灰度增强 / 去色偏；翻拍件先拉正
-python3 scripts/imgprep.py variants photo.jpg --box 300,120,900,760 --out-dir v/
-python3 scripts/imgprep.py variants photo.jpg --persp 312,140,880,95,905,770,290,720 --box ... --out-dir v/
-# 百度识图 + Yandex，每张出结果截图和 JSON
-python3 scripts/revimg.py photo.jpg v/*.jpg --out-dir rev/ --proxy socks5://127.0.0.1:10808
-```
-
-**一定要打开结果截图看**：提取的文字只是辅助，相似图片里的场景、来源帖子的标题更重要。百度的相似图片另存为编号拼图 `<名>_baidu_similar.jpg`（左上角是查询图，编号 i 对应 JSON `similar[i]` 的来源页），先看它：同一个物体、同一处场景的近重复照片，来源页（点评、抖音、小红书）常直接给出店名或定位。
-
-**地名标签怎么用**：百度识图的"图中可能是…"、Yandex 标签、Lens AI 概览都是候选，按级别分开计票：
-- 城市一级：几个裁剪、几个引擎各说了哪座城，数一下。同一座城被两个裁剪分别说中，比"两个互相矛盾的具体地点"更可信；具体地点对不上，不抵消它们共同指向的城市。
-- 地点一级：标签是小区、楼盘、酒店、单位名时，`poi.py` 落坐标再核，常常一步到片区：
+## 1. Reverse image search
 
 ```bash
-python3 scripts/poi.py "<小区名>" --city <城市> --out pois.json      # 同城同名点全列出（360 地图 + OSM，WGS84）
-python3 scripts/poi.py "<小区名>"                                    # 不给城市：全国哪些城市有同名点
-python3 scripts/tiles.py sheet --points pois.json --zoom 18 --out pois_sheet.jpg
+# Make variants first: tight crop of a distinctive object / horizontal flip / grayscale enhancement / color-cast removal; rectify rephotographed material first
+uv run scripts/imgprep.py variants photo.jpg --box 300,120,900,760 --out-dir v/
+uv run scripts/imgprep.py variants photo.jpg --persp 312,140,880,95,905,770,290,720 --box ... --out-dir v/
+# Baidu image search + Yandex; each image gets a result screenshot and JSON
+uv run scripts/revimg.py photo.jpg v/*.jpg --out-dir rev/
 ```
 
-- 标签是某个学校、小区这类常见设施的具体名字时，先点开"图片来源"缩略图看是不是同一处（一次调用）：操场、住宅这类图的名字多是相似图投票凑出来的，不是同一处就降为弱，不必再落坐标。
-- 泛称里的**设施类型词**（"谷物烘干综合体""水泥厂""温室"）有用：拿去查这类产业集中在哪，做类别推断和候选区。
-- 标签是泛称（"成片住宅""城市街道""学校操场"）时只当弱证据；整图 + 一个紧裁、两个引擎各一轮都只给泛称，就停，别再换变体。
+**Always open the result screenshots and look**: extracted text is only an aid; the scenes in similar images and the titles of source posts matter more. Baidu's similar images are also saved as a numbered contact sheet `<name>_baidu_similar.jpg` (the top-left cell is the query image; number i corresponds to the source page of JSON `similar[i]`). Look at it first: for near-duplicate photos of the same object or scene, the source page (Dianping, Douyin, Xiaohongshu) often gives the shop name or location tag directly.
 
-| 情况 | 做法 | 来源 |
+**How to use place-name labels**: Baidu image search's "图中可能是…" ("the image may show…"), Yandex labels and the Lens AI overview are all candidates; count votes separately by level:
+- City level: count which city each crop and each engine named. The same city named by two different crops is more credible than "two contradictory specific places"; specific places that don't agree don't cancel the city they jointly point to.
+- Place level: when a label is the name of a residential compound, housing development, hotel or organization, get its coordinates with `poi.py` and check; this often gets you to the area in one step:
+
+```bash
+uv run scripts/poi.py "<compound name>" --city <city> --out pois.json      # list every same-name point in the city (360 Maps + OSM, WGS84)
+uv run scripts/poi.py "<compound name>"                                    # no city: which cities nationwide have a same-name point
+uv run scripts/tiles.py sheet --points pois.json --zoom 18 --out pois_sheet.jpg
+```
+
+- When a label is the specific name of a common facility such as a school or residential compound, first open the "图片来源" ("image source") thumbnails to see whether it's the same place (one call): names on images of playgrounds or housing are mostly assembled by voting over similar images; if it isn't the same place, downgrade it to weak and don't bother getting coordinates.
+- **Facility-type words** in generic labels ("grain drying complex", "cement plant", "greenhouse") are useful: use them to look up where that industry is concentrated, for category inference and candidate areas.
+- When the label is generic ("blocks of housing", "city street", "school playground"), treat it only as weak evidence; if the whole image + one tight crop, one round in each of two engines, give only generic labels, stop; don't keep trying variants.
+
+| Situation | What to do | Source |
 |---|---|---|
-| 整图搜不到 | 只框最独特的那个物件（雕像、楼、装饰），去掉天空和背景楼 | v010-5、v010-6 |
-| 图库照片可能是从另一边拍的 | 水平翻转再搜 | v010-5（翻转后才命中） |
-| 翻拍件、斜着拍 | 透视拉正、去反光 | v004 |
-| 老照片偏黄偏紫 | 去色偏或转灰度 | v010-6 |
-| 一个引擎没结果 | 换引擎：百度对中文网页、微博、百家号、景区内容最好；Yandex 补建筑街景和外国内容 | v009（Yandex 无果、百度命中） |
-| 搜索界面语言会带偏结果 | 中文界面的 Google 智能镜头优先给中文网站的相似建筑；搜国外场景时换英文或当地语言 | v004 |
+| The whole image finds nothing | Box only the most distinctive object (statue, building, ornament); remove the sky and background buildings | v010-5, v010-6 |
+| Stock photos may have been taken from the other side | Flip horizontally and search again | v010-5 (hit only after flipping) |
+| Rephotographed material, oblique shots | Perspective-rectify, remove glare | v004 |
+| Old photos with a yellow or purple cast | Remove the color cast or convert to grayscale | v010-6 |
+| One engine has no results | Switch engines: Baidu is best for Chinese web pages, Weibo, Baijiahao and scenic-area content; Yandex fills in building and street scenes and foreign content | v009 (Yandex found nothing, Baidu hit) |
+| The search UI language biases results | Google Lens with a Chinese UI favors similar buildings on Chinese sites; for foreign scenes switch to English or the local language | v004 |
 
-**Google Lens**：从服务器出口会被要求人机验证，脚本不做。有浏览器操作工具（如 Claude in Chrome，用的是用户自己的浏览器）时直接用：Google 图片首页 → 按图片搜索 → 上传。实测它常比百度、Yandex 强，但要分清两块结果：
-- "完全匹配/含有此图片的网页"：出处证据，可以用。
-- "AI 概览"：会拿外观相似的照片硬报一个地名，同一张图换个裁剪能报出相距十几公里的两个地方。只当候选，必须回到第 6、7 步核实。
+**Google Lens**: from the server's egress it demands a CAPTCHA, so the script doesn't do it. If you have a browser tool (such as Claude in Chrome, which uses the user's own browser), use it directly: Google Images home → search by image → upload. In tests it is often stronger than Baidu and Yandex, but keep its two result blocks apart:
+- "Exact matches / pages that include this image": provenance evidence; usable.
+- "AI Overview": forces a place name out of similar-looking photos; a different crop of the same image can yield two places a dozen or so km apart. Treat it only as a candidate; it must be verified back at steps 6 and 7.
 
-没有浏览器工具时，百度、Yandex 都没结果而画面是国外景点或物件，请用户在自己的浏览器里试一次 Lens。
+Without a browser tool, when Baidu and Yandex both have no results and the frame shows a foreign landmark or object, ask the user to try Lens once in their own browser.
 
-### 中文关键词搜索
+### Chinese keyword search
 
-通用网页搜索工具对国内中文内容常常无效。用脚本：
+General web search tools are often ineffective for Chinese content inside China. Use the script:
 
 ```bash
-python3 scripts/revimg.py --query "蓝色拱形顶棚 人行天桥 高架" --query "<城市> 出租车 颜色" --out-dir q/
+uv run scripts/revimg.py --query "蓝色拱形顶棚 人行天桥 高架" --query "<city> 出租车 颜色" --out-dir q/
 ```
 
-必应国内版给网页结果（标题 + 链接），百度图片、搜狗图片给结果页截图（看同类场景照片）。描述性的长查询（"楼顶操场 学校""黄色公交"）必应多是攻略页，直接看百度图片截图。百度网页搜索会弹验证，不做。
+(Queries in Chinese: "blue arched canopy, pedestrian bridge, elevated road"; "<city> taxi color".)
 
-### 命中之后
+Bing China gives web results (title + link); Baidu Images and Sogou Images give result-page screenshots (look at photos of similar scenes). For long descriptive queries ("楼顶操场 学校" rooftop playground school, "黄色公交" yellow bus) Bing mostly returns travel-guide pages; look directly at the Baidu Images screenshot. Baidu web search pops up a verification challenge, so it isn't done.
 
-- **看同组照片**：命中的帖子常是一组图，别的图里可能有车牌、路牌、店名（v009：车牌在同组的第 5 张里）。先用共同的固定物（路灯、围墙、烟囱）确认同组照片和题图是同一地点。
-- **候选背景对不上**：可能是复制品、同款装置、同一连锁的另一家店。拿到专名后再搜一轮"<专名> 复制品 / replica / 同款"，原件所在地的官方介绍常写明复制品在哪（v004）。
-- **命中只是"类似场景"**：当线索用（城市、景区名），不当结论；回到第 6、7 步核实。
-- **新闻配图先判断是不是实拍**：不少新闻站用图库图、示意插画甚至生成图配文，拿来比立面之前看一眼是不是这个地方。
+### After a hit
 
-## 2. 按物体类型选检索处
+- **Look at the rest of the set**: the hit post is often a set of images, and the others may show plates, road signs or shop names (v009: the plate was in the 5th image of the set). First use shared fixed objects (streetlights, walls, chimneys) to confirm that the photos in the set and the puzzle image are the same place.
+- **The candidate's background doesn't match**: it may be a replica, an identical installation, or another branch of the same chain. Once you have the proper name, search another round for "<proper name> 复制品 / replica / 同款" (复制品 = replica, 同款 = same model); the official introduction where the original stands often says where the replicas are (v004).
+- **The hit is only a "similar scene"**: use it as a clue (city, scenic-area name), not as a conclusion; go back to steps 6 and 7 to verify.
+- **For news images, first judge whether it's a real photo**: many news sites illustrate articles with stock images, illustrations or even generated images; before comparing facades, check whether it is this place.
 
-| 物体 | 去哪搜 | 来源 |
+## 2. Choose where to search by object type
+
+| Object | Where to search | Source |
 |---|---|---|
-| 景区建筑、网红打卡点 | 抖音、小红书、微博关键词和图片搜索；景区官方号会发同角度视频 | v010-2、v009 |
-| 雕像、公园小品、异国景点 | 旅游点评站（Tripadvisor、携程点评）的用户图；Google Lens | v010-6 |
-| 新建住宅、商业综合体 | 房产网楼盘相册（安居客、房天下、楼盘网等）的"周边配套""实景图"，一路翻到立牌 | v010-5 |
-| 老建筑、历史景点 | 地方文旅、文物保护单位介绍页；图库网站（视觉中国、Getty、Alamy）图片说明带地名和年代 | v004 |
-| 普通街巷、住宅区 | 搜图意义不大，优先几何和基础设施；城市都没定时，候选城市各抽一页主干道街景比市政设施（`baidu_pano.py sample`） | — |
-| 连锁品牌的子品牌门店（卡车服务、翻新、专营店） | **先搜开业新闻稿**（"开业 / inaugura / abre / opens + 子品牌 + 州或城市"），行业媒体常写门牌地址；官网门店定位器只当候选池：不标子品牌，坐标还可能偏几公里 | 盲测 |
-| 卫星图上找到的无名设施（厂、仓库、农场、矿） | 当地语言的设施类型词 + 附近地名搜网页和新闻，配图比立面；找到名字后再搜一轮图片 | v013 |
-| 车辆涂装（公交、出租、校车） | `revimg.py --query "<城市> <颜色描述> 公交"`，从结果图读线路牌、公司名；读出的地名先 `poi.py` 落到区县再用，别把 A 区的车当 B 区的线索 | v014 |
+| Scenic-area buildings, viral check-in spots | Douyin, Xiaohongshu, Weibo keyword and image search; official scenic-area accounts post videos from the same angle | v010-2, v009 |
+| Statues, small park features, foreign attractions | User photos on travel review sites (Tripadvisor, Ctrip reviews); Google Lens | v010-6 |
+| New residential developments, commercial complexes | Housing-development albums on property sites (Anjuke, Fang.com, Loupan.com, etc.): the "周边配套" (nearby amenities) and "实景图" (real photos) sections; page all the way to the signboard | v010-5 |
+| Old buildings, historic sites | Local culture-and-tourism and protected-heritage-site pages; stock image sites (Visual China Group, Getty, Alamy), whose captions carry place names and years | v004 |
+| Ordinary streets and residential areas | Image search adds little; prioritize geometry and infrastructure; when even the city isn't fixed, sample one page of arterial-road street view per candidate city and compare municipal fixtures (`baidu_pano.py sample`) | — |
+| Sub-brand stores of chain brands (truck service, refurbishment, specialty stores) | **Search opening press releases first** ("开业 / inaugura / abre / opens + sub-brand + state or city"; 开业 = opens), trade media often give the street address; treat the official store locator only as a candidate pool: it doesn't tag sub-brands, and its coordinates may be off by several km | blind test |
+| Nameless facilities found on satellite imagery (plants, warehouses, farms, mines) | Search the web and news for the facility-type word in the local language + nearby place names, and compare the accompanying photos with the facade; once you find the name, search images another round | v013 |
+| Vehicle livery (bus, taxi, school bus) | `revimg.py --query "<city> <color description> 公交"` (query in Chinese: <city> <color description> bus), and read route signs and company names from the result images; first resolve any place name you read to a district (county) with `poi.py` before using it; don't treat a vehicle from district A as a clue for district B | v014 |
 
-## 3. 描述性关键词搜图
+## 3. Descriptive keyword image search
 
-适合"说不出名字，但造型罕见"的物件（v004 喷泉）。
+Suits objects that "you can't name, but have a rare shape" (the v004 fountain).
 
-1. 把物件写成"外形 + 构件 + 位置"的短语：`顶上有金色球形装饰的白色钟楼`、`蓝色拱形顶棚的人行天桥`。
-2. 同时准备**带地名**和**不带地名**两个版本，中文和英文（或当地语言）各一套，一起搜。带地名搜不到很正常：复制品、冷门地方网上照片少，原件和同类资料反而多。
-3. 形状数不清就用宽词，不写错数。
-4. 风格词（罗马式、哥特式、徽派）放在形态核对之后再用：拱是尖的就不是罗马式。
+1. Write the object as a "shape + components + position" phrase: `顶上有金色球形装饰的白色钟楼` (white clock tower with a golden ball ornament on top), `蓝色拱形顶棚的人行天桥` (pedestrian bridge with a blue arched canopy).
+2. Prepare both a version **with place names** and one **without**, one set each in Chinese and in English (or the local language), and search them together. Finding nothing with place names is normal: replicas and obscure places have few photos online, while there is more material on the original and on similar objects.
+3. If you can't count the shapes, use broad words; don't write a wrong count.
+4. Use style words (Romanesque, Gothic, Hui-style) only after checking the form: if the arches are pointed, it isn't Romanesque.
 
-## 4. 社媒和打卡点检索
+## 4. Social media and check-in spot search
 
-- 网红景物（樱花街、银杏道、网红墙、打卡咖啡馆）：`<城市> + <景物>` 在抖音、小红书、微博搜，**中英文都搜**（国外热门街道英文帖常带街名）。
-- 同一地点的其他作品能给更多角度（房子、台阶、烟囱）甚至定位标签。
-- 当地人拍的同一片山、同一条河：去候选乡镇的"同城"或地点页里看（v010-1 博主把设备虚拟定位到候选乡镇刷同城内容）。
-- 热门打卡街全城往往只有十几条，先找名单再逐条核对。
+- Viral scenery (cherry-blossom streets, ginkgo avenues, influencer walls, check-in cafés): search `<city> + <scenery>` on Douyin, Xiaohongshu and Weibo, **in both Chinese and English** (English posts about popular foreign streets often include the street name).
+- Other posts from the same place give more angles (houses, steps, chimneys) and even location tags.
+- Locals' photos of the same mountains or the same river: look in the candidate township's "同城" (local) feed or its place page (the v010-1 creator spoofed the device location to the candidate township to browse local content).
+- A city usually has only a dozen or so popular check-in streets; find the list first, then check them one by one.
 
-## 5. 开放数据（效果明显时用）
+## 5. Open data (use when clearly effective)
 
-- **城市行道树数据**（树种、胸径、树高档、门牌、坐标），很多国外城市有开放数据集（例：温哥华 `opendata.vancouver.ca` 的 `public-trees`，全市约 18 万棵，`exports/csv` 一次请求约 20 s）。适合"成排的某种树 + 住宅街、没有文字"的题：全市缩到几十个街段，真值在里面（v009 拆解提出，实战一例用上）。做法：
-  1. **拉全部树种**，不只拉目标树种：后面要判断"对街有没有树"，只拉樱属会把种着别的树的对街当成空的。
-  2. **品种、胸径只排序不过滤**：市政清单的品种会和实物对不上（照片里淡粉的染井吉野型花，清单标的是白花品种），胸径可能是多年前量的。同属、花色相近的品种一起进候选；排除只能靠街景里的不变特征。
-  3. **门牌奇偶定树在街道哪一侧**：同一条街奇数号、偶数号的树坐标一比就知道（温哥华东西向 Avenue 奇数号在北侧，南北向 Street 奇数号在西侧，东西向的 Street 按 Avenue 算）。再配合影子推出的"站在哪一侧、朝哪个方向"筛。
-  4. **对街约束按视野算**：竖拍手机水平视场约 50°，对街草地带（横向 10–20 m）要到前方约 25 m 以外才进画面；"对街没有树"只约束前方约 25–50 m，近处不约束。
-  5. 筛出的街段 `board.py add --from <街段 JSON> --level road` 一次进盘，放弃一条就写 `evidence --against` 附比对图（SKILL 硬规则 9）。
-  6. 街景先挑和照片同季节的历史批次（`gsv.py near` 看 history，`sheet --date <年>`）比立面、挡墙、路灯杆位置；夏季批次里树冠和花期差很多，不要按"树看着小"跳过。
-- 地方政府、媒体报道：定位后反查画面里的异常人造物（景区、塔、雕像）的名称、尺寸、建成年份（v008）。
+- **City street-tree data** (species, trunk diameter, height class, address number, coordinates): many cities abroad have open datasets (e.g., Vancouver's `public-trees` on `opendata.vancouver.ca`, about 180,000 trees citywide, `exports/csv` takes about 20 s in one request). Suited to puzzles with "a row of some kind of tree + residential street, no text": it narrows the whole city to a few dozen street segments, with the ground truth among them (proposed in the v009 breakdown, used in one real case). Method:
+  1. **Pull all species**, not just the target species: later you need to judge "are there trees across the street", and pulling only Prunus would make an opposite side planted with other trees look empty.
+  2. **Use cultivar and trunk diameter only to sort, never to filter**: the cultivar in the municipal inventory may not match the actual tree (pale pink Somei-Yoshino-type blossoms in the photo; the inventory lists a white-flowered cultivar), and the trunk diameter may have been measured years ago. Cultivars of the same genus with similar flower color all go in as candidates; exclusion can only rely on invariant features in street view.
+  3. **Use odd/even address numbers to fix which side of the street the trees are on**: comparing the coordinates of odd- and even-numbered trees on the same street tells you (in Vancouver, odd numbers are on the north side of east–west Avenues and the west side of north–south Streets; east–west Streets follow the Avenue rule). Then filter with "which side you're standing on, which way you're facing" from the shadows.
+  4. **Compute the across-the-street constraint from the field of view**: a portrait phone's horizontal FOV is about 50°, so the grass strip across the street (10–20 m sideways) enters the frame only beyond about 25 m ahead; "no trees across the street" constrains only about 25–50 m ahead, not close by.
+  5. Add the filtered street segments to the board in one go with `board.py add --from <street-segment JSON> --level road`; when you drop one, write `evidence --against` with a comparison image (SKILL hard rule 9).
+  6. For street view, first pick historical captures from the same season as the photo (`gsv.py near` to see the history, `sheet --date <year>`) and compare facades, retaining walls and lamp-post positions; in summer captures tree crowns and bloom differ a lot, so don't skip a segment because "the trees look small".
+- Local government and media reports: after locating, look up the name, size and year built of unusual man-made objects in the frame (scenic spots, towers, statues) (v008).
 
-## 常见错误
+## Common mistakes
 
-- 只用一个引擎、只搜整图，失败后不改图不换引擎。
-- 把 AI 或识图给出的"物件类别"直接推成地点（"船形雕塑 → 旅游城市"），这一跳只能算弱证据（v005）。
-- 被搜到的"最有名的同类地点"带走，忘了回头核对方位和细节（v010 AI 的主要失败方式）。
-- 两个引擎各指一座城，就在两城中点画个大圆交差：应该做区分检验，选一个当主答案（SKILL 硬规则 8）。
-- 识图给了小区名、楼盘名却没去落坐标。
+- Using only one engine and searching only the whole image; after a failure, not changing the image or the engine.
+- Turning the "object category" from an AI or image recognition directly into a location ("boat-shaped sculpture → tourist city"); this jump counts only as weak evidence (v005).
+- Getting carried off by the "most famous similar place" the search turns up and forgetting to come back and check bearings and details (the main way the AI failed in v010).
+- Two engines each point at a different city, and you draw a big circle around the midpoint of the two and call it done: instead run a discriminating test and pick one as the main answer (SKILL hard rule 8).
+- Image search gave a residential compound or housing-development name, and you didn't get its coordinates.

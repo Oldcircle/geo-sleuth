@@ -3,21 +3,21 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow"]
 # ///
-"""出证据图：卫星图上标拍摄点、朝向扇形、关键地物，下面拼街景对比图。
+"""Make the evidence image: mark the camera position, heading wedge and key features on satellite imagery, with street-view comparison panels below.
 
-输入一个 JSON 描述文件：
+Input is a JSON spec file:
 {
-  "map": "area.jpg",                         # tiles.py fetch 的输出（旁边要有同名 .json）
-  "crop": [x0, y0, x1, y1],                  # 可选，按原图像素裁剪
-  "width": 1280,                             # 输出宽度
+  "map": "area.jpg",                         # output of tiles.py fetch (needs the same-name .json next to it)
+  "crop": [x0, y0, x1, y1],                  # optional, crop in original-image pixels
+  "width": 1280,                             # output width
   "camera": [lat, lon],
-  "heading": 52, "hfov": 54, "range_m": 560, # 朝向扇形
-  "labels": [{"at": [lat, lon], "text": "星河双子塔", "color": "#ffdd55", "dx": 0, "dy": 0}],
+  "heading": 52, "hfov": 54, "range_m": 560, # heading wedge
+  "labels": [{"at": [lat, lon], "text": "Xinghe Twin Towers", "color": "#ffdd55", "dx": 0, "dy": 0}],
   "lines":  [{"from": [lat, lon], "bearing": 47, "length_m": 75, "color": "#00ffff"}],
-  "panels": [{"image": "sv1.jpg", "caption": "街景：同一条路朝东北看"}]
+  "panels": [{"image": "sv1.jpg", "caption": "Street view: same road, looking northeast"}]
 }
 
-示例：evidence.py spec.json --out evidence.jpg
+Example: evidence.py spec.json --out evidence.jpg
 """
 from __future__ import annotations
 
@@ -64,11 +64,11 @@ def build(spec: dict, base: Path, out: Path) -> None:
     for lb in spec.get("labels", []):
         ax, ay = m.to_px(*lb["at"])
         r = 8 * scale_font
-        d.ellipse([ax - r, ay - r, ax + r, ay + r], fill=lb.get("color", "white"), outline="black")   # 锚点
+        d.ellipse([ax - r, ay - r, ax + r, ay + r], fill=lb.get("color", "white"), outline="black")   # anchor point
         x, y = ax + lb.get("dx", 12), ay + lb.get("dy", -12)
         bb = d.textbbox((0, 0), lb["text"], font=f)
         tw, th = bb[2] - bb[0], bb[3] - bb[1]
-        x = min(max(8, x), im.size[0] - tw - 16)                                                   # 不出图边
+        x = min(max(8, x), im.size[0] - tw - 16)                                                   # stay inside the image edges
         y = min(max(8, y), im.size[1] - th - 16)
         d.rectangle([x - 8, y - 6, x + tw + 8, y + th + 10], fill="black")
         d.text((x, y), lb["text"], font=f, fill=lb.get("color", "white"))
@@ -84,7 +84,7 @@ def build(spec: dict, base: Path, out: Path) -> None:
         ph = int(pw * 3 / 4)
         cf = _font(20)
         lines_per = []
-        for p in panels:                                   # 说明文字按格宽折行，不和隔壁格重叠
+        for p in panels:                                   # wrap captions to the panel width so they don't overlap the neighboring panel
             cap, cur, lines = p.get("caption", ""), "", []
             for ch in cap:
                 if cf.getlength(cur + ch) > pw - 12:
@@ -100,7 +100,7 @@ def build(spec: dict, base: Path, out: Path) -> None:
         d = ImageDraw.Draw(S)
         for k, (p, lines) in enumerate(zip(panels, lines_per)):
             pim = Image.open(base / p["image"]).convert("RGB")
-            pim.thumbnail((pw, ph))                        # 保持纵横比，居中留黑边
+            pim.thumbnail((pw, ph))                        # keep aspect ratio, centered with black borders
             S.paste(pim, (k * pw + (pw - pim.width) // 2, im.size[1] + cap_h + (ph - pim.height) // 2))
             for li, text in enumerate(lines):
                 d.text((k * pw + 6, im.size[1] + 6 + 26 * li), text, font=cf, fill="white")
@@ -110,7 +110,7 @@ def build(spec: dict, base: Path, out: Path) -> None:
 
 
 def _neg_coords(argv: list[str]) -> list[str]:
-    """argparse 把 -1.45,-48.5 这种负坐标当成选项名；前面补个空格就当普通值（float 会忽略空格）。南半球、西半球的题都要用。"""
+    """argparse takes negative coordinates like -1.45,-48.5 for option names; prefixing a space makes them plain values (float ignores the space). Needed for any case in the southern or western hemisphere."""
     return [" " + a if re.match(r"^-\d[\d.]*(,-?[\d.]+)+$", a) else a for a in argv]
 
 
@@ -124,7 +124,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m², ñ, and Chinese text the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

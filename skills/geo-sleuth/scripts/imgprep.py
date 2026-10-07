@@ -3,32 +3,32 @@
 # requires-python = ">=3.10"
 # dependencies = ["numpy", "pillow"]
 # ///
-"""看图和搜图前的图片处理。
+"""Image processing before looking at and searching with a photo.
 
-  zoom      裁一块放大锐化，读小字、数轨道、看车牌底色
-  edges     四条边缘和四个角各出一张放大图——角落的缆绳、底部船头、小路牌最容易漏
-  variants  以图搜图用的变体：紧裁 / 水平翻转 / 灰度增强 / 去色偏 / 放大；可选透视拉正
-  grid      切成 N×M 块，给以图搜图"只搜局部"用
-  piers     沿桥面下方几行取亮度剖面，找出桥墩所在的像素列（给反解机位用）
+  zoom      crop a region, upscale and sharpen: read small text, count tracks, check plate background color
+  edges     one upscaled image for each of the four edges and four corners — ropes in corners, a boat bow at the bottom, small road signs are the easiest to miss
+  variants  variants for reverse image search: tight crop / horizontal flip / enhanced grayscale / color-cast removal / upscale; optional perspective rectification
+  grid      cut into N×M tiles, for "search only a part" in reverse image search
+  piers     take a brightness profile along a few rows below the bridge deck and find the pixel columns of the bridge piers (for back-solving the camera position)
 
-坐标一律是原图像素 x0,y0,x1,y1（左上、右下）。先用 `exif.py` 或 PIL 看原图尺寸。
+Coordinates are always original-image pixels x0,y0,x1,y1 (top-left, bottom-right). Check the original image size first with `exif.py` or PIL.
 
-示例：
+Examples:
   imgprep.py zoom photo.jpg --box 820,40,1080,300 --scale 4 --out sign.png
   imgprep.py edges photo.jpg --out-dir edges/
   imgprep.py variants photo.jpg --box 300,120,900,760 --prefix left --out-dir v/     # → v/left_crop.jpg left_flip.jpg …
-  imgprep.py variants photo.jpg --persp 312,140,880,95,905,770,290,720 --out-dir v/   # 四角（左上 右上 右下 左下）拉正
+  imgprep.py variants photo.jpg --persp 312,140,880,95,905,770,290,720 --out-dir v/   # rectify four corners (top-left top-right bottom-right bottom-left)
   imgprep.py grid photo.jpg --rows 2 --cols 3 --out-dir tiles/
   imgprep.py piers photo.jpg --rows 926:940 --out cols.json --sheet piers.jpg
 
-piers 的输出 JSON：
-  {"image": 路径, "size": [W, H], "rows": [r0, r1], "cols": [x0, x1],
-   "polarity": "bright" | "dark",            # 桥墩比周围亮还是暗
+piers output JSON:
+  {"image": path, "size": [W, H], "rows": [r0, r1], "cols": [x0, x1],
+   "polarity": "bright" | "dark",            # whether piers are brighter or darker than their surroundings
    "params": {"min_gap": 20, "min_prominence": 12, "baseline": 61},
-   "count": 峰数,
+   "count": number of peaks,
    "piers": [{"col": 38, "prominence": 100.5, "dev": 92.4, "level": 183.2}, ...]}
-  col 是像素列（整数，原图坐标），prominence 是该峰的地形突起度（判断真假的主要依据），
-  dev 是去基线后的高度，level 是该列在 rows 区间内的原始平均亮度。piers 按 col 升序。
+  col is the pixel column (integer, original-image coordinates), prominence is the peak's topographic prominence (the main basis for judging real vs. false),
+  dev is the height after baseline removal, level is the column's raw mean brightness over the rows range. piers are sorted by col ascending.
 """
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ def zoom(im: Image.Image, box, scale: float) -> Image.Image:
 
 
 def gray_world(im: Image.Image) -> Image.Image:
-    """灰世界白平衡：老照片偏黄偏紫时用。"""
+    """Gray-world white balance: use when an old photo has a yellow or purple cast."""
     r, g, b = ImageStat.Stat(im.convert("RGB")).mean
     avg = (r + g + b) / 3
     chans = [ch.point(lambda v, k=avg / max(m, 1): max(0, min(255, int(v * k))))
@@ -61,23 +61,23 @@ def gray_world(im: Image.Image) -> Image.Image:
 
 
 def perspective(im: Image.Image, quad: list[float]) -> Image.Image:
-    """四角（左上 右上 右下 左下）→ 矩形。输出宽高取对边长度的最大值。"""
+    """Four corners (top-left top-right bottom-right bottom-left) → rectangle. Output width and height take the larger of each pair of opposite side lengths."""
     (x0, y0), (x1, y1), (x2, y2), (x3, y3) = (quad[i:i + 2] for i in range(0, 8, 2))
     w = int(max(((x1 - x0) ** 2 + (y1 - y0) ** 2) ** .5, ((x2 - x3) ** 2 + (y2 - y3) ** 2) ** .5))
     h = int(max(((x3 - x0) ** 2 + (y3 - y0) ** 2) ** .5, ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** .5))
-    # PIL 的 QUAD 变换：输出矩形的四角依次取自源图的 左上、左下、右下、右上
+    # PIL's QUAD transform: the output rectangle's four corners come, in order, from the source's top-left, bottom-left, bottom-right, top-right
     return im.transform((w, h), Image.QUAD, (x0, y0, x3, y3, x2, y2, x1, y1), Image.BICUBIC)
 
 
 def _range(s: str) -> tuple[int, int]:
-    """解析 "a:b"（含 a、不含 b）。"""
+    """Parse "a:b" (a inclusive, b exclusive)."""
     a, b = s.split(":")
     a, b = int(float(a)), int(float(b))
     return (a, b) if a <= b else (b, a)
 
 
 def _baseline(p, w: int):
-    """滑动中值基线：把桥体、天空、地面这类缓变亮度抹平，只留下细的竖条。"""
+    """Sliding median baseline: flattens slowly varying brightness such as the bridge body, sky and ground, leaving only thin vertical strips."""
     import numpy as np
     h = w // 2
     pad = np.pad(p, (h, h), mode="edge")
@@ -85,7 +85,7 @@ def _baseline(p, w: int):
 
 
 def _prominence(d, i: int) -> float:
-    """局部极大值 i 的地形突起度：峰高减去左右两侧下降到的较高那个谷底。"""
+    """Topographic prominence of local maximum i: peak height minus the higher of the two valley floors it descends to on the left and right."""
     h = d[i]
     lo = h
     j = i
@@ -102,7 +102,7 @@ def _prominence(d, i: int) -> float:
 
 
 def _peaks(d, min_gap: int, min_prominence: float) -> list[tuple[int, float]]:
-    """找 d 上的峰：突起度先过阈值，再按突起度从大到小贪心地留下相距 ≥ min_gap 的。"""
+    """Find peaks in d: prominence must first pass the threshold, then, from highest to lowest prominence, greedily keep those ≥ min_gap apart."""
     cand = [i for i in range(1, len(d) - 1) if d[i] >= d[i - 1] and d[i] > d[i + 1]]
     res = [(i, _prominence(d, i)) for i in cand]
     res = [(i, pr) for i, pr in res if pr >= min_prominence]
@@ -117,16 +117,16 @@ def _peaks(d, min_gap: int, min_prominence: float) -> list[tuple[int, float]]:
 
 def piers(im: Image.Image, rows: tuple[int, int], cols: tuple[int, int] | None,
           min_gap: int, min_prominence: float, baseline_win: int, polarity: str) -> dict:
-    """沿桥面下方的 rows 行取每列平均亮度 → 减滑动中值基线 → 找峰 = 桥墩像素列。
+    """Take each column's mean brightness over the rows below the bridge deck → subtract the sliding median baseline → find peaks = bridge pier pixel columns.
 
-    桥墩在背光的桥体阴影里通常比周围亮（polarity=bright），逆光或阴天可能反过来（dark）；
-    auto 就是两种都算一遍，取突起度总和大的那一种。
+    In the shadow of a shaded bridge body, piers are usually brighter than their surroundings (polarity=bright); against the light or on overcast days it can be the reverse (dark);
+    auto computes both and takes the one with the larger total prominence.
     """
     import numpy as np
     W, H = im.size
     r0, r1 = max(0, rows[0]), min(H, rows[1])
     if r1 - r0 < 1:
-        raise SystemExit(f"--rows {rows[0]}:{rows[1]} 在 {W}x{H} 的图上取不到行")
+        raise SystemExit(f"--rows {rows[0]}:{rows[1]} selects no rows in a {W}x{H} image")
     x0, x1 = (0, W) if cols is None else (max(0, cols[0]), min(W, cols[1]))
     a = np.asarray(im.convert("L"), dtype=float)
     p = a[r0:r1, x0:x1].mean(axis=0)
@@ -146,7 +146,7 @@ def piers(im: Image.Image, rows: tuple[int, int], cols: tuple[int, int] | None,
 
 
 def piers_sheet(im: Image.Image, r: dict, out: Path) -> None:
-    """在原图上画出取样行带和每个桥墩列（带序号），给人一眼核对多没多、漏没漏。"""
+    """Draw the sampled row band and each pier column (numbered) on the original image, so a person can check at a glance for extra or missing ones."""
     from PIL import ImageDraw
     sheet = im.copy()
     d = ImageDraw.Draw(sheet)
@@ -172,14 +172,14 @@ def main() -> None:
 
     e = sub.add_parser("edges")
     e.add_argument("image", type=Path)
-    e.add_argument("--frac", type=float, default=0.18, help="边缘条带占整图的比例，默认 0.18")
+    e.add_argument("--frac", type=float, default=0.18, help="edge strip as a fraction of the whole image, default 0.18")
     e.add_argument("--out-dir", type=Path, required=True)
 
     v = sub.add_parser("variants")
     v.add_argument("image", type=Path)
-    v.add_argument("--box", type=_box, help="只搜这一块（去掉天空和背景）")
-    v.add_argument("--persp", help="8 个数：左上 右上 右下 左下 四角，拉成正视")
-    v.add_argument("--prefix", help="输出文件名前缀；默认 原图名 + 裁剪框，不同框的变体不会互相覆盖")
+    v.add_argument("--box", type=_box, help="search only this region (removes sky and background)")
+    v.add_argument("--persp", help="8 numbers: the four corners top-left top-right bottom-right bottom-left, rectified to a front view")
+    v.add_argument("--prefix", help="output file name prefix; default is original name + crop box, so variants of different boxes don't overwrite each other")
     v.add_argument("--out-dir", type=Path, required=True)
 
     g = sub.add_parser("grid")
@@ -189,36 +189,36 @@ def main() -> None:
     g.add_argument("--overlap", type=float, default=0.15)
     g.add_argument("--out-dir", type=Path, required=True)
 
-    pr = sub.add_parser("piers", help="沿桥面下方几行的亮度剖面找桥墩像素列",
+    pr = sub.add_parser("piers", help="find bridge pier pixel columns from the brightness profile of a few rows below the bridge deck",
                         formatter_class=argparse.RawDescriptionHelpFormatter, description="""\
-沿 --rows 那几行取亮度剖面，减去滑动中值基线，找出突起度 ≥ --min-prominence 的峰，峰所在的像素列就是桥墩列。
-取样行选桥面下方、桥墩露出来且背景（天空、远景、水面）连续的那几行；桥面在画面里倾斜时把行带放宽到覆盖两端。
+Take the brightness profile along the --rows rows, subtract the sliding median baseline, and find peaks with prominence ≥ --min-prominence; the pixel columns of the peaks are the pier columns.
+For sample rows, pick the rows below the bridge deck where the piers are exposed and the background (sky, distant view, water) is continuous; when the deck is tilted in the frame, widen the row band to cover both ends.
 
-输出 JSON（--out）：
-  {"image": 路径, "size": [W, H], "rows": [r0, r1], "cols": [x0, x1],   # cols 是列的搜索范围，不是构件列
-   "polarity": "bright" | "dark",            # 桥墩比周围亮还是暗
+Output JSON (--out):
+  {"image": path, "size": [W, H], "rows": [r0, r1], "cols": [x0, x1],   # cols is the column search range, not the structure columns
+   "polarity": "bright" | "dark",            # whether piers are brighter or darker than their surroundings
    "params": {"min_gap": 20, "min_prominence": 12, "baseline": 61},
-   "count": 峰数,
+   "count": number of peaks,
    "piers": [{"col": 38, "prominence": 100.5, "dev": 92.4, "level": 183.2}, ...]}
-  col 是像素列（整数，原图坐标），prominence 是该峰的突起度（判断真假的主要依据），
-  dev 是去基线后的高度，level 是该列在 rows 区间内的原始平均亮度。piers 按 col 升序。
+  col is the pixel column (integer, original-image coordinates), prominence is the peak's prominence (the main basis for judging real vs. false),
+  dev is the height after baseline removal, level is the column's raw mean brightness over the rows range. piers are sorted by col ascending.
 
-这份 JSON 可以直接给 geo.py spacing --cols @cols.json，但**先看 --sheet 核对**：
-剔掉非桥墩的峰（前景亮斑、栏杆、树），被前景挡断的构件分段之间要用 ';' 隔开手写成 --cols 串。""")
+This JSON can go straight to geo.py spacing --cols @cols.json, but **check --sheet first**:
+drop non-pier peaks (bright foreground spots, railings, trees); structure segments broken by foreground occlusion must be separated with ';' when you hand-write the --cols string.""")
     pr.add_argument("image", type=Path)
     pr.add_argument("--rows", type=_range, required=True,
-                    help='取样行，"r0:r1"（含 r0 不含 r1）。取桥面下方、桥墩露出来的那几行，'
-                         '先用 zoom 看一眼；桥面倾斜时把行带放宽到覆盖两端')
-    pr.add_argument("--cols", type=_range, help='只在这段列里找，"x0:x1"；默认整幅宽')
-    pr.add_argument("--min-gap", type=int, default=20, help="两个桥墩列至少隔多少像素，默认 20")
+                    help='sample rows, "r0:r1" (r0 inclusive, r1 exclusive). Take the rows below the bridge deck where the piers are exposed; '
+                         'look with zoom first; when the deck is tilted, widen the row band to cover both ends')
+    pr.add_argument("--cols", type=_range, help='search only within this column range, "x0:x1"; default full width')
+    pr.add_argument("--min-gap", type=int, default=20, help="minimum spacing in pixels between two pier columns, default 20")
     pr.add_argument("--min-prominence", type=float, default=12,
-                    help="峰的突起度阈值（0-255 灰度），默认 12；调小多出假峰，调大会漏远端的密桥墩")
+                    help="peak prominence threshold (0-255 gray level), default 12; lower gives extra false peaks, higher misses dense piers at the far end")
     pr.add_argument("--baseline", type=int, default=61,
-                    help="滑动中值基线的窗口宽度，默认 61 像素；比桥墩间距大、比桥体亮度变化尺度小")
+                    help="window width of the sliding median baseline, default 61 px; larger than the pier spacing, smaller than the scale of brightness changes along the bridge body")
     pr.add_argument("--polarity", choices=["auto", "bright", "dark"], default="auto",
-                    help="桥墩比周围亮还是暗，默认 auto（两种都试，取突起度总和大的）")
-    pr.add_argument("--out", type=Path, required=True, help="输出 JSON，结构见 --help 顶部")
-    pr.add_argument("--sheet", type=Path, help="在原图上画出行带和每个列（带序号），给人核对")
+                    help="whether piers are brighter or darker than their surroundings, default auto (tries both, takes the one with the larger total prominence)")
+    pr.add_argument("--out", type=Path, required=True, help="output JSON, structure at the top of --help")
+    pr.add_argument("--sheet", type=Path, help="draw the row band and each column (numbered) on the original image, for a person to check")
 
     args = ap.parse_args()
     im = ImageOps.exif_transpose(Image.open(args.image)).convert("RGB")
@@ -234,13 +234,13 @@ def main() -> None:
         r = {"image": str(args.image), **r}
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(r, ensure_ascii=False), encoding="utf-8")
-        print(f"行 {r['rows'][0]}:{r['rows'][1]}  列 {r['cols'][0]}:{r['cols'][1]}  "
-              f"极性 {r['polarity']}  找到 {r['count']} 列")
+        print(f"rows {r['rows'][0]}:{r['rows'][1]}  cols {r['cols'][0]}:{r['cols'][1]}  "
+              f"polarity {r['polarity']}  found {r['count']} columns")
         for n, pier in enumerate(r["piers"]):
-            print(f"  {n:>2}  col {pier['col']:>5}  突起度 {pier['prominence']:>6.1f}  亮度 {pier['level']:>6.1f}")
-        print("列表：" + ",".join(str(p["col"]) for p in r["piers"]))
-        print("喂给 geo.py spacing 之前先看 --sheet：非桥墩的峰（前景亮斑、栏杆、树）要剔掉，"
-              "被前景挡断的构件分段之间用 ';' 隔开，如 --cols '38,133,218;745,788,829'")
+            print(f"  {n:>2}  col {pier['col']:>5}  prominence {pier['prominence']:>6.1f}  brightness {pier['level']:>6.1f}")
+        print("list: " + ",".join(str(p["col"]) for p in r["piers"]))
+        print("Before feeding geo.py spacing, check --sheet: drop non-pier peaks (bright foreground spots, railings, trees); "
+              "separate structure segments broken by foreground occlusion with ';', e.g. --cols '38,133,218;745,788,829'")
         print(args.out)
         if args.sheet:
             args.sheet.parent.mkdir(parents=True, exist_ok=True)
@@ -300,7 +300,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese-locale Windows outputs GBK by default: it crashes on m² or ñ, and any Chinese the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

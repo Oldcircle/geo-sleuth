@@ -3,31 +3,32 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""查表类线索：车牌、固话区号、国家电话码、行驶方向、海外领地、行政区。表是本地 JSON（data/），查询不联网。
+"""Lookup-table clues: license plates, landline area codes, international calling codes, driving side, overseas territories, admin divisions. Tables are local JSON (data/); lookups don't go online.
 
-  lookup plate 渝G              车牌前两位 → 省 + 地级市/区县（发牌机关代号，来源维基百科；直辖市字母分区来自常识表，标 unverified）
-  lookup plate-prefix 渝        省简称 → 省
-  lookup area-code 0817         固话区号 → 省 + 市（也接受 "0817-1234567"、"(0817) 123"）
-  lookup calling-code +594      国际电话码 → 国家/地区
-  lookup driving-side left      靠左行驶的国家；`driving-side --country 日本` → left
-  lookup territories 法国       海外领地/属地列表；`--continent 南美洲` 只列该洲
-  lookup admin 渝北区            上级链；`admin --children 重庆市` 下级列表
-  list                          各表条数、来源、抓取日期
-  update [表名|all]             重新抓取（走 --proxy）；`--from-dir` 用已下载的 HTML
+  lookup plate 渝G              first two plate characters → province + prefecture-level city / district (county) (issuing-authority code, source Wikipedia; letter splits inside municipalities come from a common-knowledge table, marked unverified)
+  lookup plate-prefix 渝        province abbreviation → province (渝 = Chongqing)
+  lookup area-code 0817         landline area code → province + city (also accepts "0817-1234567", "(0817) 123")
+  lookup calling-code +594      international calling code → country/region
+  lookup driving-side left      countries that drive on the left; `driving-side --country 日本` (Japan) → left
+  lookup territories 法国       list of overseas territories/dependencies of 法国 (France); `--continent 南美洲` (South America) lists only that continent
+  lookup admin 渝北区            parent chain (渝北区 = Yubei District); `admin --children 重庆市` (Chongqing) lists the children
+  list                          entry count, source and fetch date of each table
+  update [table|all]            re-fetch; `--from-dir` uses already-downloaded HTML
 
---json 输出统一契约（给 board.py apply 用）：
+--json output follows one contract (used by board.py apply):
   {"kind": "...", "value": "...", "matches": [{"admin1": "...", "admin2": "...", "note": "..."}], "source": "...", "table_fetched": "..."}
-  国家级：matches 里是 {"country": "...", "continent": "...", "subregion": "...", "note": "..."}
+  country level: matches hold {"country": "...", "continent": "...", "subregion": "...", "note": "..."}
 
-示例：
+Examples:
   clues.py lookup plate 粤B
   clues.py lookup area-code 023 --json
   clues.py lookup territories France --continent 南美洲
-  clues.py update all --proxy socks5h://127.0.0.1:10808（示例）
+  clues.py update all
 """
 from __future__ import annotations
 
 import argparse
+from _net import curl_args, PROXY_HELP
 import html as H
 import json
 import os
@@ -51,7 +52,7 @@ SOURCES = {
 LOCAL_NAMES = {"cn_plates": "plates_zh.html", "cn_area_codes": "areacodes2_zh.html", "calling_codes": "calling_en.html",
                "driving_side": "driving_en.html", "territories": "dependent_en.html", "cn_admin": "pca-code.json"}
 
-# 国家中英别名（只放常用的；查不到时用英文名再试）
+# Chinese → English country aliases (common ones only; if not found, retry with the English name)
 COUNTRY_ZH = {
     "中国": "China", "日本": "Japan", "英国": "United Kingdom", "法国": "France", "美国": "United States", "澳大利亚": "Australia",
     "香港": "Hong Kong", "澳门": "Macau", "美属维尔京群岛": "U.S. Virgin Islands", "直布罗陀": "Gibraltar", "百慕大": "Bermuda", "开曼群岛": "Cayman Islands", "新喀里多尼亚": "New Caledonia", "法属波利尼西亚": "French Polynesia", "马约特": "Mayotte", "加那利群岛": "Canary Islands", "印度": "India", "泰国": "Thailand", "印尼": "Indonesia", "印度尼西亚": "Indonesia",
@@ -72,15 +73,15 @@ COUNTRY_ZH = {
 }
 CONTINENT_ZH = {"亚洲": ["Asia"], "欧洲": ["Europe"], "非洲": ["Africa"], "大洋洲": ["Oceania"], "北美洲": ["Northern America", "North America"],
                 "南美洲": ["South America"], "美洲": ["Americas"], "加勒比": ["Caribbean"], "中美洲": ["Central America"], "南极洲": ["Antarctica"]}
-# 直辖市字母分区：来源为原地区行署划分的常识，维基页面只写到“重庆市”。标 unverified，用前核实。
+# Letter splits inside municipalities: source is common knowledge of the former prefecture divisions; the Wikipedia page only goes down to “重庆市” (Chongqing). Marked unverified; verify before use.
 MUNICIPAL_LETTER_NOTES = {
-    "渝": {"A": "主城区", "B": "主城区", "C": "永川、江津、合川、璧山、铜梁、大足、荣昌、潼南（原永川地区）", "D": "主城区（后增）",
-          "F": "万州、开州、梁平、忠县、云阳、奉节、巫山、巫溪、城口（原万县地区）", "G": "涪陵、南川、垫江、丰都、武隆（原涪陵地区）",
-          "H": "黔江、石柱、秀山、酉阳、彭水（原黔江地区）"},
+    "渝": {"A": "main urban districts", "B": "main urban districts", "C": "永川、江津、合川、璧山、铜梁、大足、荣昌、潼南 (former 永川 prefecture)", "D": "main urban districts (added later)",
+          "F": "万州、开州、梁平、忠县、云阳、奉节、巫山、巫溪、城口 (former 万县 prefecture)", "G": "涪陵、南川、垫江、丰都、武隆 (former 涪陵 prefecture)",
+          "H": "黔江、石柱、秀山、酉阳、彭水 (former 黔江 prefecture)"},
 }
 
-# 维基“属地列表”不收本土一体化的海外领土（法国海外省、西班牙加那利、美国夏威夷…），但它们正是“IP 国家 × 提示大洲”要找的交集，这里补上。
-# 来源：Wikipedia Overseas France / Outermost regions of the EU / 各国条目；region/subregion 按联合国地理方案。
+# Wikipedia's “List of dependent territories” leaves out overseas territories integrated into the home country (French overseas departments, Spain's Canaries, US Hawaii…), but they are exactly the intersection that “IP country × hinted continent” is looking for, so they are added here.
+# Sources: Wikipedia Overseas France / Outermost regions of the EU / per-country articles; region/subregion follow the UN geoscheme.
 INTEGRAL_OVERSEAS = [
     {"name": "French Guiana", "sovereign": "France", "region": "Americas", "subregion": "South America", "status": "Overseas department and region (integral part of France, EU)"},
     {"name": "Guadeloupe", "sovereign": "France", "region": "Americas", "subregion": "Caribbean", "status": "Overseas department and region"},
@@ -112,7 +113,7 @@ INTEGRAL_OVERSEAS = [
 ]
 
 
-# ---------------------------------------------------------------- HTML 表解析（处理 rowspan/colspan）
+# ---------------------------------------------------------------- HTML table parsing (handles rowspan/colspan)
 
 def _clean(c: str) -> str:
     c = re.sub(r"<sup[^>]*>.*?</sup>", "", c, flags=re.S)
@@ -166,7 +167,7 @@ def _sections_h3(html: str) -> list[tuple[str, str]]:
     return secs
 
 
-# ---------------------------------------------------------------- 各表解析
+# ---------------------------------------------------------------- per-table parsers
 
 def parse_cn_plates(html: str) -> dict:
     out = {}
@@ -243,19 +244,19 @@ def parse_calling_codes(html: str) -> dict:
     return out
 
 
-DRIVING_SUPPLEMENT = {  # 维基表里没有单独列的地区（来源：各地区条目，常识）
-    "Hong Kong": ("left", "沿用英治时期，与内地相反"), "Macau": ("left", "沿用葡治时期，与内地相反"), "Taiwan": ("right", ""),
-    "French Guiana": ("right", "法国海外省"), "Guadeloupe": ("right", "法国海外省"), "Martinique": ("right", "法国海外省"),
-    "Réunion": ("right", "法国海外省"), "Mayotte": ("right", "法国海外省"), "New Caledonia": ("right", "法国属地"), "French Polynesia": ("right", "法国属地"),
-    "Puerto Rico": ("right", "美国属地"), "Guam": ("right", "美国属地"), "U.S. Virgin Islands": ("left", "美国属地，少见的靠左"),
-    "American Samoa": ("right", "美国属地"), "Northern Mariana Islands": ("right", "美国属地"),
-    "Greenland": ("right", "丹麦"), "Faroe Islands": ("right", "丹麦"), "Aruba": ("right", "荷兰"), "Curaçao": ("right", "荷兰"), "Sint Maarten": ("right", "荷兰"),
-    "Gibraltar": ("right", "英国属地，少见的靠右"), "Bermuda": ("left", "英国属地"), "Cayman Islands": ("left", "英国属地"),
-    "British Virgin Islands": ("left", "英国属地"), "Anguilla": ("left", "英国属地"), "Montserrat": ("left", "英国属地"),
-    "Turks and Caicos Islands": ("left", "英国属地"), "Falkland Islands": ("left", "英国属地"), "Saint Helena": ("left", "英国属地"),
-    "Isle of Man": ("left", "英国王室属地"), "Jersey": ("left", "英国王室属地"), "Guernsey": ("left", "英国王室属地"),
-    "Cook Islands": ("left", "新西兰联系邦"), "Niue": ("left", "新西兰联系邦"), "Tokelau": ("left", "新西兰属地"),
-    "Canary Islands": ("right", "西班牙"), "Azores": ("right", "葡萄牙"), "Madeira": ("right", "葡萄牙"), "Svalbard": ("right", "挪威"),
+DRIVING_SUPPLEMENT = {  # regions without their own row in the Wikipedia table (source: each region's article, common knowledge)
+    "Hong Kong": ("left", "kept from British rule, opposite to the mainland"), "Macau": ("left", "kept from Portuguese rule, opposite to the mainland"), "Taiwan": ("right", ""),
+    "French Guiana": ("right", "French overseas department"), "Guadeloupe": ("right", "French overseas department"), "Martinique": ("right", "French overseas department"),
+    "Réunion": ("right", "French overseas department"), "Mayotte": ("right", "French overseas department"), "New Caledonia": ("right", "French territory"), "French Polynesia": ("right", "French territory"),
+    "Puerto Rico": ("right", "US territory"), "Guam": ("right", "US territory"), "U.S. Virgin Islands": ("left", "US territory, a rare left-hand one"),
+    "American Samoa": ("right", "US territory"), "Northern Mariana Islands": ("right", "US territory"),
+    "Greenland": ("right", "Denmark"), "Faroe Islands": ("right", "Denmark"), "Aruba": ("right", "Netherlands"), "Curaçao": ("right", "Netherlands"), "Sint Maarten": ("right", "Netherlands"),
+    "Gibraltar": ("right", "British territory, a rare right-hand one"), "Bermuda": ("left", "British territory"), "Cayman Islands": ("left", "British territory"),
+    "British Virgin Islands": ("left", "British territory"), "Anguilla": ("left", "British territory"), "Montserrat": ("left", "British territory"),
+    "Turks and Caicos Islands": ("left", "British territory"), "Falkland Islands": ("left", "British territory"), "Saint Helena": ("left", "British territory"),
+    "Isle of Man": ("left", "British Crown Dependency"), "Jersey": ("left", "British Crown Dependency"), "Guernsey": ("left", "British Crown Dependency"),
+    "Cook Islands": ("left", "New Zealand associated state"), "Niue": ("left", "New Zealand associated state"), "Tokelau": ("left", "New Zealand territory"),
+    "Canary Islands": ("right", "Spain"), "Azores": ("right", "Portugal"), "Madeira": ("right", "Portugal"), "Svalbard": ("right", "Norway"),
 }
 
 
@@ -298,7 +299,7 @@ def parse_territories(html: str) -> dict:
     for it in items:
         by_sov.setdefault(it["sovereign"], []).append(it)
     return {"by_sovereign": by_sov, "count": len(items),
-            "note": "维基“属地列表”不含法国海外省这类本土一体化的海外领土，INTEGRAL_OVERSEAS 补上（curated=true）"}
+            "note": "Wikipedia's “List of dependent territories” excludes overseas territories integrated into the home country, such as French overseas departments; INTEGRAL_OVERSEAS adds them (curated=true)"}
 
 
 def parse_cn_admin(raw: str) -> dict:
@@ -310,7 +311,7 @@ def parse_cn_admin(raw: str) -> dict:
             name, code = n.get("name", ""), n.get("code", "")
             ch = n.get("children") or []
             if level == 2 and name in ("市辖区", "县", "省直辖县级行政区划", "自治区直辖县级行政区划", "市"):
-                walk(ch, parent, 3)      # 直辖市/省直辖的假层：下级直接挂省
+                walk(ch, parent, 3)      # dummy level for municipalities / province-administered units: attach children directly to the province
                 continue
             items.append({"name": name, "code": code, "level": level, "parent": parent})
             walk(ch, name, level + 1)
@@ -323,22 +324,21 @@ PARSERS = {"cn_plates": parse_cn_plates, "cn_area_codes": parse_cn_area_codes, "
            "driving_side": parse_driving_side, "territories": parse_territories, "cn_admin": parse_cn_admin}
 
 
-# ---------------------------------------------------------------- 读写
+# ---------------------------------------------------------------- read/write
 
 def load(table: str) -> dict:
     f = DATA / f"{table}.json"
     if not f.exists():
-        sys.exit(f"没有 {f}：先 `clues.py update {table} --proxy socks5h://127.0.0.1:10808（示例）`")
+        sys.exit(f"{f} not found: first run `clues.py update {table}`")
     return json.loads(f.read_text(encoding="utf-8"))
 
 
 def _fetch(url: str, proxy: str | None) -> str:
-    cmd = ["curl", "-s", "-m", "90", "-A", UA, "-L"]
-    if proxy:
-        cmd += ["--proxy", proxy]
+    cmd = ["curl", "-q", "-s", "-m", "90", "-A", UA, "-L"]
+    cmd += curl_args(proxy)
     r = subprocess.run(cmd + [url], capture_output=True)
     if r.returncode != 0 or len(r.stdout) < 1000:
-        sys.exit(f"抓取失败：{url}（国内要 --proxy socks5h://127.0.0.1:10808（示例））")
+        sys.exit(f"fetch failed: {url} (check service availability with doctor.py --network)")
     return r.stdout.decode("utf-8", "replace")
 
 
@@ -355,10 +355,10 @@ def cmd_update(args) -> None:
         n = data.get("count") or len(data.get("items") or data)
         payload = {"_meta": {"source": SOURCES[name], "fetched": date.today().isoformat(), "count": n}, **data}
         (DATA / f"{name}.json").write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
-        print(f"{name}: {n} 条 -> {DATA / f'{name}.json'}（{(DATA / f'{name}.json').stat().st_size // 1024} KB）")
+        print(f"{name}: {n} entries -> {DATA / f'{name}.json'} ({(DATA / f'{name}.json').stat().st_size // 1024} KB)")
 
 
-# ---------------------------------------------------------------- 查询
+# ---------------------------------------------------------------- lookups
 
 def _norm_plate(v: str) -> tuple[str, str]:
     v = v.strip().replace("·", "").replace(" ", "").replace("　", "")
@@ -378,13 +378,13 @@ def lookup_plate(value: str) -> dict:
     abbr, letter = _norm_plate(value)
     src, fetched = d["_meta"]["source"][0], d["_meta"]["fetched"]
     if not abbr or abbr not in d:
-        return _result("plate", value, [], src, fetched, "省简称没认出来，或表里没有（港澳台、军警牌不在表里）")
+        return _result("plate", value, [], src, fetched, "province abbreviation not recognized, or not in the table (Hong Kong/Macau/Taiwan and military/police plates are not in the table)")
     prov = d[abbr]["province"]
     if not letter:
-        return _result("plate-prefix", value, [{"admin1": prov, "admin2": "", "note": "只给了省简称"}], src, fetched)
+        return _result("plate-prefix", value, [{"admin1": prov, "admin2": "", "note": "only the province abbreviation was given"}], src, fetched)
     place = d[abbr]["letters"].get(letter)
     if not place:
-        return _result("plate", value, [{"admin1": prov, "admin2": "", "note": f"字母 {letter} 不在分配表里（新增号段或表未更新）"}], src, fetched)
+        return _result("plate", value, [{"admin1": prov, "admin2": "", "note": f"letter {letter} is not in the allocation table (new series, or table out of date)"}], src, fetched)
     matches = []
     for p in re.split(r"[、，,/]", place):
         p = p.strip()
@@ -393,7 +393,7 @@ def lookup_plate(value: str) -> dict:
         note = ""
         if p == prov or p.rstrip("市") == prov.rstrip("市"):
             unv = (d[abbr].get("letter_notes_unverified") or {}).get(letter)
-            note = f"直辖市全境；分区常识（未核实）：{unv}" if unv else "直辖市全境"
+            note = f"whole municipality; district split from common knowledge (unverified): {unv}" if unv else "whole municipality"
             p = ""
         matches.append({"admin1": prov, "admin2": p, "note": note})
     return _result("plate", value, matches, src, fetched)
@@ -409,10 +409,10 @@ def lookup_area_code(value: str) -> dict:
         code = digits[:L]
         if code in d:
             e = d[code]
-            note = ("已弃用；" if e.get("deprecated") else "") + (e.get("note") or "")
+            note = ("deprecated; " if e.get("deprecated") else "") + (e.get("note") or "")
             return _result("area-code", value, [{"admin1": e["admin1"], "admin2": a, "note": note, "digits": e.get("digits", "")} for a in e["admin2"]] or
                            [{"admin1": e["admin1"], "admin2": "", "note": note}], src, fetched)
-    return _result("area-code", value, [], src, fetched, "不是国内固话区号（手机号、400/800、国外号码），或位数切错：区号 010/02X 是 3 位，其余 4 位")
+    return _result("area-code", value, [], src, fetched, "not a mainland China landline area code (mobile number, 400/800, foreign number), or split at the wrong length: area codes 010/02X are 3 digits, all others 4")
 
 
 def lookup_calling_code(value: str) -> dict:
@@ -425,19 +425,19 @@ def lookup_calling_code(value: str) -> dict:
         code = digits[:L]
         if code in d:
             hits = d[code]
-            # 1、7 这类共用码：看后面的区号
+            # shared codes like 1 and 7: look at the area code that follows
             subs = [k for k in d if k.startswith(code + "-") and digits[L:].startswith(k.split("-")[1])]
             if subs:
                 hits = [h for k in subs for h in d[k]]
             return _result("calling-code", value, [{"country": h["country"], "utc": h.get("utc", ""), "note": ""} for h in hits], src, fetched)
-    return _result("calling-code", value, [], src, fetched, "没匹配到国家码")
+    return _result("calling-code", value, [], src, fetched, "no matching country code")
 
 
 _CN_NAMES: dict | None = None
 
 
 def _country_en(name: str) -> str:
-    """中文/别名 → 各表用的英文名。先查 data/country_names.json（300 国 + 别名），再查内置 COUNTRY_ZH。"""
+    """Chinese name / alias → the English name the tables use. Checks data/country_names.json (300 countries + aliases) first, then the built-in COUNTRY_ZH."""
     global _CN_NAMES
     n = name.strip()
     if _CN_NAMES is None:
@@ -461,7 +461,7 @@ def lookup_driving_side(value: str | None, country: str | None) -> dict:
         hit = next(((k, v) for k, v in d.items() if k != "_meta" and k.lower() == en.lower()), None) or \
             next(((k, v) for k, v in d.items() if k != "_meta" and en.lower() in k.lower()), None)
         if not hit:
-            return _result("driving-side", country, [], src, fetched, "表里没有这个国家名，试英文名")
+            return _result("driving-side", country, [], src, fetched, "country name not in the table; try the English name")
         k, v = hit
         return _result("driving-side", country, [{"country": k, "side": v["side"], "note": v.get("note", "")}], src, fetched)
     side = "left" if (value or "").lower().startswith(("l", "左")) else "right"
@@ -475,13 +475,13 @@ def lookup_territories(value: str, continent: str | None) -> dict:
     en = _country_en(value)
     sovs = [k for k in d["by_sovereign"] if k.lower() == en.lower()] or [k for k in d["by_sovereign"] if en.lower() in k.lower()]
     if not sovs:
-        return _result("territories", value, [], src, fetched, "表里没有这个主权国（或它没有属地）；前殖民地不在此表")
+        return _result("territories", value, [], src, fetched, "sovereign state not in the table (or it has no territories); former colonies are not in this table")
     items = [it for k in sovs for it in d["by_sovereign"][k]]
     if continent:
         keys = [x.lower() for x in CONTINENT_ZH.get(continent, [continent])]
         items = [it for it in items if any(k in (it["region"] + " " + it["subregion"]).lower() for k in keys)]
     return _result("territories", value, [{"country": it["name"], "continent": it["region"], "subregion": it["subregion"],
-                                           "note": f"{it['status']}；主权国 {it['sovereign']}"} for it in items], src, fetched)
+                                           "note": f"{it['status']}; sovereign state {it['sovereign']}"} for it in items], src, fetched)
 
 
 def lookup_admin(value: str | None, children: str | None, level: str | None) -> dict:
@@ -495,7 +495,7 @@ def lookup_admin(value: str | None, children: str | None, level: str | None) -> 
         parent = children.strip()
         hits = by_name.get(parent) or [it for it in items if it["name"].rstrip("市省") == parent.rstrip("市省")]
         if not hits:
-            return _result("admin", parent, [], src, fetched, "没有这个行政区名")
+            return _result("admin", parent, [], src, fetched, "no admin division with this name")
         kids = [it for it in items if it["parent"] == hits[0]["name"]]
         want = {"city": 2, "county": 3}.get(level or "", None)
         if want:
@@ -512,7 +512,7 @@ def lookup_admin(value: str | None, children: str | None, level: str | None) -> 
             nxt = by_name.get(p)
             p = nxt[0]["parent"] if nxt else ""
         ms.append({"admin1": chain[-1], "admin2": h["name"] if h["level"] > 1 else "", "chain": list(reversed(chain)), "code": h["code"], "level": h["level"]})
-    return _result("admin", name, ms, src, fetched, "" if ms else "没有这个行政区名（写全名，如“渝北区”）")
+    return _result("admin", name, ms, src, fetched, "" if ms else "no admin division with this name (use the full name, e.g. “渝北区”)")
 
 
 def cmd_lookup(args) -> None:
@@ -534,26 +534,26 @@ def cmd_lookup(args) -> None:
     if args.json:
         print(json.dumps(res, ensure_ascii=False, indent=1))
         return
-    print(f"[{res['kind']}] {res['value']} → {len(res['matches'])} 条" + (f"（{res['note']}）" if res["note"] else ""))
+    print(f"[{res['kind']}] {res['value']} → {len(res['matches'])} matches" + (f" ({res['note']})" if res["note"] else ""))
     for m in res["matches"][: args.limit]:
         if "country" in m:
             print("  " + " / ".join(str(m.get(x)) for x in ("country", "side", "continent", "subregion", "utc") if m.get(x)) + (f"  {m['note']}" if m.get("note") else ""))
         else:
             print("  " + " / ".join(str(m.get(x)) for x in ("admin1", "admin2") if m.get(x)) + (f"  {m['note']}" if m.get("note") else "")
-                  + (f"  链:{'>'.join(m['chain'])}" if m.get("chain") else ""))
+                  + (f"  chain:{'>'.join(m['chain'])}" if m.get("chain") else ""))
     if len(res["matches"]) > args.limit:
-        print(f"  … 共 {len(res['matches'])} 条，--limit 调大")
-    print(f"来源 {res['source']}（{res['table_fetched']}）")
+        print(f"  … {len(res['matches'])} in total; raise --limit")
+    print(f"source {res['source']} ({res['table_fetched']})")
 
 
 def cmd_list(args) -> None:
     for name in SOURCES:
         f = DATA / f"{name}.json"
         if not f.exists():
-            print(f"{name}: 未抓取")
+            print(f"{name}: not fetched")
             continue
         m = json.loads(f.read_text(encoding="utf-8"))["_meta"]
-        print(f"{name}: {m.get('count')} 条，{f.stat().st_size // 1024} KB，抓取 {m.get('fetched')}，来源 {m['source'][0]}")
+        print(f"{name}: {m.get('count')} entries, {f.stat().st_size // 1024} KB, fetched {m.get('fetched')}, source {m['source'][0]}")
 
 
 def main() -> None:
@@ -571,14 +571,14 @@ def main() -> None:
     sub.add_parser("list")
     up = sub.add_parser("update")
     up.add_argument("table", nargs="?", default="all")
-    up.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
-    up.add_argument("--from-dir", help="已下载的源文件目录（开发用）")
+    up.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
+    up.add_argument("--from-dir", help="directory of already-downloaded source files (for development)")
     args = ap.parse_args()
     {"lookup": cmd_lookup, "list": cmd_list, "update": cmd_update}[args.cmd](args)
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese-locale Windows writes GBK by default: m², ñ make it crash, and the Chinese the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

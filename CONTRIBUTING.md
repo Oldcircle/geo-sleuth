@@ -8,11 +8,11 @@ Thanks for looking. Three kinds of contribution help most; each has a short rule
 
 ## 2. A data source
 
-Lookup tables live in `skills/geo-sleuth/data/`. Every file carries `_meta` with the source URL, fetch date, row count and licence, and `clues.py update` must be able to re-fetch it. Live queries (OSM, tiles, panoramas) go into a script with a `--proxy` flag and an entry in `references/data-sources.md`.
+Lookup tables live in `skills/geo-sleuth/data/`. Every file carries `_meta` with the source URL, fetch date, row count and licence, and `clues.py update` must be able to re-fetch it. Live queries (OSM, tiles, panoramas) use the shared `_net.py` helpers. Add an entry in `references/data-sources.md`.
 
 ## 3. A run that went wrong
 
-Open an issue with: your own photo (or a description if you would rather not post it), what the skill concluded, what the truth was, and which step first went off. The first wrong step is the useful part.
+Open an issue with: your own photo (or a description if you would rather not post it), what the skill concluded, what the truth was, and which step first went off. The first wrong step is the useful part. For setup or connection failures, include the relevant output of `uv run skills/geo-sleuth/scripts/doctor.py --network --json`, your OS and the failing command. Remove private paths or source text before posting.
 
 ## House rules
 
@@ -20,8 +20,13 @@ Open an issue with: your own photo (or a description if you would rather not pos
 - Do not add anything that identifies a real person, a private home or a specific case answer.
 - Scripts declare their dependencies in the PEP 723 header and run with `uv run`.
 - Keep `SKILL.md` under control: long material goes into `references/`.
+- `SKILL.md`, `references/`, script output and comments are in English. Chinese stays only where it is data: text found in photos (plates, signs), queries sent to Chinese services, and patterns that match Chinese text.
 - Use the skill on photos you took yourself, or whose photographer agreed.
 
 ## Translations
 
 `README.md` is the source of truth. When you change it, the Chinese README (`README.zh-CN.md`) should keep the same structure, the same images and the same numbers. A translation that only updates one section is still welcome.
+
+## Runtime checks
+
+Run `uv run skills/geo-sleuth/tests/test_runtime.py` for offline routing, browser fallback and diagnostics regressions. The test uses only loopback HTTP and mocked service calls; it does not upload photos or download ML models. Use `doctor.py --network` separately for live reachability.

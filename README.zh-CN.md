@@ -188,9 +188,30 @@ flowchart LR
 
 ## 环境要求
 
-Python 3.10+、[`uv`](https://docs.astral.sh/uv/)，以及一个能运行 shell 命令的 agent。依赖写在每个脚本头部，`uv run` 首次运行时会自动安装。
+需要 Python 3.10+、[`uv`](https://docs.astral.sh/uv/)、`curl`，以及能运行 shell 命令的 agent。每个脚本声明自己的依赖，用 `uv run` 首次运行时安装；安装时保留完整 skill 文件夹，包括 `data/` 和 `scripts/` 中的辅助模块。
 
-可选：以图搜图用的 Google Chrome（也可以用 `uvx playwright install chromium` 代替），以及用 `export GEO_PROXY=socks5h://127.0.0.1:<port>` 让所有联网脚本都走代理。
+以图搜图需要 **Google Chrome 或 Playwright Chromium**，先尝试 Chrome，启动失败则回退到 Chromium。两者都没有时运行 `uvx playwright install chromium`。Linux 缺少系统库时可用 `uvx playwright install --with-deps chromium`；Playwright 升级后若提示缺少浏览器可执行文件，重新运行安装命令。
+
+在仓库根目录自检（PowerShell 也可运行）：
+
+```bash
+uv run skills/geo-sleuth/scripts/doctor.py
+uv run skills/geo-sleuth/scripts/doctor.py --network
+```
+
+已安装 skill 时换成其实际的 `scripts/doctor.py` 路径，或让 agent 运行。自检会检查 Python、uv、curl、查表数据、当前目录写权限，以及浏览器能否实际启动。`--network` 额外探测各服务，不上传照片；`--json` 输出诊断数据。退出码 1 表示有失败项，警告表示部分可选功能受影响。首次运行 uv 可能需要安装 Playwright；自检不加载 OCR 或 ML 模型。网站可达不等于识图上传、模型下载和街景查询一定成功。
+
+先用自己的照片检查本地处理流程：
+
+```bash
+uv run skills/geo-sleuth/scripts/intake.py photo.jpg --out-dir intake --no-rev
+```
+
+打开 `intake/intake.md`，检查裁图和 OCR 结果；去掉 `--no-rev` 才会在线以图搜图。macOS 优先 Apple Vision，其他系统或回退场景使用 RapidOCR。`match.py`、`sat_scan.py` 首次运行会安装 ML 依赖并下载模型，需预留时间和磁盘空间；首次安装依赖仍需联网。
+
+排错：浏览器启动失败就安装 Chrome / Chromium；HTTP 403/429 或验证码先查看截图、稍后重试；连接超时先跑 `doctor.py --network`。模型加载失败要看磁盘空间、下载错误和 Hugging Face 连通性。`intake.md` 会区分跳过、失败和已完成的步骤；搜索失败不能当作“没有匹配图片”。
+
+语言：维护中的指令、CLI 帮助、报错、报告标题和默认证据标注均为英文。照片 OCR、地名、第三方响应和截图保留原文，agent 负责解释，并用用户的语言写最终报告。中文指令的最后一版冻结在 tag [`zh-final`](https://github.com/Oldcircle/geo-sleuth/tree/zh-final)，不再更新；要装那一版：`npx skills add https://github.com/Oldcircle/geo-sleuth/tree/zh-final/skills/geo-sleuth`。
 
 ## 路线图
 

@@ -3,21 +3,21 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow"]
 # ///
-"""天空几何：太阳位置、影子、卫星电视锅。
+"""Sky geometry: sun position, shadows, satellite TV dishes.
 
-太阳位置用 NOAA 算法（Meeus），1950–2050 年误差约 0.01°，含大气折射修正。
-方位角一律是罗盘方位：0=北，顺时针。时间可以带时区（--tz Asia/Shanghai），默认当作 UTC。
+Sun position uses the NOAA algorithm (Meeus), error about 0.01° for 1950–2050, with atmospheric refraction correction.
+Azimuths are always compass bearings: 0=north, clockwise. Times can carry a time zone (--tz Asia/Shanghai); the default is UTC.
 
-  pos     某地某时的太阳方位角、高度角、1 米物体的影长、影子朝向
-  ratio   影长比 ↔ 太阳高度角 换算（物体高 1，影长 r）
-  locate  已知拍摄时刻 + 量出的高度角（或影长比）/影子朝向 → 在一个范围里找出符合的地带
-  when    已知地点 + 高度角/影子朝向 → 反推一天里的哪些时刻（或一段日期里哪些天）符合
-  dish    地球静止卫星的锅朝向；给锅的方位角还能反推经度
-  street  已知地点和日期 + 影子与街道的夹角 → 街道走向候选（上午、下午分开列）
-  facing  哪几面墙受光、哪几面背光 → 镜头朝向区间（没有可量的影子时用）
-  compass 太阳在画面里 → 镜头朝向，和画面里任意物体的真实方位（没给时刻就分日出、日落两组）
+  pos     sun azimuth, elevation angle, shadow length of a 1 m object, and shadow bearing at a given place and time
+  ratio   shadow ratio ↔ sun elevation angle conversion (object height 1, shadow length r)
+  locate  known capture time + measured elevation angle (or shadow ratio) / shadow bearing → find the matching band within an area
+  when    known place + elevation angle / shadow bearing → work back to which times of day (or which days in a date range) match
+  dish    geostationary satellite dish pointing; given the dish azimuth it can also work back to longitude
+  street  known place and date + angle between shadow and street → street orientation candidates (morning and afternoon listed separately)
+  facing  which walls are lit and which are shaded → camera heading range (use when there is no measurable shadow)
+  compass sun in the frame → camera heading, and the true bearing of any object in the frame (with no time given, split into sunrise and sunset groups)
 
-示例：
+Examples:
   sun.py pos --at 39.9042,116.4074 --time 2023-08-15T16:20 --tz Asia/Shanghai
   sun.py ratio --shadow 1.2
   sun.py locate --time 2023-08-15T16:20 --tz Asia/Shanghai --ratio 1.2 --tol 1.5 --bbox 34,110,42,122
@@ -26,9 +26,9 @@
   sun.py when --at 30.25,120.16 --date 2024-10-01 --tz Asia/Shanghai --ratio 1.2 --shadow-bearing 30
   sun.py when --at 30.25,120.16 --dates 2024-01-01:2024-12-31 --tz Asia/Shanghai --elev 40 --shadow-bearing 330
   sun.py dish --at 31.23,121.47 --sat 92.2
-  sun.py dish --lat 31.2 --sat 92.2 --azimuth 215     # 锅朝 215°，反推经度
-  sun.py compass --at <lat,lon> --time 07:40 --dates 2024-09-01:2024-10-15 --tz <IANA 时区> --sun-x 1200 --width 4000 --hfov 60:70 --x 2900
-  sun.py compass --at <lat,lon> --tz <IANA 时区> --sun-x 2600 --width 4032 --x 1500        # 没时刻没日期：全年早晚两组
+  sun.py dish --lat 31.2 --sat 92.2 --azimuth 215     # dish faces 215°, work back to longitude
+  sun.py compass --at <lat,lon> --time 07:40 --dates 2024-09-01:2024-10-15 --tz <IANA time zone> --sun-x 1200 --width 4000 --hfov 60:70 --x 2900
+  sun.py compass --at <lat,lon> --tz <IANA time zone> --sun-x 2600 --width 4032 --x 1500        # no time, no date: morning and evening groups over the whole year
   sun.py street --at 49.25,-123.10 --date 2025-04-01 --tz America/Vancouver --ratio 1.5 --tol 4 --shadow-rel 90
 """
 from __future__ import annotations
@@ -44,14 +44,14 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-# ---------------------------------------------------------------- 太阳位置
+# ---------------------------------------------------------------- Sun position
 
 _D = math.degrees
 _R = math.radians
 
 
 def _sun_core(dt_utc: datetime) -> tuple[float, float]:
-    """返回 (太阳赤纬°, 均时差 分钟)。"""
+    """Returns (solar declination °, equation of time in minutes)."""
     jd = dt_utc.timestamp() / 86400 + 2440587.5
     t = (jd - 2451545) / 36525
     l0 = (280.46646 + t * (36000.76983 + t * 0.0003032)) % 360
@@ -84,7 +84,7 @@ def _refraction(h: float) -> float:
 
 
 def sun_position(lat: float, lon: float, dt_utc: datetime, refraction: bool = True) -> tuple[float, float]:
-    """(方位角°, 高度角°)。dt_utc 必须带 UTC 时区。"""
+    """(azimuth °, elevation angle °). dt_utc must carry the UTC time zone."""
     decl, eqt = _sun_core(dt_utc)
     minutes = dt_utc.hour * 60 + dt_utc.minute + dt_utc.second / 60 + dt_utc.microsecond / 6e7
     tst = (minutes + eqt + 4 * lon) % 1440
@@ -104,7 +104,7 @@ def sun_position(lat: float, lon: float, dt_utc: datetime, refraction: bool = Tr
 
 
 def subsolar_point(dt_utc: datetime) -> tuple[float, float]:
-    """太阳直射点 (lat, lon)。同一时刻太阳高度角相同的点，是以它为圆心、半径 90°-高度角 的圆。"""
+    """Subsolar point (lat, lon). At a given moment, the points with the same sun elevation angle form a circle centered on it with radius 90°-elevation angle."""
     decl, eqt = _sun_core(dt_utc)
     minutes = dt_utc.hour * 60 + dt_utc.minute + dt_utc.second / 60
     lon = -(minutes + eqt - 720) / 4
@@ -112,7 +112,7 @@ def subsolar_point(dt_utc: datetime) -> tuple[float, float]:
 
 
 def shadow_ratio(elev: float) -> float:
-    """1 米竖直物体在水平地面上的影长（米）。"""
+    """Shadow length (m) of a 1 m vertical object on level ground."""
     return math.inf if elev <= 0 else 1 / math.tan(_R(elev))
 
 
@@ -124,13 +124,13 @@ def _ang_diff(a: float, b: float) -> float:
     return abs((a - b + 180) % 360 - 180)
 
 
-# ---------------------------------------------------------------- 卫星锅
+# ---------------------------------------------------------------- Satellite dishes
 
 _RE, _RGEO = 6378.137, 42164.0
 
 
 def dish_pointing(lat: float, lon: float, sat_lon: float) -> tuple[float, float]:
-    """地面 (lat, lon) 指向经度 sat_lon 的地球静止卫星：(方位角°, 仰角°)。"""
+    """Ground point (lat, lon) pointing at the geostationary satellite at longitude sat_lon: (azimuth °, elevation angle °)."""
     la, lo = _R(lat), _R(lon)
     gx, gy, gz = _RE * math.cos(la) * math.cos(lo), _RE * math.cos(la) * math.sin(lo), _RE * math.sin(la)
     sx, sy, sz = _RGEO * math.cos(_R(sat_lon)), _RGEO * math.sin(_R(sat_lon)), 0.0
@@ -141,22 +141,22 @@ def dish_pointing(lat: float, lon: float, sat_lon: float) -> tuple[float, float]
     return (_D(math.atan2(east, north)) + 360) % 360, _D(math.atan2(up, math.hypot(east, north)))
 
 
-# 常见卫星（经度，东经为正）
+# Common satellites (longitude, east positive)
 SATELLITES = {
-    "chinasat9": (92.2, "中星9号：国内户户通/村村通小锅，全国最常见"),
-    "chinasat6b": (115.5, "中星6B：有线电视前端、单位的大锅"),
-    "asiasat7": (105.5, "亚洲7号"),
-    "apstar6c": (134.0, "亚太6C"),
-    "astra1": (19.2, "Astra 1：德国、奥地利等中欧"),
-    "hotbird": (13.0, "Hot Bird：意大利、波兰等"),
-    "astra2": (28.2, "Astra 2：英国、爱尔兰"),
-    "eutelsat5w": (-5.0, "Eutelsat 5W：法国、西班牙部分"),
-    "nilesat": (-7.0, "Nilesat：中东、北非"),
-    "turksat": (42.0, "Türksat：土耳其"),
+    "chinasat9": (92.2, "ChinaSat-9 (中星9号): small dishes of China's 户户通/村村通 (rural direct-to-home) programs, the most common nationwide"),
+    "chinasat6b": (115.5, "ChinaSat-6B: large dishes at cable TV headends and organizations"),
+    "asiasat7": (105.5, "AsiaSat 7"),
+    "apstar6c": (134.0, "APStar-6C"),
+    "astra1": (19.2, "Astra 1: Germany, Austria and other Central Europe"),
+    "hotbird": (13.0, "Hot Bird: Italy, Poland, etc."),
+    "astra2": (28.2, "Astra 2: UK, Ireland"),
+    "eutelsat5w": (-5.0, "Eutelsat 5W: France, parts of Spain"),
+    "nilesat": (-7.0, "Nilesat: Middle East, North Africa"),
+    "turksat": (42.0, "Türksat: Turkey"),
 }
 
 
-# ---------------------------------------------------------------- 输入解析
+# ---------------------------------------------------------------- Input parsing
 
 def _pair(s: str) -> tuple[float, float]:
     a, b = s.split(",")
@@ -177,13 +177,13 @@ def _target_elev(args) -> float | None:
 
 
 def _target_az(args) -> float | None:
-    """统一成太阳方位角。影子朝向 = 太阳方位 + 180。"""
+    """Normalize to sun azimuth. Shadow bearing = sun azimuth + 180."""
     if getattr(args, "shadow_bearing", None) is not None:
         return (args.shadow_bearing + 180) % 360
     return getattr(args, "sun_azimuth", None)
 
 
-# ---------------------------------------------------------------- 子命令
+# ---------------------------------------------------------------- Subcommands
 
 def cmd_pos(args) -> None:
     lat, lon = args.at
@@ -199,9 +199,9 @@ def cmd_pos(args) -> None:
 
 def cmd_ratio(args) -> None:
     if args.shadow is not None:
-        print(f"影长比 1:{args.shadow} → 太阳高度角 {elev_from_ratio(args.shadow):.2f}°")
+        print(f"Shadow ratio 1:{args.shadow} → sun elevation angle {elev_from_ratio(args.shadow):.2f}°")
     else:
-        print(f"太阳高度角 {args.elev}° → 1 米物体影长 {shadow_ratio(args.elev):.3f} 米")
+        print(f"Sun elevation angle {args.elev}° → shadow length of a 1 m object {shadow_ratio(args.elev):.3f} m")
 
 
 def _matches(lat, lon, times, tel, tol, taz, az_tol) -> bool:
@@ -220,7 +220,7 @@ def _matches(lat, lon, times, tel, tol, taz, az_tol) -> bool:
 def cmd_locate(args) -> None:
     tel, taz = _target_elev(args), _target_az(args)
     if tel is None and taz is None:
-        sys.exit("需要 --elev / --ratio 或 --shadow-bearing / --sun-azimuth 至少一个")
+        sys.exit("Need at least one of --elev / --ratio or --shadow-bearing / --sun-azimuth")
     t0 = _to_utc(args.time, args.tz)
     k = max(0, int(args.time_tol // 5))
     times = [t0 + timedelta(minutes=5 * i) for i in range(-k, k + 1)] if args.time_tol else [t0]
@@ -272,7 +272,7 @@ def _draw(mosaic: Path, pts, step, out: Path) -> None:
 
 
 def _scan_day(lat, lon, day: date, tz: ZoneInfo, tel, tol, taz, az_tol, step_min: int):
-    """返回这一天里符合条件的时间窗 [(开始, 结束, 中点方位角, 中点高度角)]。"""
+    """Returns the matching time windows in this day [(start, end, midpoint azimuth, midpoint elevation angle)]."""
     start = datetime(day.year, day.month, day.day, tzinfo=tz)
     wins, cur = [], None
     for i in range(0, 24 * 60, step_min):
@@ -297,7 +297,7 @@ def _scan_day(lat, lon, day: date, tz: ZoneInfo, tel, tol, taz, az_tol, step_min
 def cmd_when(args) -> None:
     tel, taz = _target_elev(args), _target_az(args)
     if tel is None and taz is None:
-        sys.exit("需要 --elev / --ratio 或 --shadow-bearing / --sun-azimuth 至少一个")
+        sys.exit("Need at least one of --elev / --ratio or --shadow-bearing / --sun-azimuth")
     tz = ZoneInfo(args.tz) if args.tz else timezone.utc
     lat, lon = args.at
     if args.dates:
@@ -313,11 +313,11 @@ def cmd_when(args) -> None:
             _, e1 = sun_position(lat, lon, (mid - timedelta(minutes=5)).astimezone(timezone.utc))
             _, e2 = sun_position(lat, lon, (mid + timedelta(minutes=5)).astimezone(timezone.utc))
             rate = abs(e2 - e1) / 10
-            sens = f"  高度角每分钟变 {rate:.2f}°，差 1° ≈ {1 / rate:.0f} 分钟" if rate > 1e-3 else "  正午前后高度角几乎不变，时刻分辨率很差"
-            print(f"{d} {s:%H:%M}–{e:%H:%M}  太阳方位 {az:5.1f}°  高度 {el:4.1f}°  影子朝 {(az + 180) % 360:5.1f}°  "
-                  f"影长比 1:{shadow_ratio(el):.2f}{sens}")
+            sens = f"  elevation angle changes {rate:.2f}° per minute, 1° off ≈ {1 / rate:.0f} minutes" if rate > 1e-3 else "  elevation angle barely changes around noon; time resolution is poor"
+            print(f"{d} {s:%H:%M}–{e:%H:%M}  sun azimuth {az:5.1f}°  elevation {el:4.1f}°  shadow bearing {(az + 180) % 360:5.1f}°  "
+                  f"shadow ratio 1:{shadow_ratio(el):.2f}{sens}")
     if not hits:
-        print("没有符合条件的时刻（放宽 --tol / --az-tol，或检查时区与方位是否弄反）")
+        print("No matching times (loosen --tol / --az-tol, or check whether the time zone or bearing is backwards)")
 
 
 def cmd_dish(args) -> None:
@@ -325,10 +325,10 @@ def cmd_dish(args) -> None:
     if args.at:
         lat, lon = args.at
         az, el = dish_pointing(lat, lon, sat)
-        print(f"地点 {lat},{lon} 指向东经 {sat}° 卫星：方位角 {az:.1f}°，仰角 {el:.1f}°")
+        print(f"Place {lat},{lon} pointing at the satellite at longitude {sat}°E: azimuth {az:.1f}°, elevation angle {el:.1f}°")
         return
     if args.azimuth is None or args.lat is None:
-        sys.exit("正算给 --at；反推经度给 --lat 和 --azimuth")
+        sys.exit("Forward calculation: give --at; working back to longitude: give --lat and --azimuth")
     best = []
     for i in range(-1800, 1801):
         lon = i / 10
@@ -336,30 +336,30 @@ def cmd_dish(args) -> None:
         if el > 0 and _ang_diff(az, args.azimuth) <= args.az_tol:
             best.append((lon, az, el))
     if not best:
-        print("该纬度上没有经度符合（锅可能对的是别的卫星）")
+        print("No longitude at this latitude matches (the dish may point at a different satellite)")
         return
-    print(f"纬度 {args.lat}、锅方位 {args.azimuth}±{args.az_tol}° 对东经 {sat}° 卫星 → 经度范围 {best[0][0]}° ~ {best[-1][0]}°，"
-          f"仰角约 {best[len(best) // 2][2]:.0f}°")
+    print(f"Latitude {args.lat}, dish azimuth {args.azimuth}±{args.az_tol}° to the satellite at longitude {sat}°E → longitude range {best[0][0]}° ~ {best[-1][0]}°, "
+          f"elevation angle about {best[len(best) // 2][2]:.0f}°")
 
 
 def cmd_facing(args) -> None:
-    """哪几面墙受光 / 背光 → 镜头朝向区间。墙受光 ⟺ |太阳方位 − 墙面法向| < 90°。
+    """Which walls are lit / shaded → camera heading range. A wall is lit ⟺ |sun azimuth − wall normal| < 90°.
 
-    墙面按"在画面里朝哪边"描述：camera=正对镜头（法向 = 朝向+180）、left=朝画面左（朝向−90）、
-    right=朝画面右（朝向+90）、away=背对镜头（法向 = 朝向）。
+    Walls are described by "which way they face in the frame": camera=faces the camera (normal = heading+180), left=faces frame left (heading−90),
+    right=faces frame right (heading+90), away=faces away from the camera (normal = heading).
     """
     lat, lon = args.at
     t = _to_utc(args.time, args.tz)
     az, el = sun_position(lat, lon, t)
     if el <= 0:
-        print(f"该时刻太阳在地平线下（高度 {el:.1f}°），受光面法用不上")
+        print(f"The sun is below the horizon at this time (elevation {el:.1f}°); the lit-face method doesn't apply")
         return
     offs = {"camera": 180.0, "left": -90.0, "right": 90.0, "away": 0.0}
     lit = [w for w in (args.lit or "").split(",") if w]
     shaded = [w for w in (args.shaded or "").split(",") if w]
     bad = [w for w in lit + shaded if w not in offs]
     if bad:
-        sys.exit(f"墙面只能写 camera/left/right/away，收到：{bad}")
+        sys.exit(f"Walls can only be camera/left/right/away, got: {bad}")
     ok = []
     for h in range(0, 360):
         good = True
@@ -371,23 +371,23 @@ def cmd_facing(args) -> None:
                 good = False
         if good:
             ok.append(h)
-    print(f"太阳方位 {az:.1f}°、高度 {el:.1f}°（影子朝 {(az + 180) % 360:.1f}°）")
+    print(f"Sun azimuth {az:.1f}°, elevation {el:.1f}° (shadow bearing {(az + 180) % 360:.1f}°)")
     if not ok:
-        print("没有朝向能同时满足这些受光/背光条件：检查哪面墙受光看错了，或时刻/时区不对（也可能是拼图）")
+        print("No heading satisfies all these lit/shaded conditions: check whether you misread which wall is lit, or whether the time / time zone is wrong (the photo may also be a composite)")
         return
     runs, start = [], ok[0]
     for a, b in zip(ok, ok[1:] + [None]):
         if b is None or b != a + 1:
             runs.append((start, a))
             start = b
-    if len(runs) > 1 and runs[0][0] == 0 and runs[-1][1] == 359:      # 跨北方向合并
+    if len(runs) > 1 and runs[0][0] == 0 and runs[-1][1] == 359:      # merge across north
         runs = [(runs[-1][0] - 360, runs[0][1])] + runs[1:-1]
-    print("镜头朝向可能区间：" + "，".join(f"{a % 360}°–{b % 360}°" for a, b in runs))
-    print("提示：区间边界处墙面几乎平行于阳光，明暗差别很小，别当硬边界（--margin 调保守程度）")
+    print("Possible camera heading ranges: " + ", ".join(f"{a % 360}°–{b % 360}°" for a, b in runs))
+    print("Tip: at the range edges the walls are nearly parallel to the sunlight and the light/dark difference is small; don't treat them as hard edges (--margin sets how conservative)")
 
 
 def cmd_street(args) -> None:
-    """夹角在俯视图里量：从街道方向顺时针转到影子方向。分不清顺逆时针时两个都列（--both）。"""
+    """Measure the angle in a top-down view: clockwise from the street direction to the shadow direction. If you can't tell clockwise from counterclockwise, list both (--both)."""
     tz = ZoneInfo(args.tz) if args.tz else timezone.utc
     lat, lon = args.at
     tel = _target_elev(args)
@@ -405,30 +405,30 @@ def cmd_street(args) -> None:
             cands.add(round((shadow + args.shadow_rel) % 180))
         rows.append((lt, az, el, shadow, sorted(cands)))
     if not rows:
-        print("没有符合的时刻（高度角容差放宽，或检查日期/时区）")
+        print("No matching times (loosen the elevation angle tolerance, or check the date / time zone)")
         return
     step = max(1, len(rows) // 16)
     for k, (lt, az, el, shadow, cands) in enumerate(rows):
         if k % step and k != len(rows) - 1:
             continue
-        half = "上午" if lt.hour < 12 else "下午"
-        print(f"{lt:%H:%M} {half}  太阳 {az:5.1f}°/{el:4.1f}°  影子朝 {shadow:5.1f}°  → 街道走向 "
-              + " 或 ".join(f"{c}°–{c + 180}°" for c in cands))
-    print("街道走向按 0–180° 表示（47° 即东北—西南向）。上午和下午两组结果都要带着，除非有别的证据分出上下午。")
+        half = "morning" if lt.hour < 12 else "afternoon"
+        print(f"{lt:%H:%M} {half}  sun {az:5.1f}°/{el:4.1f}°  shadow bearing {shadow:5.1f}°  → street orientation "
+              + " or ".join(f"{c}°–{c + 180}°" for c in cands))
+    print("Street orientation is given as 0–180° (47° means northeast–southwest). You must keep both the morning and the afternoon group, unless other evidence tells morning from afternoon.")
 
 
 
 def _px_angle(x: float, width: float, hfov: float) -> float:
-    """像素列 x 相对画面中心的水平角（°，右为正）。"""
+    """Horizontal angle (°, right positive) of pixel column x relative to the frame center."""
     f = (width / 2) / math.tan(math.radians(hfov) / 2)
     return math.degrees(math.atan((x - width / 2) / f))
 
 
 def cmd_compass(args) -> None:
-    """太阳在画面里 → 镜头朝向，以及画面里任意一列像素（塔、烟囱、路口）的真实方位。
+    """Sun in the frame → camera heading, and the true bearing of any pixel column in the frame (tower, chimney, intersection).
 
-    给了时刻：直接用那一刻的太阳方位（日期不确定时 --dates 给区间，方位跟着变成区间）。
-    没给时刻：按 --dates 里每天太阳高度在 0–--elev-max 之间的早晚两段分别算，日出、日落两组结果都列。
+    Time given: use the sun azimuth at that moment directly (if the date is uncertain, give a range with --dates and the bearing becomes a range too).
+    No time given: compute the morning and evening stretches of each day in --dates where the sun elevation is between 0 and --elev-max separately; list both the sunrise and the sunset group.
     """
     lat, lon = args.at
     tz = ZoneInfo(args.tz) if args.tz else timezone.utc
@@ -438,7 +438,7 @@ def cmd_compass(args) -> None:
         a = b = datetime.fromisoformat(args.time).date()
     else:
         a, b = date(2025, 1, 1), date(2025, 12, 31)
-        print("没给日期：按全年算。发帖时间不等于拍摄时间，有物候、穿着、雪能定季节再用 --dates 缩小")
+        print("No date given: computing over the whole year. Posting time is not capture time; when phenology, clothing or snow can pin down the season, narrow it with --dates")
     groups: dict[str, list[float]] = {}
     lo_el, hi_el = (float(x) for x in args.elev.split(":")) if args.elev else (None, None)
     dropped: list[date] = []
@@ -458,7 +458,7 @@ def cmd_compass(args) -> None:
                 lt = start + timedelta(minutes=i)
                 az, el = sun_position(lat, lon, lt.astimezone(timezone.utc))
                 if (0 < el <= args.elev_max) if lo_el is None else (lo_el <= el <= hi_el):
-                    groups.setdefault("早上（日出一侧）" if lt.hour < 12 else "傍晚（日落一侧）", []).append(az)
+                    groups.setdefault("morning (sunrise side)" if lt.hour < 12 else "evening (sunset side)", []).append(az)
         d += timedelta(days=max(1, args.step_days))
     if dropped:
         runs, s0 = [], dropped[0]
@@ -466,9 +466,9 @@ def cmd_compass(args) -> None:
             if y is None or (y - x).days > max(1, args.step_days):
                 runs.append((s0, x))
                 s0 = y
-        print("太阳高度不在 --elev 区间、已排除的日期：" + "，".join(f"{p:%m-%d}–{q:%m-%d}" for p, q in runs))
+        print("Dates excluded because the sun elevation is outside --elev: " + ", ".join(f"{p:%m-%d}–{q:%m-%d}" for p, q in runs))
     if not groups:
-        print("这些日期里没有符合的太阳位置（太阳在地平线下，或 --elev / --elev-max 给得太窄）")
+        print("No matching sun position on these dates (sun below the horizon, or --elev / --elev-max too narrow)")
         return
     h0, h1 = (float(x) for x in args.hfov.split(":"))
     xs = [float(v) for s in (args.x or []) for v in s.split(",")]
@@ -478,22 +478,22 @@ def cmd_compass(args) -> None:
         for hf in (h0, h1):
             off = _px_angle(args.sun_x, args.width, hf)
             cands += [(lo - off) % 360, (hi - off) % 360]
-        print(f"{name}：太阳方位 {lo:.1f}°–{hi:.1f}°；太阳在画面 x={args.sun_x:.0f}（偏离中心 "
-              f"{_px_angle(args.sun_x, args.width, h0):+.1f}° 到 {_px_angle(args.sun_x, args.width, h1):+.1f}°）"
-              f" → 镜头朝向约 {min(cands):.0f}°–{max(cands):.0f}°")
+        print(f"{name}: sun azimuth {lo:.1f}°–{hi:.1f}°; sun at frame x={args.sun_x:.0f} (offset from center "
+              f"{_px_angle(args.sun_x, args.width, h0):+.1f}° to {_px_angle(args.sun_x, args.width, h1):+.1f}°)"
+              f" → camera heading about {min(cands):.0f}°–{max(cands):.0f}°")
         for x in xs:
             bs = []
             for hf in (h0, h1):
                 rel = _px_angle(x, args.width, hf) - _px_angle(args.sun_x, args.width, hf)
                 bs += [(lo + rel) % 360, (hi + rel) % 360]
-            print(f"    x={x:.0f} 的物体：方位约 {min(bs):.0f}°–{max(bs):.0f}°（相对太阳 "
-                  f"{_px_angle(x, args.width, h0) - _px_angle(args.sun_x, args.width, h0):+.1f}° 到 "
-                  f"{_px_angle(x, args.width, h1) - _px_angle(args.sun_x, args.width, h1):+.1f}°）")
-    print("跨北方向（如 350°–10°）时区间按顺时针读。视角不确定就放宽 --hfov；日出、日落两组分不开时两个朝向都要建俯视模板。")
+            print(f"    object at x={x:.0f}: bearing about {min(bs):.0f}°–{max(bs):.0f}° (relative to the sun "
+                  f"{_px_angle(x, args.width, h0) - _px_angle(args.sun_x, args.width, h0):+.1f}° to "
+                  f"{_px_angle(x, args.width, h1) - _px_angle(args.sun_x, args.width, h1):+.1f}°)")
+    print("When a range crosses north (e.g. 350°–10°), read it clockwise. If the field of view is uncertain, widen --hfov; when the sunrise and sunset groups can't be told apart, you must build top-down templates for both headings.")
 
 
 def _neg_coords(argv: list[str]) -> list[str]:
-    """argparse 把 -1.45,-48.5 这种负坐标当成选项名；前面补个空格就当普通值（float 会忽略空格）。南半球、西半球的题都要用。"""
+    """argparse treats negative coordinates like -1.45,-48.5 as option names; a leading space makes them plain values (float ignores the space). Every southern- or western-hemisphere case needs this."""
     return [" " + a if re.match(r"^-\d[\d.]*(,-?[\d.]+)+$", a) else a for a in argv]
 
 
@@ -501,81 +501,81 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    p = sub.add_parser("pos", help="某地某时的太阳位置")
+    p = sub.add_parser("pos", help="sun position at a given place and time")
     p.add_argument("--at", type=_pair, required=True, help="lat,lon")
-    p.add_argument("--time", required=True, help="2024-06-06T15:39，可带 +08:00")
-    p.add_argument("--tz", help="IANA 时区，如 Asia/Shanghai、Europe/Berlin")
+    p.add_argument("--time", required=True, help="2024-06-06T15:39, may include +08:00")
+    p.add_argument("--tz", help="IANA time zone, e.g. Asia/Shanghai, Europe/Berlin")
 
-    r = sub.add_parser("ratio", help="影长比 ↔ 高度角")
+    r = sub.add_parser("ratio", help="shadow ratio ↔ elevation angle")
     g = r.add_mutually_exclusive_group(required=True)
-    g.add_argument("--shadow", type=float, help="物体高 1 时的影长")
+    g.add_argument("--shadow", type=float, help="shadow length for an object of height 1")
     g.add_argument("--elev", type=float)
 
     def targets(sp):
-        sp.add_argument("--elev", type=float, help="太阳高度角°")
-        sp.add_argument("--ratio", type=float, help="影长比（物体高 1 时的影长），和 --elev 二选一")
-        sp.add_argument("--tol", type=float, default=2.0, help="高度角容差°，默认 2")
-        sp.add_argument("--shadow-bearing", type=float, help="影子指向的罗盘方位°（从物体指向影子末端）")
-        sp.add_argument("--sun-azimuth", type=float, help="太阳方位角°，和 --shadow-bearing 二选一")
-        sp.add_argument("--az-tol", type=float, default=10.0, help="方位容差°，默认 10")
+        sp.add_argument("--elev", type=float, help="sun elevation angle °")
+        sp.add_argument("--ratio", type=float, help="shadow ratio (shadow length for an object of height 1); either this or --elev")
+        sp.add_argument("--tol", type=float, default=2.0, help="elevation angle tolerance °, default 2")
+        sp.add_argument("--shadow-bearing", type=float, help="compass bearing ° the shadow points to (from the object to the shadow tip)")
+        sp.add_argument("--sun-azimuth", type=float, help="sun azimuth °; either this or --shadow-bearing")
+        sp.add_argument("--az-tol", type=float, default=10.0, help="azimuth tolerance °, default 10")
         sp.add_argument("--tz")
 
-    lo = sub.add_parser("locate", help="已知时刻 → 找出符合太阳条件的地带")
+    lo = sub.add_parser("locate", help="known time → find the band that matches the sun conditions")
     lo.add_argument("--time", required=True)
     targets(lo)
-    lo.add_argument("--time-tol", type=float, default=0, help="拍摄时刻不确定的分钟数（±）")
+    lo.add_argument("--time-tol", type=float, default=0, help="uncertainty of the capture time in minutes (±)")
     lo.add_argument("--bbox", type=lambda s: tuple(map(float, s.split(","))), required=True, help="south,west,north,east")
-    lo.add_argument("--step", type=float, default=0.1, help="网格步长°，默认 0.1（约 11 km）")
-    lo.add_argument("--points", type=Path, help="把命中点写成 {name:[lat,lon]}，可给 tiles.py mark")
-    lo.add_argument("--mosaic", type=Path, help="tiles.py fetch 出的底图，在上面画出命中地带")
+    lo.add_argument("--step", type=float, default=0.1, help="grid step °, default 0.1 (about 11 km)")
+    lo.add_argument("--points", type=Path, help="write matching points as {name:[lat,lon]}, for tiles.py mark")
+    lo.add_argument("--mosaic", type=Path, help="base map from tiles.py fetch; the matching band is drawn on it")
     lo.add_argument("--out", type=Path)
 
-    w = sub.add_parser("when", help="已知地点 → 反推拍摄时刻/日期")
+    w = sub.add_parser("when", help="known place → work back to capture time / date")
     w.add_argument("--at", type=_pair, required=True)
     dg = w.add_mutually_exclusive_group(required=True)
-    dg.add_argument("--date", help="单日 2024-10-01")
-    dg.add_argument("--dates", help="日期范围 2024-01-01:2024-12-31")
+    dg.add_argument("--date", help="single day 2024-10-01")
+    dg.add_argument("--dates", help="date range 2024-01-01:2024-12-31")
     targets(w)
     w.add_argument("--step-min", type=int, default=2)
 
-    d = sub.add_parser("dish", help="卫星锅朝向 / 由朝向反推经度")
-    d.add_argument("--sat", type=float, default=92.2, help="卫星经度，默认中星9号 92.2")
-    d.add_argument("--at", type=_pair, help="lat,lon：正算")
-    d.add_argument("--lat", type=float, help="反推：已知纬度")
-    d.add_argument("--azimuth", type=float, help="反推：锅的方位角")
+    d = sub.add_parser("dish", help="satellite dish pointing / work back to longitude from the pointing")
+    d.add_argument("--sat", type=float, default=92.2, help="satellite longitude, default ChinaSat-9 92.2")
+    d.add_argument("--at", type=_pair, help="lat,lon: forward calculation")
+    d.add_argument("--lat", type=float, help="work back: known latitude")
+    d.add_argument("--azimuth", type=float, help="work back: dish azimuth")
     d.add_argument("--az-tol", type=float, default=5.0)
 
-    st = sub.add_parser("street", help="影子与街道的夹角 → 街道走向候选")
-    st.add_argument("--at", type=_pair, required=True, help="城市内任一点 lat,lon")
+    st = sub.add_parser("street", help="angle between shadow and street → street orientation candidates")
+    st.add_argument("--at", type=_pair, required=True, help="any point in the city, lat,lon")
     st.add_argument("--date", required=True)
-    st.add_argument("--shadow-rel", type=float, required=True, help="俯视图里从街道方向顺时针到影子方向的角度；影子垂直街道填 90")
-    st.add_argument("--both", action="store_true", help="分不清顺时针还是逆时针时，两种都列")
-    st.add_argument("--elev", type=float, help="量得的太阳高度角，用来只保留符合的时刻")
-    st.add_argument("--ratio", type=float, help="影长比，和 --elev 二选一")
+    st.add_argument("--shadow-rel", type=float, required=True, help="angle in a top-down view, clockwise from the street direction to the shadow direction; 90 if the shadow is perpendicular to the street")
+    st.add_argument("--both", action="store_true", help="list both when you can't tell clockwise from counterclockwise")
+    st.add_argument("--elev", type=float, help="measured sun elevation angle, used to keep only the matching times")
+    st.add_argument("--ratio", type=float, help="shadow ratio; either this or --elev")
     st.add_argument("--tol", type=float, default=3.0)
     st.add_argument("--tz")
     st.add_argument("--step-min", type=int, default=10)
 
-    fc = sub.add_parser("facing", help="哪几面墙受光 → 镜头朝向区间")
+    fc = sub.add_parser("facing", help="which walls are lit → camera heading range")
     fc.add_argument("--at", type=_pair, required=True)
     fc.add_argument("--time", required=True)
     fc.add_argument("--tz")
-    fc.add_argument("--lit", help="受光的墙，逗号分隔：camera,left,right,away")
-    fc.add_argument("--shaded", help="背光的墙，同上")
-    fc.add_argument("--margin", type=float, default=5, help="边界余量°，默认 5")
+    fc.add_argument("--lit", help="lit walls, comma-separated: camera,left,right,away")
+    fc.add_argument("--shaded", help="shaded walls, same format")
+    fc.add_argument("--margin", type=float, default=5, help="edge margin °, default 5")
 
-    cp = sub.add_parser("compass", help="太阳在画面里 → 镜头朝向、画面里物体的方位（没时刻时列日出日落两组）")
-    cp.add_argument("--at", type=_pair, required=True, help="候选地区里任一点 lat,lon")
-    cp.add_argument("--time", help="钟表时刻 07:40，或完整 2024-09-20T07:40；不给就按低太阳算早晚两组")
-    cp.add_argument("--dates", help="日期区间 2024-09-01:2024-10-15；不给就按全年算")
+    cp = sub.add_parser("compass", help="sun in the frame → camera heading, bearings of objects in the frame (lists sunrise and sunset groups when there is no time)")
+    cp.add_argument("--at", type=_pair, required=True, help="any point in the candidate region, lat,lon")
+    cp.add_argument("--time", help="clock time 07:40, or full 2024-09-20T07:40; if omitted, computes morning and evening groups for a low sun")
+    cp.add_argument("--dates", help="date range 2024-09-01:2024-10-15; if omitted, uses the whole year")
     cp.add_argument("--step-days", type=int, default=3)
     cp.add_argument("--tz")
-    cp.add_argument("--elev-max", type=float, default=12, help="没给时刻时：太阳高度上限°（画面里太阳贴近地平线取 5–12）")
-    cp.add_argument("--elev", help="太阳高度区间° lo:hi（按画面里太阳离地平线/林线多高估）：给了时刻时剔除高度不符的日期，没给时刻时代替 0–--elev-max")
-    cp.add_argument("--sun-x", type=float, required=True, help="太阳在画面里的像素列")
-    cp.add_argument("--width", type=float, required=True, help="画面宽度（像素）")
-    cp.add_argument("--hfov", default="55:75", help="水平视角区间°；手机横拍主摄约 65–75，竖拍约 50–60，截图/变焦更窄")
-    cp.add_argument("--x", action="append", help="要算方位的物体像素列，逗号分隔或重复写")
+    cp.add_argument("--elev-max", type=float, default=12, help="when no time is given: upper limit of sun elevation ° (use 5–12 when the sun in the frame is close to the horizon)")
+    cp.add_argument("--elev", help="sun elevation range ° lo:hi (estimate from how high the sun is above the horizon / tree line in the frame): with a time given, drops dates whose elevation doesn't fit; with no time, replaces 0–--elev-max")
+    cp.add_argument("--sun-x", type=float, required=True, help="pixel column of the sun in the frame")
+    cp.add_argument("--width", type=float, required=True, help="frame width (pixels)")
+    cp.add_argument("--hfov", default="55:75", help="horizontal field of view range °; phone main camera about 65–75 in landscape, about 50–60 in portrait, narrower for crops / zoom")
+    cp.add_argument("--x", action="append", help="pixel columns of objects to compute bearings for, comma-separated or repeated")
 
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
     {"pos": cmd_pos, "ratio": cmd_ratio, "locate": cmd_locate, "when": cmd_when, "dish": cmd_dish,
@@ -583,7 +583,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m² or ñ, and the Chinese the agent reads is garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

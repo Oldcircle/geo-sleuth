@@ -46,7 +46,7 @@ Pick your agents when prompted. Then hand your agent a photo and say:
 
 > find where this photo was taken
 
-That is the whole interface. The agent reads `SKILL.md`, runs the scripts, and comes back with the camera position, the direction it was facing and a satellite evidence image. Prefer to copy the folder yourself? See [Installation](#installation).
+On first use, ask the agent to run `doctor.py` from the installed skill’s `scripts/` folder and address any failed checks (see [Requirements and setup](#requirements-and-setup)). That is the whole interface. The agent reads `SKILL.md`, runs the scripts, and comes back with the camera position, the direction it was facing and a satellite evidence image. Prefer to copy the folder yourself? See [Installation](#installation).
 
 ## Why geo-sleuth
 
@@ -151,6 +151,7 @@ Twenty scripts, one job each. The full table with data sources is in `skills/geo
 
 | What it does | Script |
 |---|---|
+| Environment checks, browser launch and optional network probes | `doctor.py` |
 | EXIF: GPS, capture time, equivalent focal length, heading | `exif.py` |
 | OCR on the whole image, zoomed crops and tiles (Apple Vision on macOS, RapidOCR elsewhere) | `ocr.py` |
 | Reverse image search on Baidu and Yandex, similar images tiled into a numbered sheet; keyword image search | `revimg.py` |
@@ -186,13 +187,48 @@ Per-operator measurements:
 
 The method comes from breaking down 14 videos by online-geolocation creators, 22 puzzles and a set of real runs, then turning what works into rules and scripts. v2 moves every rule that can be code into `board.py`, so the rules get executed, not just read.
 
-## Requirements
+## Requirements and setup
 
-Python 3.10+, [`uv`](https://docs.astral.sh/uv/) and an agent that can run shell commands. Each script declares its own dependencies and `uv run` installs them on first use.
+You need Python 3.10+, [`uv`](https://docs.astral.sh/uv/), `curl`, and an agent that can run shell commands. Each script declares its own dependencies; use `uv run`, which installs them on first use. Keep the complete skill folder, including `data/` and the helper modules in `scripts/`.
 
-Optional: Google Chrome for reverse image search (`uvx playwright install chromium` works too), and `export GEO_PROXY=socks5h://127.0.0.1:<port>` to route every networked script through a proxy.
+Reverse image search requires **Google Chrome or Playwright Chromium**. The scripts try Chrome first and automatically fall back to Chromium. If neither is installed:
 
-Language: the skill's instructions and script output are written in Chinese. Your agent reads them fine and replies in your language, and it has solved cases outside China too (e.g. a coastal road in Los Angeles).
+```bash
+uvx playwright install chromium
+```
+
+Linux may also need browser system libraries: `uvx playwright install --with-deps chromium`. See the [Playwright browser setup guide](https://playwright.dev/python/docs/browsers). After a Playwright upgrade, rerun the installer if it reports a missing browser executable.
+
+From a clone of this repository, run these commands (also work in PowerShell):
+
+```bash
+uv run skills/geo-sleuth/scripts/doctor.py
+uv run skills/geo-sleuth/scripts/doctor.py --network
+```
+
+For an installed skill, use its actual `scripts/doctor.py` path, or ask your agent to run it. The local check tests Python, uv, curl, bundled lookup tables, a writable working directory and an actual browser launch. `--network` also probes the services without uploading photos. `--json` produces machine-readable diagnostics. Exit code 1 means a failed check; warnings identify optional features that may not work. uv may fetch Playwright on the first run; doctor does not load OCR or ML models. Passing an endpoint probe does not guarantee image uploads, model downloads, imagery coverage or freedom from CAPTCHAs.
+
+To check the local processing pipeline on your own image before using online search:
+
+```bash
+uv run skills/geo-sleuth/scripts/intake.py photo.jpg --out-dir intake --no-rev
+```
+
+Open `intake/intake.md`, then inspect the listed crops and OCR output. This checks metadata, image preparation and OCR; it does not perform reverse image search. Omit `--no-rev` for the full intake. On macOS OCR prefers Apple Vision; other systems use RapidOCR, also available as a fallback. `match.py` and `sat_scan.py` install ML packages and download model weights on first use; allow extra time and disk space. uv and model downloads still need network access even when a particular processing step works locally.
+
+### Troubleshooting
+
+| Symptom | Next step |
+|---|---|
+| `uv` or `curl` not found | Install the missing command, reopen the terminal, rerun doctor. |
+| Browser launch fails | Install Chrome or Playwright Chromium; inspect the doctor's error. Use `intake.py --no-rev` for local processing meanwhile. |
+| HTTP 403/429 or CAPTCHA | Inspect the saved screenshot; retry later or use a supported manual browser workflow. |
+| A service times out | Run `doctor.py --network`; check the service and your connection. |
+| A model fails to load | Check disk space, the download error and Hugging Face reachability. First-run downloads can be slow. |
+| Intake has failed or skipped steps | Read `intake.md`; failed search is not evidence that there is no matching image. |
+| A Chinese place name or OCR excerpt appears | Source evidence stays in its original language. Ask the agent to explain it in your language. |
+
+Language: maintained instructions, CLI help, errors, generated report headings and default evidence labels are in **English**. Source text (OCR, place names, search responses and screenshots) is preserved rather than rewritten; the agent explains it and writes the final report in your language. The last version with Chinese instructions is frozen at the [`zh-final`](https://github.com/Oldcircle/geo-sleuth/tree/zh-final) tag and is no longer updated.
 
 ## Roadmap
 

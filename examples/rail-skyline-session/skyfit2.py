@@ -2,14 +2,14 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "numpy"]
 # ///
-"""第二轮：机位网格 + 三条约束一起打分。
+"""Round 2: camera-position grid + three constraints scored together.
 
-这是第 13 集案例的专用脚本，照片参数写死：焦距 F0、地平线行 HROW、山脊 26 个像素点 ridge、
-平地平线列范围 FLX 都是那张照片量出来的。只作复现记录，不保证在别的照片上能跑。
-A 机位地面平（300 m 内起伏 < 8 m）
-B 画面左段 [-27°,-10°] 有桥（250–1000 m），右段 [3°,27°] 有桥（400–2000 m）
-C 山脊线 RMS（朝向、地平线偏移、焦距比例一起搜）
-D 左段 [-27°,-12°] 天际线 < 1°
+This is a case-specific script for episode 13 with the photo parameters hard-coded: focal length F0, horizon row HROW, the 26 ridge pixel points ridge,
+and the flat-horizon column range FLX were all measured from that photo. Kept only as a reproduction record; not guaranteed to run on another photo.
+A ground at the camera position is flat (relief < 8 m within 300 m)
+B bridge in the left part of the frame [-27°,-10°] (250–1000 m), bridge in the right part [3°,27°] (400–2000 m)
+C ridgeline RMS (heading, horizon offset, and focal-length scale searched together)
+D skyline < 1° in the left part [-27°,-12°]
 """
 import json, math, sys
 from pathlib import Path
@@ -30,7 +30,7 @@ R = 6371008.8
 hits = json.load(open(sys.argv[1]))
 a0, a1 = (int(v) for v in sys.argv[3].split(":"))
 
-# 桥采样点（100 m）
+# bridge sample points (100 m)
 gj = json.load(open("rail_bridges.geojson"))
 cell = {}
 def add(lat, lon):
@@ -56,7 +56,7 @@ def bridges_near(lat, lon):
 AZ = np.arange(0, 360, 0.5)
 NS = 260
 DIST = 150 * (15000 / 150) ** (np.arange(NS) / (NS - 1))
-HS = np.arange(0, 720)  # 0.5° 步长朝向
+HS = np.arange(0, 720)  # headings in 0.5° steps
 
 def fit(hor):
     best = None
@@ -85,7 +85,7 @@ for hi, h in list(enumerate(hits))[a0:a1]:
     except SystemExit:
         continue
     br = bridges_near(lat, lon)
-    # 机位网格：半径 2 km，250 m 间距
+    # camera-position grid: 2 km radius, 250 m spacing
     for dy in np.arange(-2000, 2001, 250):
         for dx in np.arange(-2000, 2001, 250):
             if dx * dx + dy * dy > 2000 ** 2:
@@ -95,13 +95,13 @@ for hi, h in list(enumerate(hits))[a0:a1]:
             if key in done_cams:
                 continue
             done_cams.add(key)
-            # A 平地
+            # A flat ground
             ring = terrain._dest_np(clat, clon, np.arange(0, 360, 45.0), np.array([0, 150, 300.0]))
             g = dem.sample(ring[0], ring[1])
             if g.max() - g.min() > 8:
                 continue
             g0 = float(g[:, 0].mean())
-            # B 桥分布（先粗算方位，朝向未知 → 存下每个桥点的方位和距离）
+            # B bridge distribution (rough bearings first; heading unknown → keep each bridge point's bearing and distance)
             if len(br) == 0:
                 continue
             by = (br[:, 0] - clat) * 110540; bx = (br[:, 1] - clon) * 111320 * math.cos(math.radians(clat))

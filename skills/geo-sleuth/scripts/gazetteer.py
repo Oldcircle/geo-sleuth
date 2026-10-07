@@ -3,28 +3,29 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""行政区名录：把候选区域"列全"并给出范围、面积、扫描成本。给 board.py 用，也可以单独查。
+"""Admin gazetteer: list candidate areas "in full" with extent, area and scan cost. Used by board.py; can also be queried on its own.
 
-  children  列出一个行政区的全部下一级（或指定级别）行政区，带 bbox、bbox 面积、中心
-  info      一个行政区的 OSM 关系、admin_level、bbox、中心
-  urban     一个行政区的建成区范围（OSM 住宅/商业/工业用地的最大连片块），给扫描成本和 scan_bbox 用
-  cost      一个 bbox 按 tiles.py sheet --grid 的口径要扫几格、几页
+  children  list every next-level (or specified-level) admin area of an admin area, with bbox, bbox area, center
+  info      an admin area's OSM relation, admin_level, bbox, center
+  urban     an admin area's built-up extent (largest contiguous block of OSM residential/commercial/industrial land use), for scan cost and scan_bbox
+  cost      how many cells and pages a bbox takes at tiles.py sheet --grid settings
 
-数据来自 OSM Overpass（走代理，结果按查询缓存在 .geo-cache/osm/）。OSM 的行政区列表可能缺项：
-children 会和本地 data/cn_admin.json（国内三级行政区表，若存在）合并，缺 bbox 的条目标出来。
-admin_level 各国不同：中国 省 4 / 地级 5 / 县级 6，法国 大区 4 / 省 6，美国 州 4 / 县 6。不确定就不给 --level，
-脚本会从上级的 admin_level 往下试，跳过范围合计不到上级 30% 的级别（中国的 3 级只有港澳）。
+Data comes from OSM Overpass (results cached per query in .geo-cache/osm/). OSM admin lists can have gaps:
+children merges them with the local data/cn_admin.json (China's three-level admin table, if present) and flags entries missing a bbox.
+admin_level differs by country: China province 4 / prefecture 5 / county 6, France region 4 / department 6, US state 4 / county 6. If unsure, omit --level;
+the script tries downward from the parent's admin_level and skips levels whose combined extent is under 30% of the parent (China's level 3 is only Hong Kong and Macau).
 
-示例：
-  gazetteer.py children <省级行政区全名> --out districts.json          # 直辖市 → 全部区县
-  gazetteer.py children <国家名> --level 4                               # 国家 → 一级行政区
-  gazetteer.py info <行政区名>
-  gazetteer.py urban <区县名> --within <省级行政区全名>                   # 建成区 bbox + 面积
+Examples:
+  gazetteer.py children <full province-level name> --out districts.json   # municipality → all districts
+  gazetteer.py children <country name> --level 4                          # country → first-level admin divisions
+  gazetteer.py info <admin area name>
+  gazetteer.py urban <district name> --within <full province-level name>  # built-up bbox + area
   gazetteer.py cost --bbox <s,w,n,e> --zoom 16 --cell 320 --cols 5
 """
 from __future__ import annotations
 
 import argparse
+from _net import PROXY_HELP
 import json
 import math
 import os
@@ -37,9 +38,9 @@ import geo  # noqa: E402
 import osm  # noqa: E402
 
 DATA = Path(__file__).parent.parent / "data"
-LEVEL_NAMES = {"CN": {4: "省级", 5: "地级", 6: "县级", 7: "乡镇"}, "FR": {4: "大区", 6: "省", 8: "市镇"},
-               "US": {4: "州", 6: "县", 8: "市"}, "*": {2: "国家", 4: "一级行政区", 6: "二级行政区", 8: "三级行政区"}}
-MIN_COVER = 0.3   # children 自动选级：这一级的 bbox 面积合计至少占上级 bbox 的这么多
+LEVEL_NAMES = {"CN": {4: "province", 5: "prefecture", 6: "county", 7: "township"}, "FR": {4: "region", 6: "department", 8: "commune"},
+               "US": {4: "state", 6: "county", 8: "city"}, "*": {2: "country", 4: "first-level admin division", 6: "second-level admin division", 8: "third-level admin division"}}
+MIN_COVER = 0.3   # children auto level pick: this level's combined bbox area must be at least this fraction of the parent's bbox
 
 
 def _cache(args) -> Path:
@@ -70,7 +71,7 @@ def _rel_rows(data: dict) -> list[dict]:
 
 def find_relation(name: str, proxy: str | None, cache: Path, within: str | None = None,
                   level: int | None = None) -> list[dict]:
-    """按名字找行政区关系（可能多个同名：北京朝阳区、长春朝阳区），带 bbox。"""
+    """Find admin relations by name (there can be several with the same name: Chaoyang District in Beijing and in Changchun), with bbox."""
     lv = f'["admin_level"="{level}"]' if level else ""
     if within:
         ql = (f'[out:json][timeout:120];rel["name"="{within}"]["boundary"="administrative"];map_to_area->.p;'
@@ -85,7 +86,7 @@ def find_relation(name: str, proxy: str | None, cache: Path, within: str | None 
 def children(parent: str, proxy: str | None, cache: Path, level: int | None, within: str | None) -> tuple[dict, list[dict]]:
     ps = find_relation(parent, proxy, cache, within)
     if not ps:
-        sys.exit(f"OSM 里没有叫“{parent}”的行政区关系：换全名（带不带“市/省/区”）、或加 --within 上级名")
+        sys.exit(f"OSM has no admin relation named \"{parent}\": try the full name (with or without the suffix 市/省/区), or add --within <parent name>")
     p = ps[0]
     levels = [level] if level else [p["admin_level"] + k for k in (1, 2, 3, 4)]
     first = None
@@ -99,20 +100,20 @@ def children(parent: str, proxy: str | None, cache: Path, level: int | None, wit
         rows = sorted(rows, key=lambda r: r["name"])
         if level:
             return p, rows
-        # 自动选级：只盖住上级一小块的那级不算"下一级"（中国 admin_level 3 只有港澳，省在 4）
+        # Auto level pick: a level that covers only a small part of the parent isn't the "next level" (China's admin_level 3 is only Hong Kong and Macau; provinces are 4)
         cover = sum(r["bbox_km2"] for r in rows) / max(p["bbox_km2"], 1e-9)
         if cover >= MIN_COVER:
             return p, rows
-        print(f"admin_level {lv} 只有 {len(rows)} 个（{'、'.join(r['name'] for r in rows[:6])}），"
-              f"范围合计只占上级 {cover:.1%}，不当下一级，往下试", file=sys.stderr)
+        print(f"admin_level {lv} has only {len(rows)} ({', '.join(r['name'] for r in rows[:6])}), "
+              f"together covering only {cover:.1%} of the parent; not treated as the next level, trying lower", file=sys.stderr)
         first = first or rows
     if first:
-        print("往下几级都没有盖住上级的，退回第一个有 ≥2 个的级别；不对就给 --level", file=sys.stderr)
+        print("None of the lower levels covers the parent; falling back to the first level with ≥2; if that's wrong, give --level", file=sys.stderr)
     return p, first or []
 
 
 def _cn_admin_children(parent: str) -> list[str]:
-    """本地三级行政区表里 parent 的直接下级名（表不存在就空）。"""
+    """Names of parent's direct children in the local three-level admin table (empty if the table doesn't exist)."""
     f = DATA / "cn_admin.json"
     if not f.exists():
         return []
@@ -120,11 +121,11 @@ def _cn_admin_children(parent: str) -> list[str]:
         d = json.loads(f.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
         return []
-    # 兼容两种结构：{"_meta":…, "items":[{name, code, parent, level}]} 或 modood 的嵌套 [{name, code, children:[…]}]
+    # Two structures supported: {"_meta":…, "items":[{name, code, parent, level}]} or modood's nested [{name, code, children:[…]}]
     items = d.get("items") if isinstance(d, dict) else None
     if items:
         names = {it["name"] for it in items if it.get("parent") == parent}
-        if not names:  # parent 可能是"重庆市"而表里是"重庆"或反过来
+        if not names:  # parent may be "重庆市" while the table has "重庆", or the other way round
             names = {it["name"] for it in items if it.get("parent", "").rstrip("市省") == parent.rstrip("市省")}
         return sorted(names)
     nodes = d if isinstance(d, list) else d.get("data") or []
@@ -133,7 +134,7 @@ def _cn_admin_children(parent: str) -> list[str]:
         for n in ns:
             if n.get("name", "").rstrip("市省") == parent.rstrip("市省"):
                 ch = n.get("children") or []
-                # 直辖市：省 → 市辖区（一个假层）→ 区县
+                # Municipality: province → 市辖区 ("city districts", a fake layer) → districts
                 if len(ch) == 1 and (ch[0].get("children") or []):
                     ch = ch[0]["children"]
                 return [c["name"] for c in ch]
@@ -146,10 +147,10 @@ def _cn_admin_children(parent: str) -> list[str]:
 
 
 def urban(name: str, proxy: str | None, cache: Path, within: str | None) -> dict:
-    """建成区：OSM 用地面的最大连片块。用地没画时退到 place=city/town 节点按人口估半径。"""
+    """Built-up area: the largest contiguous block of OSM land-use areas. When land use isn't mapped, fall back to a place=city/town node and estimate a radius from population."""
     rs = find_relation(name, proxy, cache, within)
     if not rs:
-        sys.exit(f"OSM 里没有叫“{name}”的行政区：换全名或加 --within")
+        sys.exit(f"OSM has no admin area named \"{name}\": try the full name or add --within")
     r = rs[0]
     ql = (f'[out:json][timeout:180];rel({r["osm_id"]});map_to_area->.a;'
           f'way["landuse"~"^(residential|commercial|retail|industrial)$"](area.a);out bb;')
@@ -157,7 +158,7 @@ def urban(name: str, proxy: str | None, cache: Path, within: str | None) -> dict
     boxes = [(e["bounds"]["minlat"], e["bounds"]["minlon"], e["bounds"]["maxlat"], e["bounds"]["maxlon"])
              for e in els if e.get("bounds")]
     out = {"name": r["name"], "admin_bbox": r["bbox"], "admin_bbox_km2": r["bbox_km2"], "landuse_polygons": len(boxes)}
-    # 行政中心：place=city/town 节点里人口最多的那个；用地连片块优先取离它最近的（OSM 只画了一半时，最大的块常是别的镇）
+    # Admin seat: the place=city/town node with the largest population; prefer the land-use block nearest to it (when OSM is only half mapped, the largest block is often another town)
     ql2 = (f'[out:json][timeout:120];rel({r["osm_id"]});map_to_area->.a;'
            f'node["place"~"^(city|town)$"](area.a);out;')
     nodes = osm.run(ql2, proxy, cache).get("elements", [])
@@ -169,7 +170,7 @@ def urban(name: str, proxy: str | None, cache: Path, within: str | None) -> dict
         seat = {"name": (best.get("tags") or {}).get("name", ""), "ll": (best["lat"], best["lon"]), "population": pop(best)}
         out["seat"] = seat
     if len(boxes) >= 3:
-        # 2 km 网格连通块，取面积最大的块
+        # Connected blocks on a 2 km grid; take the block with the largest area
         cs = 2 / 110.574
         cell_of = {}
         for i, b in enumerate(boxes):
@@ -201,30 +202,30 @@ def urban(name: str, proxy: str | None, cache: Path, within: str | None) -> dict
         if seat:
             near = [c for c in blocks if geo.distance(seat["ll"], (((bb := block_bbox(c))[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2)) <= 12000]
             if near:
-                chosen, how = max(near, key=block_area), f"离行政中心 {seat['name']} 最近的连片用地"
+                chosen, how = max(near, key=block_area), f"contiguous land use nearest the admin seat {seat['name']}"
         if chosen is None:
-            chosen, how = max(blocks, key=block_area), "最大连片用地（没找到行政中心节点，可能是别的镇）"
+            chosen, how = max(blocks, key=block_area), "largest contiguous land use (no admin seat node found; may be another town)"
         bb = block_bbox(chosen)
         if seat and not (bb[0] <= seat["ll"][0] <= bb[2] and bb[1] <= seat["ll"][1] <= bb[3]):
-            # 连片块没盖住行政中心：把中心点周围 1.5 km 并进来
+            # The block doesn't cover the admin seat: merge in 1.5 km around the seat
             s2, w2 = geo.dest(geo.dest(seat["ll"], 180, 1500), 270, 1500)
             n2, e2 = geo.dest(geo.dest(seat["ll"], 0, 1500), 90, 1500)
             bb = [min(bb[0], s2), min(bb[1], w2), max(bb[2], n2), max(bb[3], e2)]
-            how += "，并入行政中心周围 1.5 km"
+            how += "; merged in 1.5 km around the admin seat"
         out.update({"urban_bbox": [round(v, 5) for v in bb], "urban_bbox_km2": round(_bbox_km2(bb), 1),
                     "urban_landuse_km2": round(block_area(chosen), 1), "blocks": len(blocks), "source": "landuse", "how": how})
         return out
     if seat:
         pop = seat["population"]
-        rad = max(1500.0, min(12000.0, math.sqrt(max(pop, 20000) / 6000 / math.pi) * 1000))  # 约 6000 人/km²
+        rad = max(1500.0, min(12000.0, math.sqrt(max(pop, 20000) / 6000 / math.pi) * 1000))  # about 6000 people/km²
         s, w = geo.dest(geo.dest(seat["ll"], 180, rad), 270, rad)
         n, e = geo.dest(geo.dest(seat["ll"], 0, rad), 90, rad)
         out.update({"urban_bbox": [round(s, 5), round(w, 5), round(n, 5), round(e, 5)],
                     "urban_bbox_km2": round(_bbox_km2([s, w, n, e]), 1), "source": "place-node",
                     "place": seat["name"], "population": pop,
-                    "note": "OSM 没画用地，按 place 节点人口估的建成区半径，只能当数量级"})
+                    "note": "OSM has no land use mapped; built-up radius estimated from the place node's population, order of magnitude only"})
         return out
-    out["note"] = "OSM 既没有用地也没有 place 节点：自己在卫星图上框 scan_bbox"
+    out["note"] = "OSM has neither land use nor a place node: draw scan_bbox yourself on satellite imagery"
     return out
 
 
@@ -245,7 +246,7 @@ def _neg_coords(argv: list[str]) -> list[str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+    ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
     ap.add_argument("--cache", type=Path, default=Path(".geo-cache/osm"))
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -253,12 +254,12 @@ def main() -> None:
         sp.add_argument("--proxy", default=argparse.SUPPRESS)
         sp.add_argument("--cache", type=Path, default=argparse.SUPPRESS)
 
-    c = sub.add_parser("children", help="一个行政区的全部下级行政区（带 bbox），候选要“列全”时用")
+    c = sub.add_parser("children", help="every subordinate admin area of an admin area (with bbox); use when candidates must be listed \"in full\"")
     common(c)
     c.add_argument("name")
-    c.add_argument("--level", type=int, help="OSM admin_level；不给就从上级往下试")
-    c.add_argument("--within", help="上级行政区名，同名消歧")
-    c.add_argument("--out", type=Path, help="写出 {名字: {bbox, bbox_km2, center, ...}}")
+    c.add_argument("--level", type=int, help="OSM admin_level; if omitted, try downward from the parent")
+    c.add_argument("--within", help="parent admin area name, to disambiguate same names")
+    c.add_argument("--out", type=Path, help="write {name: {bbox, bbox_km2, center, ...}}")
 
     i = sub.add_parser("info")
     common(i)
@@ -266,13 +267,13 @@ def main() -> None:
     i.add_argument("--within")
     i.add_argument("--level", type=int)
 
-    u = sub.add_parser("urban", help="建成区范围：扫描成本按这个算，不按整个行政区")
+    u = sub.add_parser("urban", help="built-up extent: scan cost is computed from this, not from the whole admin area")
     common(u)
     u.add_argument("name")
     u.add_argument("--within")
     u.add_argument("--out", type=Path)
 
-    k = sub.add_parser("cost", help="一个 bbox 按 tiles.py sheet --grid 口径要扫几页")
+    k = sub.add_parser("cost", help="how many pages a bbox takes at tiles.py sheet --grid settings")
     k.add_argument("--bbox", required=True)
     k.add_argument("--zoom", type=int, default=16)
     k.add_argument("--cell", type=int, default=320)
@@ -286,7 +287,7 @@ def main() -> None:
     if args.cmd == "info":
         rows = find_relation(args.name, args.proxy, cache, args.within, args.level)
         if not rows:
-            sys.exit("没找到；换全名或加 --within")
+            sys.exit("Not found; try the full name or add --within")
         for r in rows[:8]:
             print(json.dumps(r, ensure_ascii=False))
         return
@@ -304,21 +305,21 @@ def main() -> None:
         out = {r["name"]: {k: r[k] for k in ("osm_id", "admin_level", "bbox", "bbox_km2", "center", "name_en")} for r in rows}
         for n in missing:
             out[n] = {"osm_id": None, "admin_level": None, "bbox": None, "bbox_km2": None, "center": None,
-                      "name_en": "", "note": "只在本地行政区表里有，OSM 没查到关系：bbox 用 info/urban 单独补，或先按上级范围估"}
+                      "name_en": "", "note": "only in the local admin table, no OSM relation found: fill in the bbox with info/urban, or estimate from the parent's extent for now"}
         lvl = rows[0]["admin_level"] if rows else None
-        print(f"{p['name']}（admin_level {p['admin_level']}）下级 admin_level {lvl}：OSM {len(rows)} 个"
-              + (f"，本地表补 {len(missing)} 个（{', '.join(missing)}）" if missing else "")
-              + ("；本地表没有这个上级，无法核对是否列全" if not local else ""))
+        print(f"{p['name']} (admin_level {p['admin_level']}) children admin_level {lvl}: OSM {len(rows)}"
+              + (f", local table adds {len(missing)} ({', '.join(missing)})" if missing else "")
+              + ("; the local table doesn't have this parent, can't check the list is complete" if not local else ""))
         for name, r in sorted(out.items(), key=lambda kv: -(kv[1]["bbox_km2"] or 0)):
             b = r["bbox"]
-            print(f"  {name:<14} {r['bbox_km2'] or '?':>9} km²  {b if b else '（无 bbox）'}")
+            print(f"  {name:<14} {r['bbox_km2'] or '?':>9} km²  {b if b else '(no bbox)'}")
         if args.out:
             args.out.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"-> {args.out}")
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m², ñ, and Chinese text the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

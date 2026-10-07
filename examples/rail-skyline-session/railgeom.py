@@ -2,16 +2,16 @@
 # requires-python = ">=3.10"
 # dependencies = ["numpy"]
 # ///
-"""第三轮：用画面里桥墩间距推出的桥线几何筛机位。
+"""Round 3: filter camera positions by the bridge-line geometry inferred from the pier spacing in the frame.
 
-这是第 13 集案例的专用脚本，三处桥距区间按那张照片的估计写死。
-只作复现记录，不保证在别的照片上能跑。
-照片推算（f≈1281–1435 px，32 m 跨）：桥线离机位垂距约 450–750 m，最近点在画面中心左侧约 30–45°，
-中心视线处距离约 600–800 m，右边缘处约 0.9–1.4 km；桥线从左近往右远斜穿画面。
-对 stage-2 每个机位（带最佳朝向 H），取视野 [-27°,27°]、300–2500 m 内的桥采样点，逐一比对：
-- 中心视线（±3°）上最近的桥点距离 550–900 m
-- 左边缘（-26°±3°）桥点距离 350–750 m
-- 右边缘（+22°±4°）桥点距离 800–1700 m
+This is a case-specific script for episode 13; the three bridge-distance windows are hard-coded from estimates for that photo.
+Kept only as a reproduction record; not guaranteed to run on another photo.
+Inferred from the photo (f≈1281–1435 px, 32 m spans): the bridge line's perpendicular distance from the camera position is about 450–750 m, its nearest point about 30–45° left of frame center,
+the distance along the center sight line about 600–800 m, at the right edge about 0.9–1.4 km; the bridge line crosses the frame diagonally from near-left to far-right.
+For each stage-2 camera position (with its best heading H), take the bridge sample points within field of view [-27°,27°] and 300–2500 m, and check one by one:
+- nearest bridge point on the center sight line (±3°) at 550–900 m
+- bridge point at the left edge (-26°±3°) at 350–750 m
+- bridge point at the right edge (+22°±4°) at 800–1700 m
 """
 import json, math, sys, glob
 import numpy as np
