@@ -102,6 +102,22 @@ Suits objects that "you can't name, but have a rare shape" (the v004 fountain).
   6. For street view, first pick historical captures from the same season as the photo (`gsv.py near` to see the history, `sheet --date <year>`) and compare facades, retaining walls and lamp-post positions; in summer captures tree crowns and bloom differ a lot, so don't skip a segment because "the trees look small".
 - Local government and media reports: after locating, look up the name, size and year built of unusual man-made objects in the frame (scenic spots, towers, statues) (v008).
 
+## 6. India
+
+The defaults above are China-first (Baidu first, Chinese keywords, 360 Maps). For a photo that looks Indian (left-hand traffic, Indic scripts, `AA 00` plates, kilometre stones), change the order:
+
+```bash
+uv run scripts/intake.py photo.jpg --out-dir intake/ --engines yandex --ocr-backend tesseract --tess-langs hin+eng   # add the script you see: ben, tam, tel, kan, mal, guj, pan, ori, urd …
+uv run scripts/clues.py lookup plate "KA 05"            # also std-code, pin, in-admin, script; see references/clues/india.md
+uv run scripts/poi.py "<shop or locality>" --sources osm --country in
+```
+
+- **Reverse image search**: Yandex first (Baidu's index is China-centric and adds little for India). Then Google Lens in the user's browser if you have a browser tool; it covers Indian news, Google Maps business photos and Instagram better than either script engine. Bing Visual Search (bing.com/images, camera icon) is another manual option; the scripts don't drive it.
+- **Keyword search**: search shop names, school/temple/hospital names and the locality read from boards with a general web search in English *and* in the script on the board (a transliterated Hindi or Tamil query often finds a different set of pages). Add the PIN or the STD-code town to the query to pin a chain branch. The script `--query` engines are Chinese-market; don't use them for India.
+- **Where to look by object**: shops and restaurants → Google Maps / Justdial / Zomato listings with photos; schools, colleges, hospitals → their own websites' photo galleries; temples, ghats and heritage → Wikimedia Commons, state tourism sites; real estate → MagicBricks / 99acres / Housing.com project albums; buses → state transport corporation names on the side (KSRTC, MSRTC, TNSTC …) usually name the state outright.
+- **Street view is patchy**: Google launched Street View in India in July 2022 with Genesys and Tech Mahindra, covering about 150,000 km of roads at launch, and it is "available to some extent in all states and union territories" ([Wikipedia](https://en.wikipedia.org/w/index.php?title=Google_Street_View_in_Asia&oldid=1377324296)). `gsv.py near` is still the first try; when it finds nothing, fall back to Mapillary (manual: mapillary.com/app, good on some highways and cities), user-uploaded photo spheres on Google Maps (the script filters these out), satellite (`tiles.py`, `sat_scan.py`) and ISRO's Bhuvan portal for Indian thematic layers.
+- **Coordinates**: India uses WGS84 throughout; the GCJ-02 warnings in `data-sources.md` don't apply. Indian maps label places in several spellings (Bengaluru/Bangalore, Thiruvananthapuram/Trivandrum, Gurugram/Gurgaon); try both in `poi.py` and OSM.
+
 ## Common mistakes
 
 - Using only one engine and searching only the whole image; after a failure, not changing the image or the engine.
@@ -109,3 +125,4 @@ Suits objects that "you can't name, but have a rare shape" (the v004 fountain).
 - Getting carried off by the "most famous similar place" the search turns up and forgetting to come back and check bearings and details (the main way the AI failed in v010).
 - Two engines each point at a different city, and you draw a big circle around the midpoint of the two and call it done: instead run a discriminating test and pick one as the main answer (SKILL hard rule 8).
 - Image search gave a residential compound or housing-development name, and you didn't get its coordinates.
+- Running the China defaults (Baidu, Chinese keywords, RapidOCR) on an Indian photo: the OCR garbles Devanagari and the searches return Chinese pages; see section 6.

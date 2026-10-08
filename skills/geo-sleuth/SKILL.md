@@ -1,6 +1,6 @@
 ---
 name: geo-sleuth
-description: Geolocate or chronolocate a photo with tool-verified reasoning (where was this taken / when was it taken / photo geolocation / geo-guessing). Given one or more photos, one command does metadata, OCR and reverse image search (intake.py); clues and candidates go on a candidate board (board.py) that ranks them by script and gives the next step; lookup-table clues via clues.py (plates, area codes, calling codes, driving side, territories); satellite imagery and street view are both "the machine ranks first, you look only at the top few" (CLIP-ranked satellite scan in sat_scan.py, DINOv2+SIFT-ranked street view in match.py); plus EXIF, reverse image search (Baidu/Yandex), sun and shadow math, OSM Overpass and DEM skyline rendering. Every conclusion is checked against real data; output is coordinates + error radius, evidence images and tiered confidence. Use when the user shares a photo and asks where was this taken / geolocate this / when was this taken / 这是哪 / 在哪拍的 / 帮我定位这张照片 / 网络迷踪 / 图寻 / 几点拍的.
+description: Geolocate or chronolocate a photo with tool-verified reasoning (where was this taken / when was it taken / photo geolocation / geo-guessing). Given one or more photos, one command does metadata, OCR and reverse image search (intake.py); clues and candidates go on a candidate board (board.py) that ranks them by script and gives the next step; lookup-table clues via clues.py (plates, area codes, calling codes, driving side, territories; Indian plates/RTOs, STD codes, PIN prefixes, scripts); satellite imagery and street view are both "the machine ranks first, you look only at the top few" (CLIP-ranked satellite scan in sat_scan.py, DINOv2+SIFT-ranked street view in match.py); plus EXIF, reverse image search (Baidu/Yandex), sun and shadow math, OSM Overpass and DEM skyline rendering. Every conclusion is checked against real data; output is coordinates + error radius, evidence images and tiered confidence. Use when the user shares a photo and asks where was this taken / geolocate this / when was this taken / 这是哪 / 在哪拍的 / 帮我定位这张照片 / 网络迷踪 / 图寻 / 几点拍的.
 ---
 
 # geo-sleuth (v2)
@@ -44,12 +44,14 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/intake.py photo.jpg --out-dir intake/ [--box 
 uv run ${CLAUDE_SKILL_DIR}/scripts/board.py init --photo photo.jpg
 ```
 
+India-looking photo (left-hand traffic, Indic script, `AA 00` plates, kilometre stones): run intake with `--engines yandex --ocr-backend tesseract --tess-langs hin+eng` (swap in the script you see) and read `references/search.md` §6 and `references/clues/india.md`.
+
 `intake.py` usually takes 1–2 minutes, longer on the first run because it installs dependencies: give the command a generous timeout (10+ minutes) or run it in the background. If a command timeout interrupts it, the reverse-image-search subprocesses may still be writing into `rev/`, but `intake.md` won't be generated; don't treat it as finished.
 
 `intake.md` contains: metadata, OCR text (lines read from upscaled/tiled passes are marked pass=up/tile and are hypotheses), Baidu similar images (source-site counts + numbered contact sheet), reverse-image-search labels with tiered vote counts, likely residential compound/development names, the list of edge crops, and failed items. Then you do four things:
 
 - **Look at the image**: go through every crop in `edges/` (four edges, four corners); run through the checklist in `references/observe.md`; log each clue with `board.py clue "<text>" --kind <kind> --status observed|read|inferred|computed --file <zoomed crop>`. Be honest about status: text you read is read; "the building is probably 8 floors", "the road goes uphill" are inferred.
-- **Lookup tables**: plates, area codes, calling codes, driving side, overseas territories → `clues.py lookup <kind> <value>`; for those that resolve to an admin division, use `board.py apply --kind plate --value 渝G --file <zoomed crop>` directly (adds candidates and evidence automatically; the other candidates at the same level are only down-weighted, not excluded).
+- **Lookup tables**: plates, area codes, calling codes, driving side, overseas territories → `clues.py lookup <kind> <value>` (India: `plate "MH 12"`, `std-code`, `pin`, `in-admin`, `script`); for those that resolve to an admin division, use `board.py apply --kind plate --value 渝G --file <zoomed crop>` directly (adds candidates and evidence automatically; the other candidates at the same level are only down-weighted, not excluded).
 - **Reverse-image-search results**: first open `rev/<name>_baidu_similar.jpg` (the top-left tile is the query image) and look for near-duplicates of the same object or the same scene; if there are any, go by number to `similar[i].from` in the JSON to see the source page; compound, development or hotel names in the labels → `poi.py "<name>" --city <city> --out pois.json` to get coordinates; for same-name hits (several campuses, several branches) put them all on the board with `board.py add --from pois.json --level area`, then check; always open the screenshots, and once a post hits, look through the rest of its photo set. Choose where to search by object type (`references/search.md`).
 - **Hints and metadata**: log each as an inferred clue and state how credible it is; IP location only says where the person was when posting, and the posting time is not the capture time.
 
@@ -102,7 +104,7 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/sat_scan.py points --points big.json --preset
 ### Step 5: confirmation — street view is ranked first too
 
 ```bash
-uv run ${CLAUDE_SKILL_DIR}/scripts/baidu_pano.py scan <lat,lon> --radius 300 --out panos.json                     # China; outside China use gsv.py
+uv run ${CLAUDE_SKILL_DIR}/scripts/baidu_pano.py scan <lat,lon> --radius 300 --out panos.json                     # China; outside China use gsv.py (India: coverage patchy, fall back to Mapillary/satellite, search.md §6)
 uv run ${CLAUDE_SKILL_DIR}/scripts/match.py rank --query photo.jpg --panos panos.json --toward <landmark lat,lon> --spread 15 --refine sift --top 10 --out m.json --sheet m.jpg
 uv run ${CLAUDE_SKILL_DIR}/scripts/match.py rank --query photo.jpg --items around.index.json --render gsv --spread-headings -30,0,30 --out m.json --sheet m.jpg
 ```
@@ -158,7 +160,7 @@ Use English for tool messages, report headings and generated labels. Preserve so
 
 - Python 3.10+, `uv`, and `curl`. Always use `uv run ${CLAUDE_SKILL_DIR}/scripts/xxx.py`; each script declares its dependencies. `scripts/` in references is relative to this skill directory.
 - On first setup or after a runtime failure, run `uv run ${CLAUDE_SKILL_DIR}/scripts/doctor.py`; add `--network` to check service reachability. Read the English checks and fixes before starting an expensive scan. It uploads no photos and does not load ML models.
-- Reverse image search uses local Google Chrome, with automatic fallback to Playwright Chromium (`uvx playwright install chromium`). If neither starts, use `intake.py --no-rev` and report the skipped search. OCR prefers Apple Vision on macOS and uses RapidOCR elsewhere or as a fallback.
+- Reverse image search uses local Google Chrome, with automatic fallback to Playwright Chromium (`uvx playwright install chromium`). If neither starts, use `intake.py --no-rev` and report the skipped search. OCR prefers Apple Vision on macOS and uses RapidOCR elsewhere or as a fallback; RapidOCR's bundled model doesn't read Indian scripts (Apple Vision's Indic support is unverified), so for Indic text install `tesseract` + language packs and use `ocr.py --backend tesseract` (optional, no Python dependency).
 - `match.py` and `sat_scan.py` install ML dependencies and download model weights on first use. Allow extra time and disk space.
 - Cache goes to `.geo-cache/` in the current directory; the candidate board is `board.json` in the current directory. Script list and data sources: `references/data-sources.md`.
 - macOS has no `timeout` command; in zsh `$var` doesn't word-split, so use `bash -c` or `${=var}` in loops. A province-wide Overpass query can take several minutes; run it in the background.

@@ -7,7 +7,7 @@
 | `doctor.py` | Environment checks, browser launch, optional endpoint probes; English fixes and JSON output |
 | `exif.py` | GPS, capture time, equivalent focal length, camera heading |
 | `imgprep.py` | zoom (enlarge to read text) / edges (four edges, four corners) / variants (image-search variants) / grid (split into tiles) / `piers` (brightness profile along a given row to find pixel columns of evenly spaced structures; outputs a check image) |
-| `revimg.py` | Baidu image search + Yandex reverse image search; `--query` Chinese keyword search (Bing China, Baidu/Sogou Images) |
+| `revimg.py` | Baidu image search + Yandex reverse image search (outside China use `--engines yandex`); `--query` Chinese keyword search (Bing China, Baidu/Sogou Images) |
 | `geo.py` | Coordinate conversion, bearing and distance, camera geometry (`range --hfov a:b` distance range), `line` alignment line, `intersect` sight-line intersection, `frame` computes the frame and occlusion before excluding, `spacing` pixel columns of evenly spaced structures × known polyline → solve for camera position (optionally scored jointly with the skyline) |
 | `poi.py` | Place names, residential compound names, housing development names, shop names → candidate coordinates (360 Maps + OSM Nominatim + Baidu suggestions); lists every same-name point nationwide |
 | `sun.py` | Sun position, shadow-length ratio, `locate` location band, `when` time, `street` street orientation, `facing` heading from lit faces, `dish` satellite dish |
@@ -19,8 +19,8 @@
 | `terrain.py` | Elevation: view (synthesized mountain view; `--overlay` overlays the skyline on the photo, `--roll`) / profile (skyline) / elev / `ridge` reads ridgeline pixel points from the photo / `scan` filters a whole region along infrastructure lines for "flat nearby + mountain present" points and clusters them / `fit` batch skyline scoring of candidate camera positions (optional infrastructure-distance constraint; outputs overlays of the top N) |
 | `evidence.py` | Evidence image: satellite image + camera-position wedge + comparison panels |
 | `intake.py` | Steps 0–3 in one command: exif + edge crops + variants + OCR + Baidu/Yandex reverse image search in parallel; outputs intake.md (tiered vote count, possible place names) |
-| `ocr.py` | Reads text in the photo (Apple Vision, falls back to RapidOCR): full image + zoomed + tiles, merged; text read only after zooming is marked in `pass` |
-| `clues.py` | Lookup tables: license plate prefixes, landline area codes, country calling codes, driving side, overseas territories, admin hierarchy; tables are in `data/`, `update` re-fetches them |
+| `ocr.py` | Reads text in the photo (Apple Vision, falls back to RapidOCR): full image + zoomed + tiles, merged; text read only after zooming is marked in `pass`; `--backend tesseract --tess-langs hin+eng` for Indian scripts (system tesseract + language packs) |
+| `clues.py` | Lookup tables: license plate prefixes, landline area codes, country calling codes, driving side, overseas territories, admin hierarchy; India: plates/RTO, STD codes, PIN prefixes, states and scripts; tables are in `data/`, `update` re-fetches them |
 | `board.py` | Candidate board: candidates, clues, evidence likelihood ratios, exclusions (require a computed file), ranking, scan cost, next step, pre-conclusion check, generates result.json fields |
 | `gazetteer.py` | Admin-division gazetteer: lists all subdivisions (with bbox), built-up area extents, scan pages |
 | `sat_scan.py` | CLIP zero-shot scoring and ranking of satellite grid cells/candidate points (sports fields, factory buildings, silos, dams…), top-N thumbnails + heatmap |
@@ -73,7 +73,7 @@ The endpoints are all at `https://mapsv0.bdimg.com/`, need no key, and must be a
 | Source | Use | Known issues |
 |---|---|---|
 | Google Street View | Street view outside China, with historical dates; `gsv.py` | Almost none in China; user-uploaded panoramas (ids like CIHM0og…) can't produce perspective views, and the script already filters them out |
-| Mapillary, KartaView | Crowdsourced street view, rural roads outside China | Almost none in China |
+| Mapillary, KartaView | Crowdsourced street view, rural roads outside China; in India the main fallback where Google coverage stops | Almost none in China; Mapillary's API needs a token, so use the web app manually |
 | Tencent Street View | Backup in China | API not yet investigated |
 | Map POI photos, hotel/scenic-area photos online, tourist photos | Compare skylines and building shapes when there's no street view | Shooting angle can't be controlled |
 
@@ -86,6 +86,8 @@ The endpoints are all at `https://mapsv0.bdimg.com/`, need no key, and must be a
 | Google Lens | Recognizing "what this is" (species, car models, statues, attractions), often stronger than Baidu and Yandex | Requests from a server's egress IP get challenged for verification; when you have a browser-control tool, use it in the user's browser; the AI Overview will confidently report a place name based on similar images |
 | Bing China, Baidu Images, Sogou Images | Chinese-keyword web and image search | `revimg.py --query`; Baidu web search pops up a verification challenge, not used |
 | Douyin, Xiaohongshu, Weibo | Influencer check-in spots, scenic areas' official accounts, same-city content | Web search or user assistance |
+| Bing Visual Search | India and other non-China content; another index besides Yandex and Lens | Manual in a browser (bing.com/images → camera icon); not scripted |
+| Google Maps business photos, Justdial, Zomato, MagicBricks / 99acres | India: shopfronts, restaurants, housing projects with photos and addresses | Web search the name read from the board |
 | Development photo albums on real-estate sites (Anjuke, Fang.com, Loupan.com, etc.) | New housing developments, commercial complexes; albums include signboards | Web search the development name |
 | Travel review sites (Tripadvisor, Ctrip) | User photos of statues, parks, attractions | Web search |
 | Stock photo libraries (VCG, Getty, Alamy) | Captions carry exact place names and dates | Web search |
@@ -103,6 +105,7 @@ The endpoints are all at `https://mapsv0.bdimg.com/`, need no key, and must be a
 ## Place name → coordinates (outside China)
 
 - `poi.py "<address or place name>" --sources osm --country <two-letter country code>` (Nominatim, WGS84). When a street address isn't found, drop the house number and search only the street + district name.
+- India: `--country in`; try old and new spellings (Bangalore/Bengaluru, Gurgaon/Gurugram). A PIN or STD code read in the photo gives the state first (`clues.py lookup pin|std-code`); there is no keyless PIN → coordinates table in the repo.
 
 ## Ground photos (when there's no street view)
 
@@ -122,6 +125,7 @@ The endpoints are all at `https://mapsv0.bdimg.com/`, need no key, and must be a
 | OpenInfraMap (openinframap.org) | Power lines and voltage, substations | Viewed manually on the web; voltage may be untagged |
 | AWS Terrain Tiles (Terrarium) | Global elevation, about 30 m | `terrain.py`; details smaller than a hundred meters are unreliable |
 | City open data | Street trees (species, trunk diameter at breast height, location), etc. | Many foreign cities, few Chinese ones |
+| Bhuvan (bhuvan.nrsc.gov.in, ISRO/NRSC) | India: satellite base maps and thematic layers (land use, administrative boundaries) | Viewed manually on the web; no script |
 
 ## Time and weather
 
