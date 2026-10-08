@@ -6,19 +6,27 @@
 """Read the text in a photo (second reader): runs once each on the whole image, upscaled, and in tiles; merges and dedupes; marks which text was only readable after zooming.
 
 Backends: on macOS, Apple Vision (local, no download, handles Chinese, English, Japanese and Korean); on other systems or when Vision isn't available, RapidOCR.
+RapidOCR's bundled model reads Chinese and Latin text only. For Indian scripts (Devanagari, Bengali, Gurmukhi, Gujarati, Odia, Tamil, Telugu,
+Kannada, Malayalam, Urdu…) use `--backend tesseract`: the system `tesseract` binary (not a Python dependency) with its language packs,
+e.g. `apt install tesseract-ocr tesseract-ocr-hin tesseract-ocr-tam` or `brew install tesseract tesseract-lang`. See references/clues/india.md.
 Text read only after upscaling or tiling (pass = up / tile) is just an assumption; go back to the original image and zoom in to take a look.
 
   ocr.py photo.jpg [--langs zh-Hans,en] [--upscale 2] [--tiles 2x2] [--min-conf 0.3] [--out ocr.json] [--draw ocr.png]
+                   [--backend auto|vision|rapidocr|tesseract] [--tess-langs hin+eng] [--tess-psm 11]
 
 Examples:
   ocr.py photo.jpg --out ocr.json --draw ocr.png
   ocr.py photo.jpg --langs zh-Hans,zh-Hant,en,ja --tiles 3x3 --upscale 3     # lots of small distant text: finer tiles, more upscaling
+  ocr.py photo.jpg --backend tesseract --tess-langs hin+ben+tam+eng          # Indian scripts; codes: hin mar nep san (Devanagari) ben asm pan guj ori tam tel kan mal urd
 """
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
+import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -91,7 +99,67 @@ class RapidOCRBackend:
         return out
 
 
-def backend(langs: list[str]):
+class TesseractBackend:
+    """System `tesseract` CLI (5.x) with installed traineddata; needed for Indian scripts. Lines are rebuilt from word-level TSV."""
+    name = "tesseract"
+
+    def __init__(self, langs: str = "eng", psm: int = 11):
+        self.exe = shutil.which("tesseract")
+        if not self.exe:
+            raise RuntimeError("tesseract not found: install it with its language packs (apt install tesseract-ocr tesseract-ocr-hin …, "
+                               "brew install tesseract tesseract-lang, or the UB Mannheim installer on Windows)")
+        listing = subprocess.run([self.exe, "--list-langs"], capture_output=True, text=True)
+        have = {x.strip() for x in (listing.stdout + listing.stderr).splitlines() if x.strip() and not x.startswith("List of")}
+        missing = [x for x in langs.split("+") if x and x not in have]
+        if missing:
+            raise RuntimeError(f"tesseract language data missing: {', '.join(missing)} (installed: {', '.join(sorted(have)) or 'none'})")
+        self.langs, self.psm = langs, psm
+
+    @staticmethod
+    def parse_tsv(tsv: str) -> list[dict]:
+        lines: dict = {}
+        for row in tsv.splitlines()[1:]:
+            f = row.split("\t")
+            if len(f) < 12 or f[0] != "5" or not f[11].strip():
+                continue
+            try:
+                conf = float(f[10])
+                x, y, w, h = (int(v) for v in f[6:10])
+            except ValueError:
+                continue
+            if conf < 0:
+                continue
+            ln = lines.setdefault((f[2], f[3], f[4]), {"words": [], "confs": [], "box": [x, y, x + w, y + h]})
+            ln["words"].append(f[11].strip())
+            ln["confs"].append(conf)
+            b = ln["box"]
+            ln["box"] = [min(b[0], x), min(b[1], y), max(b[2], x + w), max(b[3], y + h)]
+        return [{"text": " ".join(v["words"]), "conf": round(sum(v["confs"]) / len(v["confs"]) / 100, 3), "box": v["box"]} for v in lines.values()]
+
+    def run(self, im: Image.Image) -> list[dict]:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = f"{tmp}/in.png"
+            im.convert("RGB").save(path)
+            r = subprocess.run([self.exe, path, "stdout", "-l", self.langs, "--psm", str(self.psm), "tsv"],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if r.returncode != 0:
+            raise RuntimeError(f"tesseract failed: {r.stderr.strip()[-300:]}")
+        return self.parse_tsv(r.stdout)
+
+
+def backend(langs: list[str], which: str = "auto", tess_langs: str = "eng", tess_psm: int = 11):
+    if which == "tesseract":
+        try:
+            return TesseractBackend(tess_langs, tess_psm)
+        except Exception as e:  # noqa: BLE001
+            sys.exit(str(e))
+    if which == "rapidocr":
+        try:
+            return RapidOCRBackend(langs)
+        except Exception as e:  # noqa: BLE001
+            sys.exit(f"RapidOCR unavailable: {e}")
+    if which == "vision" and sys.platform != "darwin":
+        sys.exit("Apple Vision is only available on macOS")
     if sys.platform == "darwin":
         try:
             return VisionOCR(langs)
@@ -157,10 +225,14 @@ def main() -> None:
     ap.add_argument("--min-conf", type=float, default=0.3)
     ap.add_argument("--out")
     ap.add_argument("--draw")
+    ap.add_argument("--backend", choices=["auto", "vision", "rapidocr", "tesseract"], default="auto",
+                    help="auto = Apple Vision on macOS, else RapidOCR; tesseract for Indian and other scripts RapidOCR can't read")
+    ap.add_argument("--tess-langs", default="eng", help="tesseract language codes joined by +, e.g. hin+eng, tam+eng, ben+asm+eng")
+    ap.add_argument("--tess-psm", type=int, default=11, help="tesseract page segmentation mode (11 = sparse scene text, 6 = one block)")
     args = ap.parse_args()
     im = ImageOps.exif_transpose(Image.open(args.image))
     t0 = time.time()
-    be = backend([x.strip() for x in args.langs.split(",") if x.strip()])
+    be = backend([x.strip() for x in args.langs.split(",") if x.strip()], args.backend, args.tess_langs, args.tess_psm)
     r, c = (int(v) for v in args.tiles.lower().split("x"))
     found = recognize(im, be, args.upscale, (r, c), args.min_conf)
     W, H = im.size

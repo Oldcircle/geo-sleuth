@@ -28,7 +28,7 @@ Run `uvx playwright install chromium` if neither is installed; `doctor.py` check
 Examples:
   revimg.py photo.jpg --out-dir rev/
   revimg.py v/left_crop.jpg v/left_flip.jpg --out-dir rev/ --engines baidu
-  revimg.py photo.jpg --out-dir rev/ --engines yandex
+  revimg.py photo.jpg --out-dir rev/ --engines yandex                          (outside China, e.g. India: Yandex only; Baidu's index is China-centric)
   revimg.py --query "蓝色拱形顶棚 人行天桥" --query "<city> 出租车 颜色" --out-dir q/   (queries in Chinese: blue arched canopy footbridge; <city> taxi color)
 """
 from __future__ import annotations

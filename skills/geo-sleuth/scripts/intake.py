@@ -18,6 +18,7 @@ Examples:
   intake.py photo.jpg --out-dir intake/
   intake.py photo.jpg --out-dir intake/ --box 300,120,900,760 --exclude 网络迷踪,<creator name>   # in blind tests, exclude walkthrough posts (网络迷踪 = photo geolocation)
   intake.py photo.jpg --out-dir intake/ --no-rev                                                   # only metadata, edge crops, OCR (under 30 seconds)
+  intake.py photo.jpg --out-dir intake/ --engines yandex --ocr-backend tesseract --tess-langs hin+eng   # India: Yandex first, Indic OCR
 """
 from __future__ import annotations
 
@@ -133,6 +134,9 @@ def main() -> None:
     ap.add_argument("--no-ocr", action="store_true")
     ap.add_argument("--max-variants", type=int, default=4, help="max number of variants each engine searches (besides the original)")
     ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
+    ap.add_argument("--ocr-backend", default="auto", choices=["auto", "vision", "rapidocr", "tesseract"],
+                    help="passed to ocr.py; use tesseract (+ --tess-langs) for Indian scripts")
+    ap.add_argument("--tess-langs", help="tesseract language codes for --ocr-backend tesseract, e.g. hin+eng")
     args = ap.parse_args()
 
     photo = Path(args.photo).resolve()
@@ -169,7 +173,8 @@ def main() -> None:
         return rc, so, se
 
     def ocr():
-        return _run([UV, "run", _script("ocr.py"), str(photo), "--out", str(out / "ocr.json"), "--draw", str(out / "ocr.png")])
+        extra = ["--backend", args.ocr_backend] + (["--tess-langs", args.tess_langs] if args.tess_langs else [])
+        return _run([UV, "run", _script("ocr.py"), str(photo), "--out", str(out / "ocr.json"), "--draw", str(out / "ocr.png"), *extra])
 
     # Batch 1: metadata, edges, variants, OCR in parallel
     with ThreadPoolExecutor(4) as ex:
