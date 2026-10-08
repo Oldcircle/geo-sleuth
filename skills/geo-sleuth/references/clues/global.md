@@ -1,5 +1,7 @@
 # Clues outside China
 
+India has its own file, `india.md`.
+
 General order for photos outside China: driving side and plate shape to exclude continents → language of the text and phone area codes → plate style to the state/province → infrastructure and municipal fixtures → architecture and vegetation.
 Sections are by country; only clues that transfer to new photos are included.
 

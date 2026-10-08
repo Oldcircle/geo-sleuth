@@ -1,6 +1,6 @@
 # Clue library
 
-Check against it in steps 2 and 4. Entry sources are marked `vNNN` (the number of a creator video the author broke down; the breakdown notes are not public) or `case` (a real case).
+Check against it in steps 2 and 4. Entry sources are marked `vNNN` (the number of a creator video the author broke down; the breakdown notes are not public) or `case` (a real case); `india.md` cites public documents by URL instead.
 
 ## Files
 
@@ -8,6 +8,7 @@ Check against it in steps 2 and 4. Entry sources are marked `vNNN` (the number o
 |---|---|
 | `china.md` | Mainland China: platform metadata, text and plates, vehicles and traffic, infrastructure, climate and phenology, terrain and water, urban form |
 | `global.md` | Outside China: general (driving side, plate shape), Europe, North America, Mexico, Japan, Southeast Asia |
+| `india.md` | India: plates and plate colours, STD codes, PIN codes, scripts and signboard laws, autos and taxis, kilometre stones and road signs, monsoon and crop seasons, climate and terrain zones (public sources, by URL) |
 
 ## Entry format
 
@@ -17,7 +18,7 @@ Check against it in steps 2 and 4. Entry sources are marked `vNNN` (the number o
 - Points to: country / province / city / type of area within a city
 - Strength: strong (a single clue reaches this level) / medium (needs one more) / weak (can only exclude or boost)
 - Counterexamples: when it leads to a wrong call
-- Sources: vNNN or case
+- Sources: vNNN or case (or URLs, as in india.md)
 ```
 
 ## Rules

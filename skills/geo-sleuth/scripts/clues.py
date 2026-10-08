@@ -12,6 +12,12 @@
   lookup driving-side left      countries that drive on the left; `driving-side --country 日本` (Japan) → left
   lookup territories 法国       list of overseas territories/dependencies of 法国 (France); `--continent 南美洲` (South America) lists only that continent
   lookup admin 渝北区            parent chain (渝北区 = Yubei District); `admin --children 重庆市` (Chongqing) lists the children
+India (tables in_*.json; clue library references/clues/india.md):
+  lookup plate MH12AB1234       Indian plate (Latin letters are routed to India automatically) → state + RTO district; `22BH1234AA` → Bharat series (no state)
+  lookup std-code 0612          Indian landline STD code → SDCA (exchange area) + state; also "+91-80-2345-6789", "(0484) 123456"; `area-code <v> --country IN` is the same
+  lookup pin 560001             Indian PIN (postal code) → postal zone + state(s) from the first 1–3 digits
+  lookup in-admin Kerala        state/UT → ISO code, vehicle code, capital, official languages and scripts (no value lists all 36)
+  lookup script Gurmukhi        script or language seen on signs → states/UTs where it is official (or additional official)
   list                          entry count, source and fetch date of each table
   update [table|all]            re-fetch; `--from-dir` uses already-downloaded HTML
 
@@ -23,6 +29,8 @@ Examples:
   clues.py lookup plate 粤B
   clues.py lookup area-code 023 --json
   clues.py lookup territories France --continent 南美洲
+  clues.py lookup plate "KA 05 MN 1234"
+  clues.py lookup std-code "+91 471 2345678" --json
   clues.py update all
 """
 from __future__ import annotations
@@ -48,9 +56,20 @@ SOURCES = {
     "driving_side": ["https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic"],
     "territories": ["https://en.wikipedia.org/wiki/List_of_dependent_territories"],
     "cn_admin": ["https://raw.githubusercontent.com/modood/Administrative-divisions-of-China/master/dist/pca-code.json"],
+    # India: Wikipedia sources are pinned to a reviewed revision (oldid) so a vandalised live page can't silently change the tables;
+    # bump the oldid after checking the diff. Multi-source tables pass every source, in order, to their parser.
+    "in_plates": ["https://en.wikipedia.org/w/index.php?title=Vehicle_registration_plates_of_India&oldid=1372866191",
+                  "https://en.wikipedia.org/w/index.php?title=List_of_Regional_Transport_Office_districts_in_India&oldid=1377425763"],
+    "in_std_codes": ["https://www.dot.gov.in/static/uploads/2026/05/9ed5f19dbf38307edc38a54377d82cd5.pdf",
+                     "https://en.wikipedia.org/w/index.php?title=Telephone_numbers_in_India&oldid=1376736701"],
+    "in_pin_prefixes": ["https://en.wikipedia.org/w/index.php?title=Postal_Index_Number&oldid=1377692482"],
+    "in_admin": ["https://en.wikipedia.org/w/index.php?title=States_and_union_territories_of_India&oldid=1376547964",
+                 "https://en.wikipedia.org/w/index.php?title=Languages_with_official_recognition_in_India&oldid=1378602338"],
 }
 LOCAL_NAMES = {"cn_plates": "plates_zh.html", "cn_area_codes": "areacodes2_zh.html", "calling_codes": "calling_en.html",
-               "driving_side": "driving_en.html", "territories": "dependent_en.html", "cn_admin": "pca-code.json"}
+               "driving_side": "driving_en.html", "territories": "dependent_en.html", "cn_admin": "pca-code.json",
+               "in_plates": ["plates_in_en.html", "rto_in_en.html"], "in_std_codes": ["nnp2003_dot.pdf", "telephone_in_en.html"],
+               "in_pin_prefixes": "pin_in_en.html", "in_admin": ["states_in_en.html", "languages_in_en.html"]}
 
 # Chinese → English country aliases (common ones only; if not found, retry with the English name)
 COUNTRY_ZH = {
@@ -320,8 +339,203 @@ def parse_cn_admin(raw: str) -> dict:
     return {"items": items}
 
 
+# ---------------------------------------------------------------- India parsers
+# The four in_* tables mirror the cn_* ones. Wikipedia pages are fetched at a pinned revision (see SOURCES).
+
+# Former two-letter codes → current code. Derived from the "Former codes" table on the plates page
+# (OR→OD rename, UA→UK rename, DN→DD UT merger, TS→TG reversion); the table itself has no current-code column.
+IN_FORMER_TO_CURRENT = {"OR": "OD", "UA": "UK", "DN": "DD", "TS": "TG"}
+
+# 2003 telecom service areas (circles) as used in the National Numbering Plan → today's states/UTs inside them.
+# Circles predate the 2000/2014/2019 state splits, so one circle can span several states; clues.py resolves the state per SDCA by
+# name-matching against the RTO district list and capitals, and leaves admin1 empty when that is ambiguous.
+IN_STD_CIRCLES = {
+    "AN": ["Andaman and Nicobar Islands"], "AP": ["Andhra Pradesh", "Telangana"], "AS": ["Assam"], "BR": ["Bihar", "Jharkhand"],
+    "BY": ["Maharashtra"], "GJ": ["Gujarat", "Dadra and Nagar Haveli and Daman and Diu"], "HA": ["Haryana"], "HP": ["Himachal Pradesh"],
+    "JK": ["Jammu and Kashmir", "Ladakh"], "KL": ["Kerala", "Lakshadweep"], "KT": ["Karnataka"], "MH": ["Maharashtra", "Goa"],
+    "MP": ["Madhya Pradesh", "Chhattisgarh"], "ND": ["Delhi"], "NE": ["Arunachal Pradesh", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Tripura"],
+    "OR": ["Odisha"], "PB": ["Punjab", "Chandigarh"], "RJ": ["Rajasthan"], "TN": ["Tamil Nadu", "Puducherry"], "UPE": ["Uttar Pradesh"],
+    "UPW": ["Uttar Pradesh", "Uttarakhand"], "WB": ["West Bengal", "Sikkim"],
+}
+
+# Old LDCA spellings in the 2003 plan that the RTO-name match can't resolve inside multi-state circles (Bhir = Beed, Panji = Panaji, …).
+# Curated; only LDCAs whose SDCAs all lie in one state today. Border LDCAs (Chandigarh, Junagarh with Una-Diu) are left ambiguous on purpose.
+IN_LDCA_STATE = {
+    "Anantpur (Guntakal)": "Andhra Pradesh", "Anantpur Guntakal)": "Andhra Pradesh", "Cuddapah": "Andhra Pradesh", "Ongole": "Andhra Pradesh",
+    "Rajahmundri": "Andhra Pradesh", "Vijayawada": "Andhra Pradesh", "Vizayanagaram": "Andhra Pradesh", "Mahabubnagar": "Telangana",
+    "Chapra": "Bihar", "Monghyr": "Bihar", "Sasaram": "Bihar", "Himatnagar": "Gujarat",
+    "Cannanore": "Kerala", "Palghat": "Kerala", "Quilon": "Kerala", "Trichur": "Kerala", "Kavarathy": "Lakshadweep",
+    "Aurangabad": "Maharashtra", "Bhir": "Maharashtra", "Dhulia": "Maharashtra", "Kudal": "Maharashtra", "Nasik": "Maharashtra",
+    "Osmanabad": "Maharashtra", "Pen": "Maharashtra", "Sholapur": "Maharashtra", "Yeotmal": "Maharashtra", "Panji": "Goa",
+    "Itarsi": "Madhya Pradesh", "Bhatinda": "Punjab", "Ferozepur": "Punjab", "Hosiarpur": "Punjab", "Ropar": "Punjab",
+    "Karaikudi": "Tamil Nadu", "Nagarcoil": "Tamil Nadu", "Tirunelvelli": "Tamil Nadu", "Trichy": "Tamil Nadu", "Tuticorin": "Tamil Nadu",
+    "Bareilly": "Uttar Pradesh", "Bijnore": "Uttar Pradesh", "Kotdwara": "Uttarakhand", "Berhampur": "West Bengal", "Suri": "West Bengal",
+    "Junagarh": "Gujarat",
+}
+IN_SDCA_AMBIGUOUS = {"Una-Diu"}     # SDCA spans Una (Gujarat) and Diu (UT)
+
+# Scripts for official languages that are not in the scheduled-languages table (source: each language's Wikipedia article). Curated.
+IN_SCRIPT_SUPPLEMENT = {"English": "Latin", "Mizo": "Latin", "Khasi": "Latin", "Garo": "Latin", "Kokborok": "Latin or Bengali–Assamese script",
+                        "Bhoti": "Tibetan", "Chhattisgarhi": "Devanagari"}
+
+
+def _in_rto_codes(cell: str) -> list[tuple[str, str]]:
+    found = re.findall(r"\b([A-Z]{2})\s*[-–]?\s*(\d{1,2})\b", cell)
+    if len(found) == 2 and re.search(r"\bto\b", cell) and found[0][0] == found[1][0]:
+        a, b = int(found[0][1]), int(found[1][1])
+        return [(found[0][0], str(n)) for n in range(a, b + 1)]
+    return [(c, str(int(n))) for c, n in found]
+
+
+def parse_in_plates(plates_html: str, rto_html: str) -> dict:
+    states, former, remarks = {}, {}, {}
+    for t in _tables(plates_html):
+        h = t[0] if t and t[0] else []
+        if h[:2] == ["Code", "State or Union Territory"]:
+            states.update({r[0]: r[1] for r in t[1:] if len(r) >= 2 and re.fullmatch(r"[A-Z]{2}", r[0])})
+        elif h[:1] == ["In Active Use"]:
+            for r in t[1:]:
+                if len(r) >= 4 and re.fullmatch(r"[A-Z]{2}", r[1]):
+                    former[r[1]] = {"state": r[2], "active": r[0], "reason": r[3], "current": IN_FORMER_TO_CURRENT.get(r[1], "")}
+        elif h[:2] == ["State/UT", "Remarks"]:
+            remarks.update({r[0]: r[1] for r in t[1:] if len(r) >= 2})
+    out = {code: {"state": st, "remarks": remarks.get(st, ""), "rto": {}} for code, st in states.items()}
+    for part in re.split(r"<h2[^>]*>", rto_html)[1:]:
+        if "</h2>" not in part:
+            continue
+        title, body = part.split("</h2>", 1)
+        m = re.match(r"^([A-Z]{2})\s*[—–-]\s*(.+)$", _clean(title))
+        if not m or m.group(1) not in out:
+            continue
+        section = m.group(1)
+        for raw in re.findall(r"<table[^>]*>.*?</table>", body, re.S):
+            cap = re.search(r"<caption[^>]*>(.*?)</caption>", raw, re.S)
+            caption = _clean(cap.group(1)) if cap else ""
+            t = _tables(raw)[0]
+            hi = next((i for i, r in enumerate(t[:3]) if r and r[0].startswith("Code")), None)
+            if hi is None:
+                continue
+            head = t[hi]
+
+            def col(*keys):
+                return next((i for i, h in enumerate(head) if any(k in h for k in keys)), None)
+            c_off, c_area, c_note = col("Office location", "DTO/RTO", "Location"), col("Jurisdiction", "District"), col("Annotation", "Remarks")
+            for r in t[hi + 1:]:
+                if len(r) < 2:
+                    continue
+                get = lambda c: re.sub(r"^(Location|Jurisdiction):\s*", "", r[c]).strip() if c is not None and c < len(r) else ""
+                entry = {"office": get(c_off), "area": get(c_area), "note": get(c_note)}
+                if caption:
+                    entry["table"] = caption
+                for code, num in _in_rto_codes(r[0]):
+                    if code not in out:
+                        continue
+                    e = dict(entry)
+                    if code != section:
+                        e["listed_under"] = section      # e.g. pre-2014 "AP 09" codes listed in the Telangana section
+                    lst = out[code]["rto"].setdefault(num, [])
+                    if e not in lst:
+                        lst.append(e)
+    return {"states": out, "former": former,
+            "count": len(out) + sum(len(v["rto"]) for v in out.values())}
+
+
+def parse_in_std_codes(nnp_text: str, tel_html: str) -> dict:
+    lines = nnp_text.splitlines()
+    try:
+        a = next(i for i, l in enumerate(lines) if "LIST OF SDCA CODES" in l)
+        b = next(i for i, l in enumerate(lines[a:], a) if "ANNEX-III" in l)
+    except StopIteration:
+        sys.exit("in_std_codes: Annex II (LIST OF SDCA CODES) not found in the numbering-plan text")
+    codes: dict = {}
+    for l in lines[a:b]:
+        m = re.match(r"^\s*(\d{1,4})\s*\S?\s+([A-Z]{2,3})\s+(.+?)\s{2,}(.+?)\s{2,}(\d{2,5})\s*$", l)
+        if not m or m.group(2) not in IN_STD_CIRCLES:
+            continue
+        _, circle, ldca, sdca, code = m.groups()
+        codes["0" + code] = {"sdca": sdca.strip().title(), "ldca": ldca.strip().title(), "circle": circle, "src": "nnp2003"}
+    # Current major codes listed on Wikipedia (also catches codes renumbered after 2003, e.g. Warangal 0870)
+    known = sorted({s for v in IN_STD_CIRCLES.values() for s in v} | {"Delhi"}, key=len, reverse=True)
+    sect = re.split(r'id="Fixed-line', tel_html, maxsplit=1)
+    sect = re.split(r"<h2", sect[1], maxsplit=1)[0] if len(sect) > 1 else ""
+    for li in re.findall(r"<li[^>]*>(.*?)</li>", sect, re.S):
+        mm = re.match(r"^(\d{2,4})\s*:?\s*[-–]\s*(.+)$", _clean(li))
+        if not mm:
+            continue
+        text = mm.group(2).replace("&", "and")
+        sts = [k for k in known if re.search(r"\b" + re.escape(k) + r"\b", text)]
+        sts = [k for k in sts if not any(k != o and k in o for o in sts)]       # "Delhi" inside "New Delhi" etc. is fine; drop substrings of longer hits
+        e = codes.setdefault("0" + mm.group(1), {"sdca": "", "ldca": "", "circle": "", "src": "wikipedia"})
+        e["wiki"] = {"text": mm.group(2), "states": sts}
+    return {"codes": codes, "circles": IN_STD_CIRCLES, "count": len(codes),
+            "note": "SDCA list = DoT National Numbering Plan 2003, Annex II (OCR of the published PDF); some codes were renumbered later, "
+                    "so entries with a `wiki` block (current Wikipedia list) take precedence for those codes"}
+
+
+def parse_in_pin_prefixes(html: str) -> dict:
+    zones, prefixes = {}, {}
+    for t in _tables(html):
+        h = t[0] if t and t[0] else []
+        if h and h[0].startswith("1st digit"):
+            for r in t[1:]:
+                if len(r) >= 3 and r[0].isdigit():
+                    sts = [x.strip() for x in re.split(r"(?:National Capital Territory of|State of|Union Territory of)", r[2]) if x.strip()]
+                    zones[r[0]] = {"zone": r[1], "states": sts}
+        elif h[:1] == ["PIN prefix"]:
+            for r in t[1:]:
+                if len(r) < 3:
+                    continue
+                cell = re.sub(r"\(except[^)]*\)", "", r[0]).strip()
+                m = re.match(r"^(\d+)(?:\s*[–-]\s*(\d+))?$", cell)
+                if not m:
+                    continue
+                lo, hi = m.group(1), m.group(2) or m.group(1)
+                for n in range(int(lo), int(hi) + 1):
+                    prefixes[str(n).zfill(len(lo))] = {"codes": r[1], "region": r[2]}
+    return {"zones": zones, "prefixes": prefixes, "count": len(zones) + len(prefixes)}
+
+
+def parse_in_admin(states_html: str, lang_html: str) -> dict:
+    items = []
+    for t in _tables(states_html):
+        h = t[0] if t and t[0] else []
+        if h[:2] != ["State", "ISO"]:
+            continue
+        kind = "state" if any("Statehood" in x for x in h) else "union territory"
+        for r in t[1:]:
+            if len(r) < 6 or not r[1].startswith("IN-"):
+                continue
+            fix = lambda v: re.sub(r"\s*\|\s*", " | ", re.sub(r"\)(?=[A-Z])", ") | ", v)).strip()
+            items.append({"name": r[0], "type": kind, "iso": r[1], "vehicle_code": r[2].replace(" ", ""), "zone": r[3],
+                          "capital": fix(r[4]), "largest_city": fix(r[5])})
+    langs, official = {}, {}
+    for t in _tables(lang_html):
+        h = t[0] if t and t[0] else []
+        if h[:1] == ["Language"] and "Writing system" in h:
+            ws = h.index("Writing system")
+            for r in t[1:]:
+                if len(r) > ws:
+                    langs[r[0]] = {"script": r[ws], "notes": r[2] if len(r) > 2 else ""}
+        elif h[:1] in (["State"], ["Union territory"]) and len(h) > 1 and h[1].startswith("Official language"):
+            for r in t[1:]:
+                if len(r) >= 2:
+                    official[r[0]] = {"official_raw": r[1], "additional_raw": r[2] if len(r) > 2 else "",
+                                      "mandated_scripts": r[3] if len(r) > 3 else ""}
+    script_of = {k: v["script"] for k, v in langs.items()} | {k: v for k, v in IN_SCRIPT_SUPPLEMENT.items() if k not in langs}
+    for it in items:
+        o = official.get(it["name"], {})
+        names = [re.sub(r"^[a-z]\s+", "", x).strip() for x in re.split(r",|\band\b", re.sub(r"\([^)]*\)", "", o.get("official_raw", "")))]
+        names = [x for x in names if x]
+        it.update({"official_languages": names, "official_raw": o.get("official_raw", ""), "additional_raw": o.get("additional_raw", ""),
+                   "mandated_scripts": o.get("mandated_scripts", ""),
+                   "scripts": sorted({script_of[n] for n in names if n in script_of})})
+    return {"items": items, "languages": langs, "script_supplement": IN_SCRIPT_SUPPLEMENT, "count": len(items)}
+
+
 PARSERS = {"cn_plates": parse_cn_plates, "cn_area_codes": parse_cn_area_codes, "calling_codes": parse_calling_codes,
-           "driving_side": parse_driving_side, "territories": parse_territories, "cn_admin": parse_cn_admin}
+           "driving_side": parse_driving_side, "territories": parse_territories, "cn_admin": parse_cn_admin,
+           "in_plates": parse_in_plates, "in_std_codes": parse_in_std_codes, "in_pin_prefixes": parse_in_pin_prefixes,
+           "in_admin": parse_in_admin}
 
 
 # ---------------------------------------------------------------- read/write
@@ -342,16 +556,41 @@ def _fetch(url: str, proxy: str | None) -> str:
     return r.stdout.decode("utf-8", "replace")
 
 
+def _pdf_text(path: Path) -> str:
+    """PDF sources (the DoT numbering plan) are converted with poppler's pdftotext, which keeps the table columns."""
+    try:
+        r = subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True)
+    except OSError:
+        sys.exit("pdftotext not found: install poppler-utils (Linux) / poppler (Homebrew) to rebuild PDF-sourced tables")
+    if r.returncode != 0:
+        sys.exit(f"pdftotext failed on {path}: {r.stderr.decode('utf-8', 'replace')[:200]}")
+    return r.stdout.decode("utf-8", "replace")
+
+
+def _source_text(url: str, local: str | None, proxy: str | None) -> str:
+    if url.lower().endswith(".pdf"):
+        if local:
+            return _pdf_text(Path(local))
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "source.pdf"
+            r = subprocess.run(["curl", "-q", "-s", "-m", "180", "-A", UA, "-L", *curl_args(proxy), "-o", str(out), url], capture_output=True)
+            if r.returncode != 0 or not out.exists() or out.stat().st_size < 10000:
+                sys.exit(f"fetch failed: {url} (check service availability with doctor.py --network)")
+            return _pdf_text(out)
+    if local:
+        return Path(local).read_text(encoding="utf-8", errors="replace")
+    return _fetch(url, proxy)
+
+
 def cmd_update(args) -> None:
     DATA.mkdir(parents=True, exist_ok=True)
     names = list(SOURCES) if args.table in ("all", None) else [args.table]
     for name in names:
-        if args.from_dir:
-            src = Path(args.from_dir) / LOCAL_NAMES[name]
-            raw = src.read_text(encoding="utf-8", errors="replace")
-        else:
-            raw = _fetch(SOURCES[name][0], args.proxy)
-        data = PARSERS[name](raw)
+        locals_ = LOCAL_NAMES[name] if isinstance(LOCAL_NAMES[name], list) else [LOCAL_NAMES[name]]
+        urls = SOURCES[name] if isinstance(LOCAL_NAMES[name], list) else SOURCES[name][:1]
+        raws = [_source_text(u, str(Path(args.from_dir) / loc) if args.from_dir else None, args.proxy) for u, loc in zip(urls, locals_)]
+        data = PARSERS[name](*raws)
         n = data.get("count") or len(data.get("items") or data)
         payload = {"_meta": {"source": SOURCES[name], "fetched": date.today().isoformat(), "count": n}, **data}
         (DATA / f"{name}.json").write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -374,6 +613,9 @@ def _result(kind, value, matches, source, fetched, note=""):
 
 
 def lookup_plate(value: str) -> dict:
+    # Latin-letter plates ("MH 12 AB 1234", "22 BH 1234 AA") go to the India table; anything with a Chinese character stays on the CN path
+    if not re.search(r"[\u4e00-\u9fff]", value) and re.match(r"^\s*([A-Za-z]{2}\s*[-.]?\s*\d|[A-Za-z]{2}\s*$|\d{2}\s*-?\s*BH)", value, re.I):
+        return lookup_in_plate(value)
     d = load("cn_plates")
     abbr, letter = _norm_plate(value)
     src, fetched = d["_meta"]["source"][0], d["_meta"]["fetched"]
@@ -515,10 +757,251 @@ def lookup_admin(value: str | None, children: str | None, level: str | None) -> 
     return _result("admin", name, ms, src, fetched, "" if ms else "no admin division with this name (use the full name, e.g. “渝北区”)")
 
 
+# ---------------------------------------------------------------- India lookups
+
+IN_ALIASES = {"orissa": "Odisha", "uttaranchal": "Uttarakhand", "pondicherry": "Puducherry", "keralam": "Kerala", "nct of delhi": "Delhi",
+              "new delhi": "Delhi", "j&k": "Jammu and Kashmir", "jammu & kashmir": "Jammu and Kashmir", "a&n": "Andaman and Nicobar Islands"}
+
+
+def _in_norm(s: str) -> str:
+    return re.sub(r"[^a-z]", "", s.lower())
+
+
+def _in_place(e: dict) -> str:
+    area, office = e.get("area", ""), e.get("office", "")
+    office_ok = office and not re.match(r"(?i)^(n/?a|defunct|rta)$", office)
+    if not area or re.match(r"(?i)^(n/?a|entire|statewide|defunct)", area):
+        return office if office_ok else ""
+    area = area.split(":")[0].strip()
+    if len(area) > 40 and office_ok and len(office) <= 40:     # long jurisdiction descriptions: the office town is the better candidate name
+        return re.sub(r"\s*\(.*?\)", "", office).strip()
+    return area
+
+
+def lookup_in_plate(value: str) -> dict:
+    d = load("in_plates")
+    src, fetched = d["_meta"]["source"][1], d["_meta"]["fetched"]
+    v = re.sub(r"[\s\-.·]", "", value.upper())
+    m = re.match(r"^(\d{2})BH(\d{1,4})?([A-Z]{1,2})?$", v)
+    if m:
+        return _result("plate", value, [{"country": "India", "note": f"Bharat (BH) series, registered in 20{m.group(1)}; issued nationally to government "
+                                         "employees and staff of firms with offices in 4+ states/UTs, so it carries no state or district"}],
+                       d["_meta"]["source"][0], fetched, "BH plates don't point to a state")
+    m = re.match(r"^([A-Z]{2})(\d{1,2})?", v)
+    states, former = d["states"], d["former"]
+    if not m or (m.group(1) not in states and m.group(1) not in former):
+        return _result("plate", value, [], src, fetched, "not a current or former Indian state/UT code (armed-forces plates start with an upward arrow + year; "
+                       "diplomatic plates read like '123 CD 45')")
+    code, num = m.group(1), m.group(2)
+    note = ""
+    if code in former:
+        f = former[code]
+        note = f"former code {code} ({f['state']}, {f['active']}; {f['reason']}); still valid on older vehicles"
+        code = f["current"] or code
+    st = states[code]
+    if not num:
+        return _result("plate-prefix", value, [{"admin1": st["state"], "admin2": "", "note": note or "only the state code was given"}], src, fetched)
+    entries = st["rto"].get(str(int(num))) or []
+    extra = f"; state remark: {st['remarks']}" if st.get("remarks") and not all(e.get("listed_under") for e in entries) else ""
+    if not entries:
+        return _result("plate", value, [{"admin1": st["state"], "admin2": "", "note": (note + "; " if note else "") + f"RTO number {int(num):02d} not in the table{extra}"}], src, fetched)
+    places = []
+    for e in entries:
+        p = _in_place(e)
+        if p not in places:
+            places.append(p)
+    if len(places) > 6:     # e.g. AP 39/40: one code for the whole state
+        return _result("plate", value, [{"admin1": st["state"], "admin2": "", "note": (note + "; " if note else "") + f"{code} {int(num):02d} is used across {len(places)} districts{extra}"}], src, fetched)
+    matches = []
+    for e in entries:
+        p = _in_place(e)
+        bits = [x for x in (f"RTO {e['office']}" if e.get("office") and e["office"] != p else "", e.get("note", ""), e.get("table", ""),
+                            f"listed in the {e['listed_under']} section" if e.get("listed_under") else "", note) if x]
+        if e.get("area") and p != e["area"].split(":")[0].strip():
+            bits.append(f"jurisdiction: {e['area'][:160]}")
+        # older codes listed under another state's section (pre-2014 "AP 09" = Hyderabad): the district now belongs to that state
+        admin1 = states[e["listed_under"]]["state"] if e.get("listed_under") in states else st["state"]
+        matches.append({"admin1": admin1, "admin2": p, "note": "; ".join(bits)})
+    return _result("plate", value, matches, src, fetched, ("common caveats: vehicles registered elsewhere, statewide codes" + extra) if extra else "")
+
+
+_IN_NAMES: dict | None = None
+
+
+def _in_state_names() -> dict:
+    """state → normalized place names (RTO districts and offices, capital, largest city, the state itself); used to resolve STD codes to a state."""
+    global _IN_NAMES
+    if _IN_NAMES is None:
+        names: dict = {}
+        try:
+            for st in load("in_plates")["states"].values():
+                s = names.setdefault(st["state"], set())
+                for es in st["rto"].values():
+                    for e in es:
+                        if e.get("listed_under"):
+                            continue
+                        for txt in (e.get("area", ""), e.get("office", "")):
+                            for seg in re.split(r"[,:;()/&]|\band\b", txt):
+                                n = _in_norm(re.sub(r"(?i)\b(district|city|urban|rural|rto|dto|arto|srto|east|west|north|south|central|new|old)\b", "", seg))
+                                if len(n) >= 3:
+                                    s.add(n)
+        except SystemExit:
+            pass
+        try:
+            for it in load("in_admin")["items"]:
+                s = names.setdefault(it["name"], set())
+                s.add(_in_norm(it["name"]))
+                for txt in (it["capital"], it["largest_city"]):
+                    for seg in re.split(r"[|()]", txt):
+                        n = _in_norm(re.sub(r"(?i)\b(summer|winter)\b", "", seg))
+                        if len(n) >= 3:
+                            s.add(n)
+        except SystemExit:
+            pass
+        _IN_NAMES = names
+    return _IN_NAMES
+
+
+def _in_std_states(e: dict, circles: dict) -> tuple[list[str], str]:
+    if e.get("wiki", {}).get("states"):
+        return e["wiki"]["states"], "Wikipedia list"
+    cands = circles.get(e.get("circle", ""), [])
+    if len(cands) <= 1:
+        return cands, "telecom circle"
+    names = _in_state_names()
+    for field in ("sdca", "ldca"):          # the exchange's own name first: Karaikal SDCA sits in the Thanjavur LDCA but in Puducherry
+        x = e[field]
+        keys = {_in_norm(k) for k in re.split(r"[()]", x) + x.split()[:1] if len(_in_norm(k)) >= 3}
+        hit = [st for st in cands if keys & names.get(st, set())]
+        if len(hit) == 1:
+            return hit, f"{field.upper()} name match against RTO districts/capitals"
+    if IN_LDCA_STATE.get(e["ldca"]) in cands and e["sdca"] not in IN_SDCA_AMBIGUOUS:
+        return [IN_LDCA_STATE[e["ldca"]]], "curated LDCA spelling map"
+    return cands, "ambiguous circle"
+
+
+def lookup_std_code(value: str) -> dict:
+    d = load("in_std_codes")
+    src, fetched = d["_meta"]["source"][0], d["_meta"]["fetched"]
+    codes, circles = d["codes"], d["circles"]
+    raw = value.strip()
+    intl = raw.replace(" ", "").startswith(("+91", "0091"))
+    rest = re.sub(r"^\s*(\+|00)\s*91", "", raw)
+    groups = re.findall(r"\d+", rest)
+    if not groups:
+        return _result("std-code", value, [], src, fetched, "no digits")
+    trunk0 = rest.lstrip(" (").startswith("0")
+    first = groups[0].lstrip("0")
+    found = ["0" + first] if 2 <= len(first) <= 5 and "0" + first in codes else []
+    if not found:
+        digits = "".join(groups).lstrip("0")
+        if not trunk0 and len(digits) == 10 and digits[0] in "6789":
+            return _result("std-code", value, [], src, fetched, "looks like a mobile number (10 digits starting 6–9, no trunk 0): mobile numbers don't map to a region; "
+                           "if it is a landline, pass it with the trunk 0 or with the code as its own digit group")
+        found = ["0" + digits[:L] for L in (2, 3, 4, 5) if "0" + digits[:L] in codes]
+    if not found:
+        return _result("std-code", value, [], src, fetched, "not an Indian landline STD code in the table (mobile, toll-free 1800, or code renumbered after 2003); "
+                       "STD codes are 2–5 digits after the trunk 0 and the code + subscriber number is always 10 digits")
+    matches = []
+    for c in found:
+        e = codes[c]
+        sts, how = _in_std_states(e, circles)
+        bits = [f"SDCA {e['sdca']}" if e.get("sdca") else "", f"LDCA {e['ldca']}" if e.get("ldca") else "",
+                f"circle {e['circle']} ({', '.join(circles.get(e['circle'], []))})" if e.get("circle") else "",
+                f"Wikipedia: {e['wiki']['text']}" if e.get("wiki") else "", f"state via {how}"]
+        place = e["wiki"]["text"].split(",")[0].strip() if e.get("wiki") else e["sdca"]      # Wikipedia gives today's names (Kochi, Bengaluru, Prayagraj)
+        note = "; ".join(b for b in bits if b)
+        if len(sts) == 1:
+            matches.append({"admin1": sts[0], "admin2": place, "note": note, "code": c})
+        else:
+            for st in sts:                  # one row per possible state, no admin2: the exchange sits in only one of them
+                matches.append({"admin1": st, "admin2": "", "note": f"{place}: {note}; one of {len(sts)} candidate states", "code": c})
+    return _result("std-code", value, matches, src, fetched, "a business may print a head-office number from another city")
+
+
+def lookup_pin(value: str) -> dict:
+    d = load("in_pin_prefixes")
+    src, fetched = d["_meta"]["source"][0], d["_meta"]["fetched"]
+    digits = re.sub(r"\D", "", value)
+    if not digits or digits[0] == "0" or len(digits) > 6:
+        return _result("pin", value, [], src, fetched, "an Indian PIN is 6 digits and never starts with 0")
+    zone = d["zones"].get(digits[0], {})
+    if digits[0] == "9":
+        return _result("pin", value, [], src, fetched, "9xxxxx is the Army Postal Service (field post offices), not a place")
+    hit = next((digits[:L] for L in (3, 2) if len(digits) >= L and digits[:L] in d["prefixes"]), None)
+    zn = f"postal zone {digits[0]} ({zone.get('zone', '?')})"
+    if not hit:
+        return _result("pin", value, [{"admin1": s, "admin2": "", "note": f"{zn}; prefix not in the 2–3 digit table"} for s in zone.get("states", [])], src, fetched,
+                       "only the zone is known: several states")
+    e = d["prefixes"][hit]
+    sts = [s.strip() for s in re.split(r",\s*", e["region"]) if s.strip()]
+    sd = f"; sorting district {digits[:3]} (first 3 digits) not resolved by this table" if len(digits) >= 3 and len(hit) < 3 else ""
+    return _result("pin", value, [{"admin1": s, "admin2": "", "note": f"{zn}; prefix {hit} → {e['codes']}{sd}"} for s in sts], src, fetched,
+                   "the PIN on a sign is the delivery post office's; it can be a head office in a neighbouring district")
+
+
+def _in_admin_items() -> tuple[list, dict]:
+    d = load("in_admin")
+    return d["items"], d
+
+
+def lookup_in_admin(value: str | None) -> dict:
+    items, d = _in_admin_items()
+    src, fetched = d["_meta"]["source"][0], d["_meta"]["fetched"]
+    v = (value or "").strip()
+    v = IN_ALIASES.get(v.lower(), v)
+    if v.lower() in ("", "all", "india"):
+        hits = items
+    else:
+        n = _in_norm(v)
+        hits = [it for it in items if n in (_in_norm(it["name"]), _in_norm(it["iso"]), _in_norm(it["iso"][3:]), _in_norm(it["vehicle_code"]))] or \
+               [it for it in items if any(n == _in_norm(re.sub(r"\(.*?\)", "", c)) for c in it["capital"].split("|"))]
+    ms = [{"admin1": it["name"], "admin2": "", "note": f"{it['type']}; {it['iso']}; plate {it['vehicle_code']}; capital {it['capital']}; "
+           f"official: {', '.join(it['official_languages'])} ({', '.join(it['scripts'])})" + (f"; additional: {it['additional_raw']}" if it.get("additional_raw") else "")}
+          for it in hits]
+    return _result("in-admin", v, ms, src, fetched, "" if ms else "no state/UT with that name, ISO code or vehicle code")
+
+
+def lookup_script(value: str) -> dict:
+    items, d = _in_admin_items()
+    src, fetched = d["_meta"]["source"][1], d["_meta"]["fetched"]
+    v = (value or "").strip().lower()
+    script_of = {k: x["script"] for k, x in d["languages"].items()} | {k: x for k, x in d.get("script_supplement", {}).items() if k not in d["languages"]}
+    if v in ("bengali", "assamese", "bangla"):
+        v = "bengali"            # the Bengali–Assamese script; "Bengali" as a language is handled the same way
+    langs = {k for k, s in script_of.items() if v and (v in s.lower() or v == k.lower())}
+    if not langs:
+        return _result("script", value, [], src, fetched, "unknown script/language; try Devanagari, Bengali, Gurmukhi, Gujarati, Odia, Tamil, Telugu, Kannada, "
+                       "Malayalam, Meitei, Perso-Arabic (Urdu/Kashmiri), Ol Chiki, Tibetan, Latin")
+    official, additional = [], []
+    for it in items:
+        o = [l for l in it["official_languages"] if l in langs]
+        if o:
+            official.append({"admin1": it["name"], "admin2": "", "note": f"official: {', '.join(o)}"})
+            continue
+        a = [l for l in langs if re.search(r"\b" + re.escape(l) + r"\b", it.get("additional_raw", ""))]
+        if a:
+            additional.append({"admin1": it["name"], "admin2": "", "note": f"additional official (often only some districts): {', '.join(a)}"})
+    return _result("script", value, official + additional, src, fetched,
+                   f"languages in this script: {', '.join(sorted(langs))}. Shop signs follow the market (Hindi/English signs appear everywhere; "
+                   "Bengali signs also in Bangladesh, Gurmukhi in Pakistani Punjab, Tamil in Sri Lanka); official road signs are the stronger clue")
+
+
 def cmd_lookup(args) -> None:
     k = args.kind
     if k in ("plate", "plate-prefix"):
         res = lookup_plate(args.value or "")
+    elif k in ("std-code", "std", "in-area-code") or (k == "area-code" and ((args.country or "").strip().lower() in ("in", "ind", "india", "印度")
+                                                                              or (args.value or "").strip().startswith(("+91", "0091")))):
+        res = lookup_std_code(args.value or "")
+    elif k == "in-plate":
+        res = lookup_in_plate(args.value or "")
+    elif k in ("pin", "pin-code", "pincode"):
+        res = lookup_pin(args.value or "")
+    elif k == "in-admin" or (k == "admin" and (args.country or "").strip().lower() in ("in", "ind", "india", "印度")):
+        res = lookup_in_admin(args.value)
+    elif k == "script":
+        res = lookup_script(args.value or "")
     elif k == "area-code":
         res = lookup_area_code(args.value or "")
     elif k == "calling-code":
@@ -530,7 +1013,7 @@ def cmd_lookup(args) -> None:
     elif k == "admin":
         res = lookup_admin(args.value, args.children, args.level)
     else:
-        sys.exit("kind: plate / plate-prefix / area-code / calling-code / driving-side / territories / admin")
+        sys.exit("kind: plate / plate-prefix / area-code / calling-code / driving-side / territories / admin; India: std-code / pin / in-admin / script (plate auto-detects)")
     if args.json:
         print(json.dumps(res, ensure_ascii=False, indent=1))
         return

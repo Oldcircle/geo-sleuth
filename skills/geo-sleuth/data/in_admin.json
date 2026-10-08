@@ -1,0 +1,800 @@
+{
+ "_meta": {
+  "source": [
+   "https://en.wikipedia.org/w/index.php?title=States_and_union_territories_of_India&oldid=1376547964",
+   "https://en.wikipedia.org/w/index.php?title=Languages_with_official_recognition_in_India&oldid=1378602338"
+  ],
+  "fetched": "2026-10-08",
+  "count": 36
+ },
+ "items": [
+  {
+   "name": "Andhra Pradesh",
+   "type": "state",
+   "iso": "IN-AP",
+   "vehicle_code": "AP",
+   "zone": "Southern",
+   "capital": "Amaravati",
+   "largest_city": "Visakhapatnam",
+   "official_languages": [
+    "Telugu"
+   ],
+   "official_raw": "Telugu",
+   "additional_raw": "English, Urdu",
+   "mandated_scripts": "",
+   "scripts": [
+    "Telugu script"
+   ]
+  },
+  {
+   "name": "Arunachal Pradesh",
+   "type": "state",
+   "iso": "IN-AR",
+   "vehicle_code": "AR",
+   "zone": "North-Eastern",
+   "capital": "Itanagar",
+   "largest_city": "Itanagar",
+   "official_languages": [
+    "English"
+   ],
+   "official_raw": "English",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Latin"
+   ]
+  },
+  {
+   "name": "Assam",
+   "type": "state",
+   "iso": "IN-AS",
+   "vehicle_code": "AS",
+   "zone": "North-Eastern",
+   "capital": "Dispur",
+   "largest_city": "Guwahati",
+   "official_languages": [
+    "Assamese",
+    "Bodo"
+   ],
+   "official_raw": "Assamese and Bodo",
+   "additional_raw": "Bengali in three districts of Barak Valley",
+   "mandated_scripts": "Bodo is officially written in the Devanagari script.",
+   "scripts": [
+    "Bengali–Assamese script",
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Bihar",
+   "type": "state",
+   "iso": "IN-BR",
+   "vehicle_code": "BR",
+   "zone": "Eastern",
+   "capital": "Patna",
+   "largest_city": "Patna",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "Urdu",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Chhattisgarh",
+   "type": "state",
+   "iso": "IN-CG",
+   "vehicle_code": "CG",
+   "zone": "Central",
+   "capital": "Raipur",
+   "largest_city": "Raipur",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "Chhattisgarhi",
+   "mandated_scripts": "Devanagari",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Goa",
+   "type": "state",
+   "iso": "IN-GA",
+   "vehicle_code": "GA",
+   "zone": "Western",
+   "capital": "Panaji",
+   "largest_city": "Vasco da Gama",
+   "official_languages": [
+    "Konkani",
+    "English"
+   ],
+   "official_raw": "Konkani, English",
+   "additional_raw": "Marathi",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari",
+    "Latin"
+   ]
+  },
+  {
+   "name": "Gujarat",
+   "type": "state",
+   "iso": "IN-GJ",
+   "vehicle_code": "GJ",
+   "zone": "Western",
+   "capital": "Gandhinagar",
+   "largest_city": "Ahmedabad",
+   "official_languages": [
+    "Gujarati"
+   ],
+   "official_raw": "Gujarati",
+   "additional_raw": "Hindi",
+   "mandated_scripts": "",
+   "scripts": [
+    "Gujarati script"
+   ]
+  },
+  {
+   "name": "Haryana",
+   "type": "state",
+   "iso": "IN-HR",
+   "vehicle_code": "HR",
+   "zone": "Northern",
+   "capital": "Chandigarh",
+   "largest_city": "Faridabad",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "English, Punjabi",
+   "mandated_scripts": "Hindi should be written in Devanagari.Punjabi should be written in Gurmukhi.",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Himachal Pradesh",
+   "type": "state",
+   "iso": "IN-HP",
+   "vehicle_code": "HP",
+   "zone": "Northern",
+   "capital": "Shimla (Summer) | Dharamshala (Winter)",
+   "largest_city": "Shimla",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "Sanskrit",
+   "mandated_scripts": "Both Hindi and Sanskrit are written in Devanagari.",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Jharkhand",
+   "type": "state",
+   "iso": "IN-JH",
+   "vehicle_code": "JH",
+   "zone": "Eastern",
+   "capital": "Ranchi",
+   "largest_city": "Jamshedpur",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "Angika, Bengali, Bhojpuri, Bhumij, Ho, Kharia, Khortha, Kurmali, Kurukh, Magahi, Maithili, Mundari, Nagpuri, Odia, Santali, Urdu",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Karnataka",
+   "type": "state",
+   "iso": "IN-KA",
+   "vehicle_code": "KA",
+   "zone": "Southern",
+   "capital": "Bengaluru (Summer) | Belagavi (Winter)",
+   "largest_city": "Bengaluru",
+   "official_languages": [
+    "Kannada"
+   ],
+   "official_raw": "Kannada",
+   "additional_raw": "Tulu",
+   "mandated_scripts": "",
+   "scripts": [
+    "Kannada script"
+   ]
+  },
+  {
+   "name": "Kerala",
+   "type": "state",
+   "iso": "IN-KL",
+   "vehicle_code": "KL",
+   "zone": "Southern",
+   "capital": "Thiruvananthapuram",
+   "largest_city": "Thiruvananthapuram",
+   "official_languages": [
+    "Malayalam"
+   ],
+   "official_raw": "Malayalam",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Malayalam script"
+   ]
+  },
+  {
+   "name": "Madhya Pradesh",
+   "type": "state",
+   "iso": "IN-MP",
+   "vehicle_code": "MP",
+   "zone": "Central",
+   "capital": "Bhopal",
+   "largest_city": "Indore",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Maharashtra",
+   "type": "state",
+   "iso": "IN-MH",
+   "vehicle_code": "MH",
+   "zone": "Western",
+   "capital": "Mumbai (Summer) | Nagpur (Winter)",
+   "largest_city": "Mumbai",
+   "official_languages": [
+    "Marathi"
+   ],
+   "official_raw": "Marathi",
+   "additional_raw": "",
+   "mandated_scripts": "Devanagari",
+   "scripts": [
+    "Devanagari(Balbodh)"
+   ]
+  },
+  {
+   "name": "Manipur",
+   "type": "state",
+   "iso": "IN-MN",
+   "vehicle_code": "MN",
+   "zone": "North-Eastern",
+   "capital": "Imphal",
+   "largest_city": "Imphal",
+   "official_languages": [
+    "Manipuri"
+   ],
+   "official_raw": "Manipuri",
+   "additional_raw": "English",
+   "mandated_scripts": "Meetei mayek",
+   "scripts": [
+    "Meitei script"
+   ]
+  },
+  {
+   "name": "Meghalaya",
+   "type": "state",
+   "iso": "IN-ML",
+   "vehicle_code": "ML",
+   "zone": "North-Eastern",
+   "capital": "Shillong",
+   "largest_city": "Shillong",
+   "official_languages": [
+    "English",
+    "Khasi",
+    "Garo"
+   ],
+   "official_raw": "English,e Khasi and Garo",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Latin"
+   ]
+  },
+  {
+   "name": "Mizoram",
+   "type": "state",
+   "iso": "IN-MZ",
+   "vehicle_code": "MZ",
+   "zone": "North-Eastern",
+   "capital": "Aizawl",
+   "largest_city": "Aizawl",
+   "official_languages": [
+    "Mizo",
+    "English"
+   ],
+   "official_raw": "Mizo, English",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Latin"
+   ]
+  },
+  {
+   "name": "Nagaland",
+   "type": "state",
+   "iso": "IN-NL",
+   "vehicle_code": "NL",
+   "zone": "North-Eastern",
+   "capital": "Kohima",
+   "largest_city": "Dimapur",
+   "official_languages": [
+    "English"
+   ],
+   "official_raw": "English",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Latin"
+   ]
+  },
+  {
+   "name": "Odisha",
+   "type": "state",
+   "iso": "IN-OD",
+   "vehicle_code": "OD",
+   "zone": "Eastern",
+   "capital": "Bhubaneswar",
+   "largest_city": "Bhubaneswar",
+   "official_languages": [
+    "Odia"
+   ],
+   "official_raw": "Odia",
+   "additional_raw": "English",
+   "mandated_scripts": "",
+   "scripts": [
+    "Odia script"
+   ]
+  },
+  {
+   "name": "Punjab",
+   "type": "state",
+   "iso": "IN-PB",
+   "vehicle_code": "PB",
+   "zone": "Northern",
+   "capital": "Chandigarh",
+   "largest_city": "Ludhiana",
+   "official_languages": [
+    "Punjabi"
+   ],
+   "official_raw": "Punjabi",
+   "additional_raw": "",
+   "mandated_scripts": "Gurmukhi",
+   "scripts": [
+    "Gurmukhi"
+   ]
+  },
+  {
+   "name": "Rajasthan",
+   "type": "state",
+   "iso": "IN-RJ",
+   "vehicle_code": "RJ",
+   "zone": "Northern",
+   "capital": "Jaipur",
+   "largest_city": "Jaipur",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Sikkim",
+   "type": "state",
+   "iso": "IN-SK",
+   "vehicle_code": "SK",
+   "zone": "North-Eastern",
+   "capital": "Gangtok",
+   "largest_city": "Gangtok",
+   "official_languages": [
+    "English",
+    "Nepali"
+   ],
+   "official_raw": "English, Nepali",
+   "additional_raw": "Bhutia, Gurung, Lepcha, Limbu, Magar, Mukhia, Newari, Rai, Sherpa, and Tamang",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari",
+    "Latin"
+   ]
+  },
+  {
+   "name": "Tamil Nadu",
+   "type": "state",
+   "iso": "IN-TN",
+   "vehicle_code": "TN",
+   "zone": "Southern",
+   "capital": "Chennai",
+   "largest_city": "Chennai",
+   "official_languages": [
+    "Tamil"
+   ],
+   "official_raw": "Tamil",
+   "additional_raw": "English",
+   "mandated_scripts": "",
+   "scripts": [
+    "Tamil script"
+   ]
+  },
+  {
+   "name": "Telangana",
+   "type": "state",
+   "iso": "IN-TS",
+   "vehicle_code": "TG",
+   "zone": "Southern",
+   "capital": "Hyderabad",
+   "largest_city": "Hyderabad",
+   "official_languages": [
+    "Telugu"
+   ],
+   "official_raw": "Telugu",
+   "additional_raw": "Urdu",
+   "mandated_scripts": "",
+   "scripts": [
+    "Telugu script"
+   ]
+  },
+  {
+   "name": "Tripura",
+   "type": "state",
+   "iso": "IN-TR",
+   "vehicle_code": "TR",
+   "zone": "North-Eastern",
+   "capital": "Agartala",
+   "largest_city": "Agartala",
+   "official_languages": [
+    "Bengali",
+    "English",
+    "Kokborok"
+   ],
+   "official_raw": "Bengali, English, Kokborok",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Bengali–Assamese script",
+    "Latin",
+    "Latin or Bengali–Assamese script"
+   ]
+  },
+  {
+   "name": "Uttar Pradesh",
+   "type": "state",
+   "iso": "IN-UP",
+   "vehicle_code": "UP",
+   "zone": "Central",
+   "capital": "Lucknow",
+   "largest_city": "Lucknow",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "Urdu",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "Uttarakhand",
+   "type": "state",
+   "iso": "IN-UK",
+   "vehicle_code": "UK",
+   "zone": "Central",
+   "capital": "Bhararisain (Summer) | Dehradun (Winter)",
+   "largest_city": "Dehradun",
+   "official_languages": [
+    "Hindi"
+   ],
+   "official_raw": "Hindi",
+   "additional_raw": "Sanskrit",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari"
+   ]
+  },
+  {
+   "name": "West Bengal",
+   "type": "state",
+   "iso": "IN-WB",
+   "vehicle_code": "WB",
+   "zone": "Eastern",
+   "capital": "Kolkata",
+   "largest_city": "Kolkata",
+   "official_languages": [
+    "Bengali",
+    "English"
+   ],
+   "official_raw": "Bengali, English",
+   "additional_raw": "Nepali in Darjeeling and Kurseong sub-divisions; Urdu, Hindi, Odia, Santali, Punjabi, Kamtapuri, Rajbanshi,Kudmali/Kurmali, Kurukh and Telugu in blocks, divisions or districts with population greater than 10 per cent",
+   "mandated_scripts": "",
+   "scripts": [
+    "Bengali–Assamese script",
+    "Latin"
+   ]
+  },
+  {
+   "name": "Andaman and Nicobar Islands",
+   "type": "union territory",
+   "iso": "IN-AN",
+   "vehicle_code": "AN",
+   "zone": "Southern",
+   "capital": "Port Blair",
+   "largest_city": "Port Blair",
+   "official_languages": [
+    "Hindi",
+    "English"
+   ],
+   "official_raw": "Hindi, English",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari",
+    "Latin"
+   ]
+  },
+  {
+   "name": "Chandigarh",
+   "type": "union territory",
+   "iso": "IN-CH",
+   "vehicle_code": "CH",
+   "zone": "Northern",
+   "capital": "Chandigarh",
+   "largest_city": "Chandigarh",
+   "official_languages": [
+    "Hindi",
+    "English"
+   ],
+   "official_raw": "Hindi, English",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari",
+    "Latin"
+   ]
+  },
+  {
+   "name": "Dadra and Nagar Haveli and Daman and Diu",
+   "type": "union territory",
+   "iso": "IN-DH",
+   "vehicle_code": "DD",
+   "zone": "Western",
+   "capital": "Daman",
+   "largest_city": "Silvassa",
+   "official_languages": [
+    "Hindi",
+    "English"
+   ],
+   "official_raw": "Hindi, English",
+   "additional_raw": "Gujarati",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari",
+    "Latin"
+   ]
+  },
+  {
+   "name": "Delhi",
+   "type": "union territory",
+   "iso": "IN-DL",
+   "vehicle_code": "DL",
+   "zone": "Northern",
+   "capital": "New Delhi",
+   "largest_city": "Delhi",
+   "official_languages": [
+    "Hindi",
+    "English"
+   ],
+   "official_raw": "Hindi, English",
+   "additional_raw": "Urdu, Punjabi",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari",
+    "Latin"
+   ]
+  },
+  {
+   "name": "Jammu and Kashmir",
+   "type": "union territory",
+   "iso": "IN-JK",
+   "vehicle_code": "JK",
+   "zone": "Northern",
+   "capital": "Srinagar (Summer) | Jammu (Winter)",
+   "largest_city": "Srinagar",
+   "official_languages": [
+    "Kashmiri",
+    "Dogri",
+    "Hindi",
+    "Urdu",
+    "English"
+   ],
+   "official_raw": "Kashmiri, Dogri, Hindi, Urdu, English",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari",
+    "Latin",
+    "Perso-Arabic script"
+   ]
+  },
+  {
+   "name": "Ladakh",
+   "type": "union territory",
+   "iso": "IN-LA",
+   "vehicle_code": "LA",
+   "zone": "Northern",
+   "capital": "Leh (Summer) | Kargil (Winter)",
+   "largest_city": "Leh",
+   "official_languages": [
+    "Bhoti",
+    "Purgi",
+    "Urdu",
+    "Hindi",
+    "English"
+   ],
+   "official_raw": "Bhoti, Purgi, Urdu, Hindi, English",
+   "additional_raw": "",
+   "mandated_scripts": "",
+   "scripts": [
+    "Devanagari",
+    "Latin",
+    "Perso-Arabic script",
+    "Tibetan"
+   ]
+  },
+  {
+   "name": "Lakshadweep",
+   "type": "union territory",
+   "iso": "IN-LD",
+   "vehicle_code": "LD",
+   "zone": "Southern",
+   "capital": "Kavaratti",
+   "largest_city": "Kavaratti",
+   "official_languages": [
+    "English"
+   ],
+   "official_raw": "English",
+   "additional_raw": "Malayalam",
+   "mandated_scripts": "",
+   "scripts": [
+    "Latin"
+   ]
+  },
+  {
+   "name": "Puducherry",
+   "type": "union territory",
+   "iso": "IN-PY",
+   "vehicle_code": "PY",
+   "zone": "Southern",
+   "capital": "Pondicherry",
+   "largest_city": "Pondicherry",
+   "official_languages": [
+    "Tamil",
+    "Telugu",
+    "Malayalam"
+   ],
+   "official_raw": "Tamil (in Pondicherry and Karaikal), Telugu (in Yanam), Malayalam (in Mahe)",
+   "additional_raw": "English, French",
+   "mandated_scripts": "",
+   "scripts": [
+    "Malayalam script",
+    "Tamil script",
+    "Telugu script"
+   ]
+  }
+ ],
+ "languages": {
+  "Assamese": {
+   "script": "Bengali–Assamese script",
+   "notes": "Official language of Assam"
+  },
+  "Bengali": {
+   "script": "Bengali–Assamese script",
+   "notes": "Official language of West Bengal, Tripura and the Barak Valley region of Assam, additional official in Jharkhand"
+  },
+  "Bodo": {
+   "script": "Devanagari",
+   "notes": "Official language of Bodoland, Assam."
+  },
+  "Dogri": {
+   "script": "Devanagari",
+   "notes": "Official language of Jammu and Kashmir"
+  },
+  "Gujarati": {
+   "script": "Gujarati script",
+   "notes": "Official language in Gujarat and additional official language of Dadra and Nagar Haveli and Daman and Diu"
+  },
+  "Hindi": {
+   "script": "Devanagari",
+   "notes": "Official language in Andaman and Nicobar Islands, Bihar, Dadra and Nagar Haveli and Daman and Diu, Chhattisgarh, Delhi, Gujarat, Haryana, Himachal Pradesh, Jammu and Kashmir, Jharkhand, Ladakh, Madhya Pradesh, Rajasthan, Uttar Pradesh, Uttarakhand. An additional official language in West Bengal Major spoken language in Northern India, and one of the official languages of the Government of India along with English."
+  },
+  "Kannada": {
+   "script": "Kannada script",
+   "notes": "Official language of Karnataka"
+  },
+  "Kashmiri": {
+   "script": "Perso-Arabic script",
+   "notes": "Official language of Jammu and Kashmir"
+  },
+  "Konkani": {
+   "script": "Devanagari",
+   "notes": "Official language of Goa"
+  },
+  "Maithili": {
+   "script": "Tirhuta script",
+   "notes": "Additional official language of Jharkhand"
+  },
+  "Malayalam": {
+   "script": "Malayalam script",
+   "notes": "Official language of Kerala; additional official language in Puducherry and Lakshadweep"
+  },
+  "Manipuri": {
+   "script": "Meitei script",
+   "notes": "Official language of Manipur"
+  },
+  "Marathi": {
+   "script": "Devanagari(Balbodh)",
+   "notes": "Official language of Maharashtra; additional official language of Goa."
+  },
+  "Nepali": {
+   "script": "Devanagari",
+   "notes": "Official language of Sikkim. Additional official language in the Gorkhaland region of West Bengal"
+  },
+  "Odia": {
+   "script": "Odia script",
+   "notes": "Official language of Odisha; additional official language in Jharkhand, West Bengal The spelling Oriya was replaced by Odia by 96th Constitutional Amendment Act."
+  },
+  "Punjabi": {
+   "script": "Gurmukhi",
+   "notes": "Official language of Punjab; additional official language of Delhi, Haryana, West Bengal"
+  },
+  "Sanskrit": {
+   "script": "Devanagari, Brahmi and Brahmic scripts",
+   "notes": "Classical and scriptural language of India, but not widely spoken, nor the language of any modern Indian community. Additional official language of Himachal Pradesh and Uttarakhand."
+  },
+  "Santali": {
+   "script": "Ol Chiki",
+   "notes": "Additional official language of Jharkhand, West Bengal"
+  },
+  "Sindhi": {
+   "script": "Perso-Arabic script or Devanagari",
+   "notes": "Not the official language of any state, but spoken by nearly three million Indians, mainly in Gujarat, Maharashtra, Rajasthan, Madhya Pradesh."
+  },
+  "Tamil": {
+   "script": "Tamil script",
+   "notes": "Official language of Tamil Nadu and Puducherry."
+  },
+  "Telugu": {
+   "script": "Telugu script",
+   "notes": "Official language in Andhra Pradesh and Telangana. An additional official language in Puducherry and West Bengal."
+  },
+  "Urdu": {
+   "script": "Perso-Arabic script",
+   "notes": "An official language of Jammu and Kashmir; an additional official language in Andhra Pradesh, Bihar, Delhi, Jharkhand, Telangana, Uttar Pradesh, and West Bengal."
+  }
+ },
+ "script_supplement": {
+  "English": "Latin",
+  "Mizo": "Latin",
+  "Khasi": "Latin",
+  "Garo": "Latin",
+  "Kokborok": "Latin or Bengali–Assamese script",
+  "Bhoti": "Tibetan",
+  "Chhattisgarhi": "Devanagari"
+ },
+ "count": 36
+}

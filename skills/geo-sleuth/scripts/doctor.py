@@ -100,20 +100,34 @@ def diagnose(network: bool, proxy: str | None) -> dict:
     except OSError:
         rows.append(check("Working directory", "FAIL", "Cannot write here.", "Run from a writable folder."))
     data = Path(__file__).resolve().parent.parent / "data"
-    names = ("cn_plates", "cn_area_codes", "calling_codes", "driving_side", "territories", "cn_admin")
+    names = ("cn_plates", "cn_area_codes", "calling_codes", "driving_side", "territories", "cn_admin",
+             "in_plates", "in_std_codes", "in_pin_prefixes", "in_admin")
     bad = []
     for name in names:
         try:
             json.loads((data / f"{name}.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             bad.append(name)
-    rows.append(check("Lookup tables", "FAIL" if bad else "PASS", "Missing or invalid: " + ", ".join(bad) if bad else "All six tables are readable.",
+    rows.append(check("Lookup tables", "FAIL" if bad else "PASS", "Missing or invalid: " + ", ".join(bad) if bad else f"All {len(names)} tables are readable.",
                       "Reinstall the complete skill folder (including data/)." if bad else ""))
     route = "configured proxy" if resolve_proxy(proxy) else "direct"
     rows.append(check("Service connection", "PASS", f"Using {route}."))
     rows.append(asyncio.run(browser_check(proxy)))
     rows.append(check("OCR", "INFO", "Apple Vision preferred; RapidOCR fallback." if sys.platform == "darwin" else "RapidOCR backend.",
                       "uv run ocr.py <photo> tests recognition; this check does not install or run OCR."))
+    tess = shutil.which("tesseract")
+    if tess:
+        try:
+            listing = subprocess.run([tess, "--list-langs"], capture_output=True, text=True, timeout=20)
+            out = listing.stdout + listing.stderr
+        except (OSError, subprocess.SubprocessError):
+            out = ""
+        langs = sorted({x.strip() for x in out.splitlines() if x.strip() and not x.startswith("List of")} - {"osd"})
+        rows.append(check("Tesseract (Indic OCR)", "INFO", f"Available; language data: {', '.join(langs) or 'none'}.",
+                          "ocr.py --backend tesseract --tess-langs hin+eng reads Indian scripts; add packs such as tesseract-ocr-tam."))
+    else:
+        rows.append(check("Tesseract (Indic OCR)", "INFO", "Not installed (optional). RapidOCR's model reads Chinese and Latin only.",
+                          "For Indian scripts install tesseract plus language packs (e.g. apt install tesseract-ocr tesseract-ocr-hin)."))
     rows.append(check("ML models", "INFO", "Not loaded. match.py and sat_scan.py download model weights on first use; allow time and disk space."))
     if network and shutil.which("curl"):
         with ThreadPoolExecutor(max_workers=8) as pool:

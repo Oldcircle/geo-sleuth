@@ -153,11 +153,11 @@ Twenty scripts, one job each. The full table with data sources is in `skills/geo
 |---|---|
 | Environment checks, browser launch and optional network probes | `doctor.py` |
 | EXIF: GPS, capture time, equivalent focal length, heading | `exif.py` |
-| OCR on the whole image, zoomed crops and tiles (Apple Vision on macOS, RapidOCR elsewhere) | `ocr.py` |
+| OCR on the whole image, zoomed crops and tiles (Apple Vision on macOS, RapidOCR elsewhere, optional Tesseract for Indian scripts) | `ocr.py` |
 | Reverse image search on Baidu and Yandex, similar images tiled into a numbered sheet; keyword image search | `revimg.py` |
 | Steps 0–3 in one command: metadata, edge crops, variants, OCR, reverse search → `intake.md` | `intake.py` |
 | Zoom crops, edge and corner crops, tiling, pixel columns of evenly spaced structures such as piers | `imgprep.py` |
-| Lookup tables: plate prefixes, landline area codes, calling codes, driving side, dependent territories, administrative divisions | `clues.py` + `data/` |
+| Lookup tables: plate prefixes, landline area codes, calling codes, driving side, dependent territories, administrative divisions; India: plates/RTOs, STD codes, PIN prefixes, states and scripts | `clues.py` + `data/` |
 | Candidate board: candidates, clues, likelihood ratios, exclusion, ranking, scan order, pre-report checks | `board.py` |
 | Gazetteer: list sub-divisions with bounding boxes, built-up area extent | `gazetteer.py` |
 | Place, compound or shop name → coordinate candidates, every namesake listed | `poi.py` |
@@ -173,6 +173,17 @@ Twenty scripts, one job each. The full table with data sources is in `skills/geo
 | Evidence image: satellite tile + camera fan + comparison grid | `evidence.py` |
 
 The three steps from the case above (region scan, batch skyline scoring, camera position from pier spacing) are built into the skill as subcommands: `terrain.py scan / ridge / fit`, `imgprep.py piers`, `geo.py spacing`. Case scripts tuned to that photo are kept in `examples/rail-skyline-session/` for reference.
+
+## India support
+
+geo-sleuth started China-first (Baidu, Chinese keywords, Chinese plates and area codes). The India pack adds:
+
+- **Lookups** (`clues.py`, offline JSON in `data/`): `lookup plate "KA 05 MN 1234"` → state + RTO office (BH series, former codes such as OR/UA/TS and pre-2014 Hyderabad `AP 09`–`13` handled); `lookup std-code "+91 484 2345678"` → SDCA town + state (2,645 codes from the DoT numbering plan; mobiles flagged); `lookup pin 682001` → state from the PIN prefix; `lookup in-admin Kerala`; `lookup script Gurmukhi` → states with an official language in that script. `board.py apply --kind plate|std-code|pin` feeds them straight onto the candidate board.
+- **Clue library**: `references/clues/india.md`: plates and plate colours, STD/PIN on shop boards, scripts and signboard laws, autos and taxis, kilometre-stone colours and scripts (IRC:8), road-sign languages, monsoon and kharif/rabi timing, climate and terrain zones; every entry has a strength, counterexamples and public sources.
+- **Indic OCR**: `ocr.py --backend tesseract --tess-langs hin+eng` (or `intake.py --ocr-backend tesseract --tess-langs tam+eng`) uses the system `tesseract` with its language packs (`apt install tesseract-ocr tesseract-ocr-hin …`, `brew install tesseract tesseract-lang`); no new Python dependency. RapidOCR's default model doesn't read Indian scripts.
+- **Search routing** (`references/search.md` §6): Yandex instead of Baidu, Google Lens/Bing Visual Search by hand, English + local-script keyword search, `poi.py --country in`; Google Street View in India is patchy, so fall back to Mapillary, satellite and Bhuvan.
+
+Not covered yet: PIN → district/post office, bus liveries of state transport corporations, architecture clues, automated Bing/Lens search.
 
 ## Benchmarks
 
