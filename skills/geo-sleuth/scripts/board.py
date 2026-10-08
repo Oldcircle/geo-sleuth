@@ -28,7 +28,7 @@ Rules are written as code, not left to self-discipline:
   next       suggested next step
   check      checklist before the conclusion
   report     generate the candidates/alternatives/excluded/unused-clues fields of result.json
-  apply      lookup clues (plate, area code, calling code, driving side, overseas territories) add candidates and evidence automatically (uses clues.py)
+  apply      lookup clues (plate, area code, calling code, driving side, overseas territories; India: plate, std-code, pin) add candidates and evidence automatically (uses clues.py)
   log        print the ledger
 
 Examples:
@@ -38,6 +38,7 @@ Examples:
   board.py clue "bus yellow on top, green below; green rear stripe curves down" --kind livery --status observed --file bus_zoom.png
   board.py evidence --clue K1 --for <district A>:5 --for <district B>:2 --why "compared bus rears one by one across both districts' bus photos" --file livery_sheet.jpg
   board.py apply --kind plate --value <first two plate characters>
+  board.py apply --kind plate --value "MH 12"          # India: state code + RTO number; also --kind std-code "0484", --kind pin 682001
   board.py urban <district A> --within <municipality or province name>
   board.py rank
   board.py next
@@ -874,7 +875,7 @@ def main() -> None:
     rp.add_argument("--merge", help="merge into an existing result.json")
 
     ap_ = sub.add_parser("apply", help="lookup clues add candidates and evidence automatically (clues.py)")
-    ap_.add_argument("--kind", required=True, help="plate/area-code/calling-code/driving-side/territories")
+    ap_.add_argument("--kind", required=True, help="plate/area-code/calling-code/driving-side/territories; India: plate/std-code/pin (not script: one script covers many states)")
     ap_.add_argument("--value", required=True)
     ap_.add_argument("--clue", help="id of an already recorded clue; if omitted, a new read clue is created")
     ap_.add_argument("--file", help="zoomed image the text was read from")

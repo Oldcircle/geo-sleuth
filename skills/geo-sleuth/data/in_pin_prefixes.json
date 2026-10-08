@@ -1,0 +1,480 @@
+{
+ "_meta": {
+  "source": [
+   "https://en.wikipedia.org/w/index.php?title=Postal_Index_Number&oldid=1377692482"
+  ],
+  "fetched": "2026-10-08",
+  "count": 105
+ },
+ "zones": {
+  "1": {
+   "zone": "North",
+   "states": [
+    "Delhi",
+    "Haryana",
+    "Himachal Pradesh",
+    "Punjab",
+    "Chandigarh",
+    "Jammu and Kashmir",
+    "Ladakh"
+   ]
+  },
+  "2": {
+   "zone": "North",
+   "states": [
+    "Uttarakhand",
+    "Uttar Pradesh"
+   ]
+  },
+  "3": {
+   "zone": "West",
+   "states": [
+    "Gujarat",
+    "Rajasthan",
+    "Dadra and Nagar Haveli and Daman and Diu"
+   ]
+  },
+  "4": {
+   "zone": "West",
+   "states": [
+    "Chhattisgarh",
+    "Goa",
+    "Madhya Pradesh",
+    "Maharashtra"
+   ]
+  },
+  "5": {
+   "zone": "South",
+   "states": [
+    "Andhra Pradesh",
+    "Karnataka",
+    "Telangana"
+   ]
+  },
+  "6": {
+   "zone": "South",
+   "states": [
+    "Kerala",
+    "Tamil Nadu",
+    "Puducherry",
+    "Lakshadweep"
+   ]
+  },
+  "7": {
+   "zone": "East",
+   "states": [
+    "Arunachal Pradesh",
+    "Assam",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Sikkim",
+    "Tripura",
+    "West Bengal",
+    "Andaman and Nicobar Islands"
+   ]
+  },
+  "8": {
+   "zone": "East",
+   "states": [
+    "Bihar",
+    "Jharkhand"
+   ]
+  },
+  "9": {
+   "zone": "APS",
+   "states": [
+    "Army Postal Service (APS) Field Post Office (FPO)"
+   ]
+  }
+ },
+ "prefixes": {
+  "11": {
+   "codes": "DL",
+   "region": "Delhi"
+  },
+  "12": {
+   "codes": "HR",
+   "region": "Haryana"
+  },
+  "13": {
+   "codes": "HR",
+   "region": "Haryana"
+  },
+  "14": {
+   "codes": "PB",
+   "region": "Punjab"
+  },
+  "15": {
+   "codes": "PB",
+   "region": "Punjab"
+  },
+  "16": {
+   "codes": "CH",
+   "region": "Chandigarh"
+  },
+  "17": {
+   "codes": "HP",
+   "region": "Himachal Pradesh"
+  },
+  "18": {
+   "codes": "JK, LA",
+   "region": "Jammu and Kashmir, Ladakh"
+  },
+  "19": {
+   "codes": "JK, LA",
+   "region": "Jammu and Kashmir, Ladakh"
+  },
+  "20": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "21": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "22": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "23": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "24": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "25": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "26": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "27": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "28": {
+   "codes": "UP, UK",
+   "region": "Uttar Pradesh, Uttarakhand"
+  },
+  "30": {
+   "codes": "RJ",
+   "region": "Rajasthan"
+  },
+  "31": {
+   "codes": "RJ",
+   "region": "Rajasthan"
+  },
+  "32": {
+   "codes": "RJ",
+   "region": "Rajasthan"
+  },
+  "33": {
+   "codes": "RJ",
+   "region": "Rajasthan"
+  },
+  "34": {
+   "codes": "RJ",
+   "region": "Rajasthan"
+  },
+  "36": {
+   "codes": "GJ",
+   "region": "Gujarat"
+  },
+  "37": {
+   "codes": "GJ",
+   "region": "Gujarat"
+  },
+  "38": {
+   "codes": "GJ",
+   "region": "Gujarat"
+  },
+  "39": {
+   "codes": "GJ",
+   "region": "Gujarat"
+  },
+  "396": {
+   "codes": "DD",
+   "region": "Dadra and Nagar Haveli and Daman and Diu"
+  },
+  "40": {
+   "codes": "MH",
+   "region": "Maharashtra"
+  },
+  "41": {
+   "codes": "MH",
+   "region": "Maharashtra"
+  },
+  "42": {
+   "codes": "MH",
+   "region": "Maharashtra"
+  },
+  "43": {
+   "codes": "MH",
+   "region": "Maharashtra"
+  },
+  "44": {
+   "codes": "MH",
+   "region": "Maharashtra"
+  },
+  "403": {
+   "codes": "GA",
+   "region": "Goa"
+  },
+  "45": {
+   "codes": "MP",
+   "region": "Madhya Pradesh"
+  },
+  "46": {
+   "codes": "MP",
+   "region": "Madhya Pradesh"
+  },
+  "47": {
+   "codes": "MP",
+   "region": "Madhya Pradesh"
+  },
+  "48": {
+   "codes": "MP",
+   "region": "Madhya Pradesh"
+  },
+  "49": {
+   "codes": "CG",
+   "region": "Chhattisgarh"
+  },
+  "50": {
+   "codes": "TG",
+   "region": "Telangana"
+  },
+  "51": {
+   "codes": "AP",
+   "region": "Andhra Pradesh"
+  },
+  "52": {
+   "codes": "AP",
+   "region": "Andhra Pradesh"
+  },
+  "53": {
+   "codes": "AP",
+   "region": "Andhra Pradesh"
+  },
+  "56": {
+   "codes": "KA",
+   "region": "Karnataka"
+  },
+  "57": {
+   "codes": "KA",
+   "region": "Karnataka"
+  },
+  "58": {
+   "codes": "KA",
+   "region": "Karnataka"
+  },
+  "59": {
+   "codes": "KA",
+   "region": "Karnataka"
+  },
+  "60": {
+   "codes": "TN",
+   "region": "Tamil Nadu"
+  },
+  "61": {
+   "codes": "TN",
+   "region": "Tamil Nadu"
+  },
+  "62": {
+   "codes": "TN",
+   "region": "Tamil Nadu"
+  },
+  "63": {
+   "codes": "TN",
+   "region": "Tamil Nadu"
+  },
+  "64": {
+   "codes": "TN",
+   "region": "Tamil Nadu"
+  },
+  "65": {
+   "codes": "TN",
+   "region": "Tamil Nadu"
+  },
+  "66": {
+   "codes": "TN",
+   "region": "Tamil Nadu"
+  },
+  "605": {
+   "codes": "PY",
+   "region": "Puducherry"
+  },
+  "67": {
+   "codes": "KL",
+   "region": "Kerala"
+  },
+  "68": {
+   "codes": "KL",
+   "region": "Kerala"
+  },
+  "69": {
+   "codes": "KL",
+   "region": "Kerala"
+  },
+  "682": {
+   "codes": "LD",
+   "region": "Lakshadweep"
+  },
+  "70": {
+   "codes": "WB",
+   "region": "West Bengal"
+  },
+  "71": {
+   "codes": "WB",
+   "region": "West Bengal"
+  },
+  "72": {
+   "codes": "WB",
+   "region": "West Bengal"
+  },
+  "73": {
+   "codes": "WB",
+   "region": "West Bengal"
+  },
+  "74": {
+   "codes": "WB",
+   "region": "West Bengal"
+  },
+  "737": {
+   "codes": "SK",
+   "region": "Sikkim"
+  },
+  "744": {
+   "codes": "AN",
+   "region": "Andaman and Nicobar Islands"
+  },
+  "75": {
+   "codes": "OD",
+   "region": "Odisha"
+  },
+  "76": {
+   "codes": "OD",
+   "region": "Odisha"
+  },
+  "77": {
+   "codes": "OD",
+   "region": "Odisha"
+  },
+  "78": {
+   "codes": "AS",
+   "region": "Assam"
+  },
+  "790": {
+   "codes": "AR",
+   "region": "Arunachal Pradesh"
+  },
+  "791": {
+   "codes": "AR",
+   "region": "Arunachal Pradesh"
+  },
+  "792": {
+   "codes": "AR",
+   "region": "Arunachal Pradesh"
+  },
+  "793": {
+   "codes": "ML",
+   "region": "Meghalaya"
+  },
+  "794": {
+   "codes": "ML",
+   "region": "Meghalaya"
+  },
+  "795": {
+   "codes": "MN",
+   "region": "Manipur"
+  },
+  "796": {
+   "codes": "MZ",
+   "region": "Mizoram"
+  },
+  "797": {
+   "codes": "NL",
+   "region": "Nagaland"
+  },
+  "798": {
+   "codes": "NL",
+   "region": "Nagaland"
+  },
+  "799": {
+   "codes": "TR",
+   "region": "Tripura"
+  },
+  "80": {
+   "codes": "BR, JH",
+   "region": "Bihar, Jharkhand"
+  },
+  "81": {
+   "codes": "BR, JH",
+   "region": "Bihar, Jharkhand"
+  },
+  "82": {
+   "codes": "BR, JH",
+   "region": "Bihar, Jharkhand"
+  },
+  "83": {
+   "codes": "BR, JH",
+   "region": "Bihar, Jharkhand"
+  },
+  "84": {
+   "codes": "BR, JH",
+   "region": "Bihar, Jharkhand"
+  },
+  "85": {
+   "codes": "BR, JH",
+   "region": "Bihar, Jharkhand"
+  },
+  "90": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "91": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "92": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "93": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "94": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "95": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "96": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "97": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "98": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  },
+  "99": {
+   "codes": "APS",
+   "region": "Army Postal Service"
+  }
+ },
+ "count": 105
+}
