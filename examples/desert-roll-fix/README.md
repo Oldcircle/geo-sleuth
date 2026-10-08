@@ -1,6 +1,6 @@
 # Desert skyline: before and after the roll fix
 
-The data behind [case 2](../../README.md#2-a-desert-skyline-one-degree-off), and the example of what a core change should show: a real photo the skill could not solve, the same photo solved after a general change, and a way for anyone to check.
+The data behind [case 2](../../README.md#2-a-desert-skyline-one-degree-off). It shows what a change to the core scripts should come with: a real photo the skill could not solve, the same photo solved after a general change, and commands anyone can rerun.
 
 | File | What it is |
 |---|---|
@@ -27,13 +27,12 @@ uv run $S/terrain.py fit --hits clusters.json --ridge ridge.json --min-peak 3 --
 | before, `--roll-max 0` | **#8**, 12.0 px | 10.2 px | 10.2–13.6 px |
 | after, default | **#1, 6.2 px** | 9.9 px | 9.1–10.4 px |
 
-Before, the true site hides in a band of near-equal scores and nothing separates them. After, every site gets a little better, because each can absorb some tilt, but only the true one drops by half: its residual was the tilt. The solved roll is about 1° (the printout's `roll`).
+Before the change, the true site is one of many with nearly equal scores. After it, every site improves a little, since each can absorb some tilt, but only the true site drops by about half, because most of its error was the tilt. The solved roll is about 1° (the printout's `roll`).
 
-## Why this is the bar
+## Why this is the reference for core changes
 
-- **A real failure first.** The skill was stuck on this photo: the top 25 sites in Qinghai sat between 9.6 and 11.7 px.
-- **A general change.** Solving camera roll is about phones, not about this desert. It is capped (`--roll-max`, default 1°) so a wrong site can't buy a better score by tilting the image, and `--roll-max 0` reproduces the old output value for value.
-- **Solved after.** The same photo, the same sites: the true one breaks away.
-- **No regression elsewhere.** On 8 synthetic skylines (random heading, focal length, ±1° roll) the median position error went from 324 to 238 m, untilted cases included (324 → 89 m); on an earlier real case the true cluster moved from #3 to #1. A looser cap (1.5°, 2.5°) let wrong sites catch up, which is why the default is 1°.
+The skill was stuck on this photo: the top 25 sites in Qinghai scored between 9.6 and 11.7 px. The fix is not specific to this desert; any handheld photo can be tilted. The roll is capped (`--roll-max`, default 1°) so that a wrong site can't improve its score by tilting the image, and `--roll-max 0` gives the old output value for value. With the fix, the same photo and the same sites, the true site separates from the rest.
 
-A pull request that changes the core scripts should bring the same four things: the photo or case it fails on, the change, the before and after, and a check on cases it wasn't built for.
+It was also checked on cases it wasn't built for. On 8 synthetic skylines (random heading, focal length, ±1° roll) the median position error went from 324 to 238 m, and from 324 to 89 m for the untilted ones. On an earlier real case the true cluster moved from #3 to #1. Looser caps (1.5°, 2.5°) let wrong sites catch up, so the default stayed at 1°.
+
+A pull request that changes the core scripts should include the same things: the photo or case it fails on, the change, a before and after anyone can rerun, and a check on cases it wasn't built for.

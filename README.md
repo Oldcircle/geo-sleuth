@@ -60,18 +60,18 @@ On first use, ask the agent to run `doctor.py` from the installed skill’s `scr
 
 ## Cases
 
-Three photos, three different ways in. None of them had GPS data; each one ends with a camera position someone could walk to.
+None of these photos had GPS data. Each case lists what the skill read from the photo, how it narrowed the search, and how far the result landed from the confirmed camera position.
 
 <table>
 <tr>
 <td width="33%" align="center"><a href="#1-a-rice-paddy-and-a-viaduct"><img src="docs/case/thumb.jpg" alt="An oven at the edge of a rice paddy, a viaduct and a mountain behind"></a></td>
 <td width="33%" align="center"><a href="#2-a-desert-skyline-one-degree-off"><img src="docs/cases/desert/thumb.jpg" alt="A sand dune ridge and a range of bare dark mountains"></a></td>
-<td width="33%" align="center"><a href="#3-a-cherry-tree-from-a-viral-post"><img src="docs/cases/cherry/thumb.jpg" alt="A flowering cherry tree over a sidewalk"></a></td>
+<td width="33%" align="center"><a href="#3-a-cherry-tree-on-a-vancouver-street"><img src="docs/cases/cherry/thumb.jpg" alt="A flowering cherry tree over a sidewalk"></a></td>
 </tr>
 <tr>
-<td><b>1 · Rice paddy and viaduct</b><br><sub>Nothing to read. Railway bridges × skyline × pier count.</sub></td>
-<td><b>2 · Desert skyline</b><br><sub>Nothing to read. Power lines × skyline × a phone tilted by 1°.</sub></td>
-<td><b>3 · Cherry street</b><br><sub>A licence plate and a tree. Street-tree open data × shadows × street view.</sub></td>
+<td><b>1 · Rice paddy and viaduct</b><br><sub>Railway bridges × skyline × pier count.</sub></td>
+<td><b>2 · Desert skyline</b><br><sub>Power lines × skyline × a phone tilted by 1°.</sub></td>
+<td><b>3 · Cherry street</b><br><sub>Street-tree open data × shadows × street view.</sub></td>
 </tr>
 <tr>
 <td align="center"><b>±2 m</b><br><sub>Qingyuan, Guangdong</sub></td>
@@ -113,52 +113,58 @@ A phone photo with the EXIF stripped: a white oven at the edge of a harvested ri
 
 ### 2. A desert skyline, one degree off
 
-A follower sent this one as a dare: a sand dune, a wall of bare dark mountains, a few pylons at their foot. No text, no road, no building. Reverse image search found nothing but generic desert pictures from northwest China.
+A sand dune in the foreground, a range of bare dark mountains behind it, and a few pylons at the foot of the range. There is no text, road or building in the frame, and reverse image search returned only generic desert photos from northwest China.
 
-**photo → 12,537 power lines → 1,537 sites → stuck at ~10 px → solve a 1° tilt → 1 site → one dune crest**
+<div align="center"><img src="docs/cases/desert/00-photo.jpg" width="820" alt="The photo: a sand dune ridge, bare dark mountains, pylons at the foot of the range"></div>
 
-| Step | What it did | Left |
-|---|---|---|
-| **Read the photo** | The only man-made thing is a row of high-voltage pylons at the foot of the mountains, so the camera stands within a few km of a power line. Sand, gravel and bare rock: northwest China. | 6 provinces |
-| **Power lines × terrain** | Pulled every power line in six northwest provinces from OpenStreetMap (**12,537**) and computed the horizon along each from elevation data, keeping places where mountains fill the view (`osm.py geom` → `terrain.py scan`). | **1,537 sites** |
-| **Skyline fit** | Traced the ridge line in the photo and scored the rendered ridge from every site against it (`terrain.py ridge` / `fit`). The top 25 in Qinghai all landed between 9.6 and 11.7 px. No winner. | **stuck** |
-| **One degree** | A phone held 1° off level moves the frame edge by 1024 px × tan 1° ≈ 18 px, about 10 px on average: exactly the size of the plateau. Plotting the residual across the frame gave a straight line whose slope is tan θ, θ ≈ 1°. So `fit` now solves the roll together with the horizon offset. | |
-| **Re-run** | With roll solved, one site dropped from 11.1 px to 6.2 px; every other site improved by a pixel or two at most. | **1** |
-| **Satellite and the pylons** | Within 1 km along the line of sight: three crescent dunes and a tent camp; 1–2 km east, a 750/330/110 kV bundle, which is why the pylons only appear on the left. The camera stands on the crest of the western dune, facing 205°. | **one dune** |
-
-<div align="center">
-<img src="docs/cases/desert/01-power-lines.webp" width="270" alt="Power lines across northwest China light up, then candidate sites are compared one by one"> <img src="docs/cases/desert/03-roll-fix.webp" width="270" alt="After solving the tilt, one site breaks away from the cloud at 6.2 px"> <img src="docs/cases/desert/04-reveal.webp" width="270" alt="Zoom into Da Qaidam: three dunes, the camp, the power-line bundle, the dune crest"><br>
-<sub>Left: 12,537 power lines, then the skyline seen from each candidate site. Middle: re-run with the tilt solved, one site breaks away at 6.2 px. Right: Da Qaidam, three dunes, the camp and the line bundle.</sub><br><br>
-<img src="docs/cases/desert/02-one-degree.jpg" width="820" alt="Photo ridge (cyan) against the computed ridge (red); 1024 × tan 1° ≈ 18 px; residuals across the frame form a line with slope tan θ, θ = 1.05°"><br>
-<sub>Why it was stuck: a 1° tilt bends the comparison by up to 18 px at the frame edge. The residuals line up, and the slope gives the angle.</sub>
-</div>
-
-**Blind re-run.** A fresh agent with today's skill, the photo and one hint (*it is in China*) went straight down the same path: 5,334 power lines in Qinghai → 792 sites → one skyline fit at 0.224° against 0.357° for the runner-up → the same dune crest, **87 m from the confirmed camera position** in 32 minutes. The tilt fix found in this case is now part of `terrain.py fit` for every photo; [Contributing](#contributing) explains why this case is the bar for core changes.
-
-<sub>Animations are from our video on this case; labels are in Chinese.</sub>
-
-### 3. A cherry tree from a viral post
-
-A flowering cherry over a sidewalk, from a post with over a million likes. People had narrowed it to Vancouver, but nobody had found the street: Vancouver has close to ten thousand blocks.
-
-**photo → Vancouver → 1,095 big cherries → 97 blocks → 72 cross-slopes → W 60th Ave → 3 m**
+**photo → 1,537 sites → stuck around 10 px → solve a 1° tilt → 1 site → one dune**
 
 | Step | What it did | Left |
 |---|---|---|
-| **Read the photo** | White-and-blue BC plates, a dark-green streetlight pole in a grass boulevard, Vancouver Special houses. | **Vancouver** |
-| **Street-tree data** | Vancouver publishes every street tree with species, trunk diameter and address. Candidates came from the data, not from famous cherry streets: large flowering cherries (trunk ≥ 40 cm), then blocks lined with at least three of them. | **1,095 trees → 97 blocks** |
-| **Shadows and slope** | Car shadows fall to the left and toward the camera, so the sun is front-right. The yards on the camera side sit above the sidewalk behind rock walls, so that side is uphill. Cross-slope from elevation data for 72 blocks, matched against which side the big trees stand on. | **a handful** |
-| **Tree by tree** | On W 60th Ave, 100 block, the data has big trees on the north side and only 7.6 cm saplings on the south side for 30–60 m ahead, then a big one about 75 m away: in the photo, nothing tall on the near right, pink canopy in the distance. | **1 block** |
-| **Street view** | Captures from 2009-04 and 2024-05: the rock retaining wall with stone steps, the rooftop-deck house behind a white stucco one, the green pole about 10 m behind the tree. North sidewalk, facing east. | **3 m** |
+| **Read the photo** | The pylons are the only man-made objects, so the camera is within a few kilometres of a power line. Sand, gravel and bare rock point to northwest China. | 4 provinces |
+| **Power lines × terrain** | `osm.py geom` pulled every power line in Xinjiang, Gansu, Ningxia and Qinghai. `terrain.py scan` worked along them with elevation data and kept the places where mountains fill the view. | **1,537 sites** |
+| **Skyline fit** | `terrain.py ridge` traced the ridge in the photo, and `terrain.py fit` compared it with the ridge seen from each site. In Qinghai the top 25 sites all scored between 9.6 and 11.7 px; the true site was 9th. | **stuck** |
+| **The tilt** | A phone held 1° off level moves the ridge at the edge of a 2048 px frame by 1024 × tan 1° ≈ 18 px, about 10 px on average, which is the size of the gap between the sites. At the true site the error across the frame lies on a line whose slope is tan θ, with θ ≈ 1°. `fit` was changed to solve the roll together with the horizon offset. | |
+| **Fit again** | With the roll solved, the true site went from 11.1 to 6.2 px. The next best site was at 9.4 px. | **1 site** |
+| **Satellite** | Within 1 km along the line of sight there are three crescent dunes and a tent camp. A 750/330/110 kV bundle runs 1–2 km to the east, which is why the pylons appear only on the left of the photo. The camera stood on the crest of the dune west of the camp, facing 205°. | **one dune** |
 
 <div align="center">
-<img src="docs/cases/cherry/01-tree-funnel.webp" width="270" alt="Vancouver's street trees, then only cherries, then only old ones"> <img src="docs/cases/cherry/02-shadow.webp" width="270" alt="Car shadows give the sun direction; which side of the street the camera is on"> <img src="docs/cases/cherry/03-street-view.webp" width="270" alt="The photo against street view on W 60th Ave"><br>
-<sub>Left: every street tree in the city, then cherries, then old ones. Middle: shadows decide which side of which street. Right: the photo against a 2024 street view capture.</sub><br><br>
-<img src="docs/cases/cherry/00-photo.jpg" width="300" alt="The photo"> <img src="docs/cases/cherry/04-reveal.jpg" width="381" alt="W 60th Ave, 100 block, north sidewalk, facing east"><br>
-<sub>The photo, and where it was taken: W 60th Ave, 100 block, north sidewalk, facing east.</sub>
+<img src="docs/cases/desert/01-scan.jpg" width="820" alt="Power lines in Qinghai, Gansu and Ningxia, candidate sites in orange, the camera as a red star"><br>
+<sub>Power lines from OSM (gold), sites where mountains fill the view (orange), and the camera (red star). Xinjiang's sites are not drawn.</sub><br><br>
+<img src="docs/cases/desert/02-one-degree.jpg" width="820" alt="Ridge in the photo against the computed ridge at the true site, before and after solving the roll, with the error plotted across the frame"><br>
+<sub>The true site, before and after solving the roll. Top: the error grows from one side of the frame to the other, and its slope gives the angle. Bottom: with the roll solved, the trend is gone.</sub><br><br>
+<img src="docs/cases/desert/03-ranking.jpg" width="820" alt="Skyline error of 408 Qinghai sites assuming a level camera, and of the 12 best sites with the roll solved"><br>
+<sub>Skyline error per site. Assuming a level camera, the true site sits inside the pack; with the roll solved, it is the only one below 9 px.</sub><br><br>
+<img src="docs/cases/desert/04-evidence.jpg" width="600" alt="Evidence image: the camera on the dune crest, field of view, the dunes, the camp and the power-line bundle"><br>
+<sub>Evidence image. The OSM power lines (gold) run over the pylons visible in the satellite image.</sub>
 </div>
 
-**Blind re-run.** The table is the blind run: a fresh agent with today's skill and only the photo, no hint, finished in 53 minutes **3 m from the confirmed camera position**. The animations come from our video on this case, which used a stricter funnel (trunk ≥ 60 cm, 184,518 → 17,052 → 3,891 → 90 places); labels are in Chinese.
+**Blind re-run.** Later we gave the photo to a new agent running the current skill, with one hint: it is in China. It scanned the 5,334 power lines in Qinghai, fit 792 sites, and picked one at 0.224° against 0.357° for the next. It ended on the same dune crest, **87 m from the confirmed camera position**, after 32 minutes. The roll fit added for this photo is now part of `terrain.py fit`; [Contributing](#contributing) explains why this case is the reference for changes to the core scripts.
+
+### 3. A cherry tree on a Vancouver street
+
+A flowering cherry over a sidewalk. The plates and street furniture place it in Vancouver. Finding the street is the hard part, because the city has close to ten thousand blocks.
+
+**photo → Vancouver → 1,095 big cherries → 97 blocks → 72 slope checks → W 60th Ave → 3 m**
+
+| Step | What it did | Left |
+|---|---|---|
+| **Read the photo** | White-and-blue BC plates, a dark-green streetlight in a grass boulevard, Vancouver Special houses. | **Vancouver** |
+| **Street-tree data** | Vancouver publishes every street tree with species, trunk diameter and address. The candidates came from this data rather than from well-known cherry streets: flowering cherries with a trunk of at least 40 cm, then blocks with at least three of them. | **1,095 trees, 97 blocks** |
+| **Shadows and slope** | The cars' shadows fall to the left and toward the camera, so the sun is ahead and to the right. The yards on the camera side sit above the sidewalk behind rock walls, so that side of the street is uphill. The agent measured the cross-slope of 72 blocks from elevation data and checked which side the big trees stand on. | **a few blocks** |
+| **Tree by tree** | On the 100 block of W 60th Ave, the north side is lined with large cherries. On the south side, the trees 30–60 m ahead are 7.6 cm saplings, and the next large one is about 75 m away. The photo shows the same thing: nothing tall on the near right and pink canopy in the distance. | **1 block** |
+| **Street view** | The 2009 and 2024 captures show the rock retaining wall with stone steps, the green streetlight and the white house. The house with a rooftop deck is in the 2024 capture and in the photo. The camera was on the north sidewalk, facing east. | **3 m** |
+
+<div align="center">
+<img src="docs/cases/cherry/01-street-trees.jpg" width="464" alt="Vancouver's street trees, the large flowering cherries, the candidate blocks and the answer"> <img src="docs/cases/cherry/02-reading.jpg" width="388" alt="The photo with the clues it gives: streetlight, plates, car shadows, raised yards, rooftop deck"><br>
+<sub>Left: all 184,517 street trees with coordinates in the city's data, the 1,095 large flowering cherries and the 97 candidate blocks. Right: what the photo gives away.</sub><br><br>
+<img src="docs/cases/cherry/03-street-view.jpg" width="820" alt="The photo next to street view captures from 2024 and 2009 on the same block"><br>
+<sub>The photo was taken from the sidewalk and the street view car drove down the middle of the road, so the angles differ.</sub><br><br>
+<img src="docs/cases/cherry/04-evidence.jpg" width="600" alt="Evidence image: W 60th Ave 100 block, camera on the north sidewalk facing east, street trees from the city data"><br>
+<sub>Evidence image. Pink rings are large cherries from the city's data, green rings are saplings.</sub>
+</div>
+
+**Blind re-run.** The table above comes from a blind run: a new agent running the current skill, given the photo and no hint. It finished in 53 minutes, **3 m from the confirmed camera position**.
 
 ## Installation
 
@@ -264,7 +270,7 @@ End to end, blind re-runs with a fresh agent that had only the photo (and the hi
 | Case | Hint | Result | Time |
 |---|---|---|---|
 | [Desert skyline](#2-a-desert-skyline-one-degree-off) | "it is in China" | 87 m from the confirmed camera position | 32 min |
-| [Cherry street](#3-a-cherry-tree-from-a-viral-post) | none | 3 m from the confirmed camera position | 53 min |
+| [Cherry street](#3-a-cherry-tree-on-a-vancouver-street) | none | 3 m from the confirmed camera position | 53 min |
 
 Both photos had been solved before and lessons from them are in the skill, so these are regression checks, not accuracy on unseen photos.
 
