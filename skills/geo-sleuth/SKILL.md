@@ -124,6 +124,8 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/board.py report --merge result.json # main an
 uv run ${CLAUDE_SKILL_DIR}/scripts/evidence.py spec.json --out evidence.jpg
 ```
 
+Show `evidence.jpg` to the user together with the answer, without waiting to be asked. A road-level claim from satellite imagery needs a ≥z18 crop, not a z17 glance.
+
 Output:
 1. One-sentence conclusion: place + camera position + heading (+ direction of travel and capture time, where applicable)
 2. Coordinates: WGS84 and GCJ-02 (`geo.py convert`), **with error radius**

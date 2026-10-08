@@ -219,7 +219,8 @@ def main() -> None:
             pass
 
     # ---- report
-    L = [f"# Steps 0–3 report: {photo.name}", "", f"Total time {time.time() - t_all:.0f}s; per step: " + ", ".join(f"{k} {v}s" for k, v in timings.items()), ""]
+    L = [f"# Steps 0–3 report: {photo.name}", "", f"Total time {time.time() - t_all:.0f}s; per step: " + ", ".join(f"{k} {v}s" for k, v in timings.items()), "",
+         "Next: record clues on board.py (`clue`), lookup clues with `apply`; list the candidates in full first (`children`), then rank.", ""]
     L += ["## Metadata", ""]
     gps = exif_json.get("gps") or exif_json.get("GPS")
     if exif_json and (gps or exif_json.get("datetime") or exif_json.get("DateTimeOriginal")):
@@ -302,7 +303,6 @@ def main() -> None:
           "## Status", ""]
     for k, v in status.items():
         L.append(f"- {k}: {v}")
-    L += ["", "Next: record clues on board.py (`clue`), lookup clues with `apply`; list the candidates in full first (`children`), then rank."]
     (out / "intake.md").write_text("\n".join(x for x in L if x is not None), encoding="utf-8")
     (out / "intake.json").write_text(json.dumps({"photo": str(photo), "exif": exif_json, "ocr": ocr_items, "rev": entries, "votes": votes,
                                                  "status": status, "timings": timings}, ensure_ascii=False, indent=1), encoding="utf-8")

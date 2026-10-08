@@ -504,8 +504,20 @@ def cmd_rank(args, p: Path, quiet: bool = False) -> dict:
     return out
 
 
+def _corridor_pending(b: dict) -> list[str]:
+    """infra clues seen/read but no computed corridor or terrain result yet: the Step 3 branch was skipped."""
+    infra = [k for k, c in b["clues"].items() if c["kind"] == "infra" and c["status"] in ("observed", "read")]
+    done = any(c["status"] == "computed" and c["kind"] in ("infra", "terrain", "corridor") for c in b["clues"].values())
+    return [] if done else infra
+
+
 def cmd_next(args, p: Path) -> None:
     b = _load(p)
+    pend = _corridor_pending(b)
+    if pend:
+        print(f"→ First: infrastructure clue {', '.join(pend)} has no corridor run yet. `osm.py geom '<filter>' --bbox <region> --out lines.geojson` → "
+              f"`terrain.py scan --lines lines.geojson` (mountains fill the frame: add `--flat-run 0 --min-low-deg 0`) → `terrain.py fit`; "
+              f"two or three kinds of infrastructure: `osm.py near`. Record the output as a computed clue.")
     lv = _frontier(b)
     if not lv:
         print("No candidates. First do step 2 (lookup clues) or step 4 (coarse location from the environment) and list the candidates in full (board.py children)")
@@ -641,6 +653,17 @@ def cmd_check(args, p: Path) -> None:
     for k, c in b["clues"].items():
         if c["status"] in ("read", "computed") and not c.get("file"):
             print(f"  WARN {k} is {c['status']} but has no file: text read needs a zoomed image, computed results need an output file")
+    # fine-level answer needs the evidence image the Output section asks for
+    fine = [n for n, c in b["candidates"].items() if c["level"] in ("area", "road", "point") and c.get("status") != "excluded"
+            and any(e["candidate"] == n and e["lr"] > 1 for e in b["evidence"])]
+    if fine:
+        ev = Path(args.evidence) if args.evidence else p.parent / "evidence.jpg"
+        if not ev.exists():
+            ok = False
+            print(f"  FAIL evidence image {ev} doesn't exist: supporting evidence reaches area/road/point level ({', '.join(fine[:3])}) → make it with evidence.py "
+                  f"(camera + heading wedge on satellite, comparison panels), or pass --evidence <path>")
+        else:
+            print(f"  ok   evidence image {ev}")
     unused = [k for k, c in b["clues"].items() if not c["used"]]
     if unused:
         print(f"  NOTE unused clues: {', '.join(unused)} → write them into unused_clues")
@@ -844,6 +867,7 @@ def main() -> None:
 
     k = sub.add_parser("check")
     rank_opts(k)
+    k.add_argument("--evidence", help="evidence image path (default: evidence.jpg next to board.json)")
 
     rp = sub.add_parser("report")
     rank_opts(rp)
