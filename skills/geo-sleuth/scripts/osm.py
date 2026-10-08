@@ -21,6 +21,8 @@ OSM data in China is incomplete: results can only be a source of candidates, not
   geom       export GeoJSON for any filter (keeps line and polygon geometry) for custom analysis
   raw        run your own Overpass QL ({{bbox}} is replaced with s,w,n,e)
 
+Run queries one after another: public Overpass servers reject parallel requests from one address (every mirror then fails), and a bbox query is often faster than --area for a whole province.
+
 Outputs JSON {name or id: [lat, lon]} (WGS84), which can go straight to tiles.py mark --points to draw on satellite imagery.
 
 Examples (江苏省 = Jiangsu Province, 长江 = Yangtze River):
@@ -51,39 +53,84 @@ import sys
 import time
 from pathlib import Path
 
+# Independent services only: overpass.kumi.systems is the old name of private.coffee (same server), so it can't confirm or replace it
 ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.private.coffee/api/interpreter",
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
 ]
+# overpass-api.de rejects curl's default User-Agent with HTTP 406; public instances ask clients to identify themselves
+UA = "geo-sleuth (+https://github.com/Oldcircle/geo-sleuth)"
+
+
+AREA_SET = re.compile(r"(\((?:area\[[^;]*\];)+\))->\.(\w+);")
+
+
+def _post(ep: str, ql: str, proxy: str | None, timeout: int) -> tuple[dict | None, str]:
+    """(reply, "") or (None, "HTTP 504: <what the server said>")."""
+    cmd = ["curl", "-q", "-s", "-m", str(timeout + 30), "-A", UA, "-w", "\n%{http_code}", "--data-urlencode", f"data={ql}", ep]
+    cmd += curl_args(proxy)
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    body, _, code = (r.stdout or "").rpartition("\n")
+    if r.returncode:
+        return None, f"curl exit {r.returncode}"
+    try:
+        data = json.loads(body)
+    except json.JSONDecodeError:
+        text = " ".join(re.sub(r"<[^>]+>", " ", body).split())
+        return None, f"HTTP {code}: {text[:160]}"
+    return (data, "") if isinstance(data, dict) else (None, f"HTTP {code}: {str(data)[:160]}")
+
+
+def _area_empty(data: dict, ql: str) -> bool:
+    """An --area query that came back empty (or with a zero area count). Mirrors disagree on these: one answered a whole-province
+    power-line query with a clean, empty result while others returned thousands, so an empty answer needs a second mirror."""
+    if not AREA_SET.search(ql):
+        return False
+    els = data.get("elements") or []
+    if els and els[0].get("type") == "count":            # coverage / _area_count: the first count is the area count
+        return int((els[0].get("tags") or {}).get("total", 0)) == 0
+    return not els
 
 
 def run(ql: str, proxy: str | None, cache: Path, timeout: int = 180, rounds: int = 3) -> dict:
-    """Try each mirror in turn; when servers are busy (common for public Overpass), wait a while and retry the whole round. Results are cached per query."""
+    """Try each mirror in turn; when servers are busy (common for public Overpass), wait a while and retry the whole round. Results are cached per query.
+    Error replies are never cached; an empty --area result is cached only when a second mirror agrees."""
     cache.mkdir(parents=True, exist_ok=True)
     key = cache / (hashlib.sha1(ql.encode()).hexdigest()[:16] + ".json")
     if key.exists():
         return json.loads(key.read_text(encoding="utf-8"))
-    last = ""
+    errs: dict[str, str] = {}
+    empty_from = None
     for rnd in range(rounds):
         for ep in ENDPOINTS:
-            cmd = ["curl", "-q", "-s", "-m", str(timeout + 30), "--data-urlencode", f"data={ql}", ep]
-            cmd += curl_args(proxy)
-            r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-            try:
-                data = json.loads(r.stdout)
-            except json.JSONDecodeError:
-                last = " ".join(re.sub(r"<[^>]+>", " ", r.stdout or r.stderr).split())[-240:]
+            if ep == empty_from:
                 continue
-            if data.get("remark"):
-                print(f"Overpass remark (results may be incomplete): {data['remark'][:200]}", file=sys.stderr)
+            data, err = _post(ep, ql, proxy, timeout)
+            if data is None:
+                errs[ep] = err
+                continue
+            remark = data.get("remark") or ""
+            if remark and not data.get("elements"):       # runtime error / timeout / out of memory with nothing returned
+                errs[ep] = f"remark: {remark[:160]}"
+                continue
+            if _area_empty(data, ql) and empty_from is None:
+                empty_from, first_empty = ep, data
+                continue
+            if remark:
+                print(f"Overpass remark (results may be incomplete): {remark[:200]}", file=sys.stderr)
             key.write_text(json.dumps(data), encoding="utf-8")
             return data
+        if empty_from is not None:
+            print(f"Only {empty_from} answered, with an empty --area result; not confirmed by a second mirror, so not cached. "
+                  f"Rerun later, or use --bbox, before treating it as \"none\".", file=sys.stderr)
+            return first_empty
+        last = "; ".join(f"{ep.split('/')[2]} {e}" for ep, e in errs.items())
         if rnd < rounds - 1:
             print(f"No Overpass mirror returned a result, retrying in {15 * (rnd + 1)} s: {last}", file=sys.stderr)
             time.sleep(15 * (rnd + 1))
-    sys.exit(f"Overpass query failed (if public servers are busy, try another time; if the query errors, check the syntax and shrink the area): {last}")
+    sys.exit(f"Overpass query failed on every mirror ({last}). HTTP 504/\"too busy\": retry later, or use --bbox / a smaller area; "
+             f"HTTP 400: check the query syntax; curl exit: network or proxy (doctor.py --network)")
 
 
 def _area_sel(name: str, var: str, loose: bool = False) -> str:

@@ -16,7 +16,8 @@ Sources:
 Examples:
   poi.py "<compound name>" --city <city>                 # all same-name points in the city, outputs {name: [lat, lon]}
   poi.py "<district> <road name> 学校" --city <municipality or prefecture-level city>   # --city only accepts prefecture-level cities; put the district in the keyword (学校 = school)
-  poi.py "<street address or place name>" --sources osm --country mx   # outside China
+  poi.py "<compound name>" --city <city> --region cn       # sources from the region pack (CN: 360 Maps + OSM + Baidu suggestions)
+  poi.py "<street address or place name>" --region mx     # packs without a poi service: OSM restricted to that country
   poi.py "<compound name>"                                # no city: lists which cities in China have a same-name point
   poi.py "<hotel name>" --city <city> --out pois.json && tiles.py sheet --points pois.json --zoom 18 --out pois_sheet.jpg
 
@@ -36,6 +37,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import geo  # noqa: E402
+import regions  # noqa: E402
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 
@@ -112,13 +114,29 @@ def _neg_coords(argv: list[str]) -> list[str]:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("keyword", help="place name, residential compound name, housing development name, or shop name")
-    ap.add_argument("--city", help="city name, e.g. <name>市 or <name> (omit to search all of China)")
-    ap.add_argument("--sources", default="so,osm,sug", help="any of so,osm,sug, comma-separated")
+    ap.add_argument("--city", help="city name, e.g. <name>市 or <name> (omit to search the whole country)")
+    ap.add_argument("--region", help="region pack (code or name): sources and Nominatim country come from its services.poi")
+    ap.add_argument("--sources", help="any of so,osm,sug, comma-separated (default: the region pack's; without one, so,osm,sug for Han-script keywords, else osm)")
     ap.add_argument("--limit", type=int, default=10, help="max results per source")
-    ap.add_argument("--country", default="cn", help="Nominatim country code; for places outside China change it to the matching code or leave it empty")
+    ap.add_argument("--country", help="Nominatim country code (default: the region pack's; without one, no restriction)")
     ap.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
     ap.add_argument("--out", type=Path, help="write {name: [lat, lon]} (WGS84) for tiles.py mark / sheet")
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
+    svc = {}
+    if args.region:
+        pk = regions.resolve(args.region)
+        if pk:
+            svc = (pk.get("services") or {}).get("poi") or {"sources": "osm", "country": pk["code"].lower()}
+        elif re.fullmatch(r"[A-Za-z]{2}", args.region.strip()):
+            # No pack for this country: still restrict Nominatim to it rather than searching the whole world
+            svc = {"sources": "osm", "country": args.region.strip().lower()}
+            print(f"No region pack for '{args.region}': OSM only, restricted to countrycodes={svc['country']}", file=sys.stderr)
+        else:
+            sys.exit(f"No region pack for '{args.region}' (installed: {', '.join(sorted(regions.packs()))}): "
+                     f"pass its ISO 3166-1 alpha-2 code (e.g. --region in) so the search stays inside that country")
+    han = re.search(r"[\u4e00-\u9fff]", args.keyword)
+    args.sources = args.sources or svc.get("sources") or ("so,osm,sug" if han and not args.region else "osm")
+    args.country = args.country if args.country is not None else svc.get("country", "")
 
     src = set(args.sources.split(","))
     rows: list[dict] = []

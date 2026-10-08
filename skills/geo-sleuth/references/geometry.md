@@ -130,7 +130,7 @@ uv run scripts/terrain.py view --at <candidate camera position> --heading <headi
 Use it to screen candidate camera positions and fix the sight-line bearing; to fix a point, add another independent constraint (another near–far alignment, a road or riverbank, camera height).
 When rendering, the FOV must match the photo: portrait phone main camera horizontal FOV about 50°, landscape about 65°; for telephoto shrink it by the zoom (2x roughly halves it).
 
-- `--overlay` outputs an extra image that draws the synthetic skyline directly on the photo by pinhole projection; easier to match than stacking them top and bottom. When it doesn't match, adjust `--heading / --pitch / --hfov / --roll` first, before doubting the camera position.
+- `--overlay` outputs an extra image that draws the synthetic skyline directly on the photo by pinhole projection; easier to match than stacking them top and bottom. When it doesn't match, adjust `--heading / --pitch / --hfov / --roll` first, before doubting the camera position. `--pitch` is positive looking up: horizon below the photo's middle → positive, above → negative.
 - When spiky false ridges appear close by (elevation sampling artifacts), set `--near` to 150–300 m.
 - When the ridges around a city are gentle, the skyline only helps you fix heading and FOV; it can't separate camera positions within a few hundred meters.
 

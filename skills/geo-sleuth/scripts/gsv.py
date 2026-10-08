@@ -35,32 +35,52 @@ from baidu_pano import _font  # noqa: E402
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
 # official Street View car coverage only (user-uploaded panorama photos have ids like CIHM0og…, and the perspective endpoint can't render them)
-META = ("https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=!1m5!1sapiv3!5sUS!11m2!1m1!1b0"
-        "!2m4!1m2!3d{lat}!4d{lon}!2d{radius}!3m10!2m2!1sen!2sUS!9m1!1e2!11m4!1m3!1e2!2b1!3e2"
-        "!4m6!1e1!1e2!1e3!1e4!1e8!1e6&callback=cb")
+# The Maps JS API's own panorama lookup (the GET endpoint GeoPhotoService.SingleImageSearch was turned down in 2026; same response layout)
+META = "https://maps.googleapis.com/$rpc/google.internal.maps.mapsjs.v1.MapsJsInternalService/SingleImageSearch"
 THUMB = ("https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid={id}&cb_client=maps_sv.tactile"
          "&w={w}&h={h}&yaw={yaw:.1f}&pitch={pitch:.1f}&thumbfov={fov:.0f}")
 
 
-def _curl(url: str, proxy: str | None, out: Path | None = None) -> bytes:
+def _curl(url: str, proxy: str | None, out: Path | None = None, data: str | None = None) -> bytes:
     cmd = ["curl", "-q", "-s", "-m", "40", "-A", UA]
     cmd += curl_args(proxy)
     if out:
         cmd += ["-o", str(out)]
+    if data is not None:
+        cmd += ["-X", "POST", "-H", "content-type: application/json+protobuf",
+                "-H", "x-user-agent: grpc-web-javascript/0.1", "--data", data]
     r = subprocess.run(cmd + [url], capture_output=True)
     return r.stdout
 
 
+class ServiceError(RuntimeError):
+    """Google answered with an error instead of a lookup result (endpoint changed, blocked, rate-limited)."""
+
+
+def _meta_query(lat: float, lon: float, radius: float) -> str:
+    # official Street View car coverage only ([2, true, 2]); the last list asks for address, date, neighbors and history
+    return json.dumps([["apiv3", None, None, None, "US", None, None, None, None, None, [[0]]],
+                       [[None, None, lat, lon], radius],
+                       [None, ["en", "US"], None, None, None, None, None, None, [2], None, [[[2, True, 2]]]],
+                       [[1, 2, 3, 4, 8, 6]]])
+
+
 def near(lat: float, lon: float, radius: float, proxy: str | None) -> dict | None:
-    t = _curl(META.format(lat=lat, lon=lon, radius=radius), proxy).decode("utf-8", "replace")
-    m = re.search(r"cb\(\s*(.*)\s*\)\s*;?\s*$", t, re.S)
-    if not m:
-        return None
+    """Nearest panorama within radius; None when there is none. Raises ServiceError when the lookup itself fails."""
+    t = _curl(META, proxy, data=_meta_query(lat, lon, radius)).decode("utf-8", "replace")
     try:
-        d = json.loads(m.group(1))
-        body = d[1]
-    except (json.JSONDecodeError, IndexError, TypeError):
-        return None
+        d = json.loads(t)
+    except json.JSONDecodeError:
+        raise ServiceError(f"unreadable reply: {' '.join(t.split())[:160] or 'empty (network?)'}") from None
+    try:
+        code = d[0][0]
+        body = d[1] if len(d) > 1 else None
+    except (IndexError, TypeError, KeyError):
+        raise ServiceError(f"unexpected reply: {t[:160]}") from None
+    if body is None:
+        if code == 5 and "no images" in t.lower():  # [[5, "generic", "Search returned no images."]]
+            return None
+        raise ServiceError(f"error reply: {t[:160]}")
     out: dict = {}
     try:
         out["id"] = body[1][1]
@@ -192,8 +212,11 @@ def main() -> None:
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
     if args.cmd == "near":
         lat, lon = map(float, args.latlon.split(","))
-        res = near(lat, lon, args.radius, args.proxy)
-        print(json.dumps(res, ensure_ascii=False, indent=1) if res else "no usable Google Street View result (increase --radius, check coverage, or run doctor.py --network to check service access)")
+        try:
+            res = near(lat, lon, args.radius, args.proxy)
+        except ServiceError as e:
+            sys.exit(f"Google Street View lookup failed ({e}); run doctor.py --network to check service access")
+        print(json.dumps(res, ensure_ascii=False, indent=1) if res else f"no Google Street View panorama within {args.radius:.0f} m (increase --radius or check coverage)")
     elif args.cmd == "render":
         render(args.id, args.heading, args.pitch, args.fov, args.width, args.height, args.proxy, args.cache).save(args.out)
         print(args.out)
@@ -204,7 +227,10 @@ def main() -> None:
         else:
             pts = {"at": list(map(float, args.at.split(",")))} if args.at else json.loads(args.points.read_text(encoding="utf-8"))
             for name, (la, lo) in pts.items():
-                res = near(la, lo, args.radius, args.proxy)
+                try:
+                    res = near(la, lo, args.radius, args.proxy)
+                except ServiceError as e:
+                    sys.exit(f"Google Street View lookup failed ({e}); run doctor.py --network to check service access")
                 if res and args.date:
                     p = pick_date(res, args.date)
                     if not p:
@@ -223,7 +249,11 @@ def main() -> None:
                 heads = [float(x) for x in args.headings.split(",")]
             elif target:
                 if ll is None:
-                    info = near(*target, 5000, args.proxy)  # with only an id there are no coordinates, so estimate from near the target; --points is recommended
+                    try:
+                        info = near(*target, 5000, args.proxy)
+                    except ServiceError:
+                        info = None
+                    # with only an id there are no coordinates, so estimate from near the target; --points is recommended
                     ll = info["wgs"] if info else list(target)
                 heads = [geo.bearing(tuple(ll), target) + args.offset]
             else:

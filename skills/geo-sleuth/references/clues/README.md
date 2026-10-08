@@ -2,12 +2,14 @@
 
 Check against it in steps 2 and 4. Entry sources are marked `vNNN` (the number of a creator video the author broke down; the breakdown notes are not public) or `case` (a real case).
 
-## Files
+## Where clues live
 
-| File | Scope |
+| Place | Scope |
 |---|---|
-| `china.md` | Mainland China: platform metadata, text and plates, vehicles and traffic, infrastructure, climate and phenology, terrain and water, urban form |
-| `global.md` | Outside China: general (driving side, plate shape), Europe, North America, Mexico, Japan, Southeast Asia |
+| `global.md` (this folder) | Cross-country: telling countries and continents apart (driving side, plate shape, multilingual signs), Europe-wide patterns, inherited standards |
+| `regions/<cc>/clues.md` | Inside one country: plates and codes to the province/state, local vehicles, infrastructure, climate, urban form. `regions.py show <cc>` prints a one-line index with line numbers |
+
+Rule for placing a new entry: if its "Points to" stays inside one country, it goes into that country's pack; if it separates countries, it goes into `global.md`.
 
 ## Entry format
 

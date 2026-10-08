@@ -281,7 +281,7 @@ def main() -> None:
             L.append("- City level: none")
         if votes["place"]:
             for t, srcs in sorted(votes["place"].items(), key=lambda kv: -len(kv[1])):
-                L.append(f"- Specific place **{t}**: {len(srcs)} times ({', '.join(srcs)}) → `poi.py \"{t}\" --city <city>` to get coordinates; list every same-name place, then verify")
+                L.append(f"- Specific place **{t}**: {len(srcs)} times ({', '.join(srcs)}) → `poi.py \"{t}\" --city <city> --region <cc>` to get coordinates; list every same-name place, then verify")
         else:
             L.append("- Specific place level: none")
         L.append("")

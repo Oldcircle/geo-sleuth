@@ -11,7 +11,7 @@
   cost      how many cells and pages a bbox takes at tiles.py sheet --grid settings
 
 Data comes from OSM Overpass (results cached per query in .geo-cache/osm/). OSM admin lists can have gaps:
-children merges them with the local data/cn_admin.json (China's three-level admin table, if present) and flags entries missing a bbox.
+children merges them with a region pack's admin table when one knows the parent (regions/<cc>/, e.g. China's three levels) and flags entries missing a bbox.
 admin_level differs by country: China province 4 / prefecture 5 / county 6, France region 4 / department 6, US state 4 / county 6. If unsure, omit --level;
 the script tries downward from the parent's admin_level and skips levels whose combined extent is under 30% of the parent (China's level 3 is only Hong Kong and Macau).
 
@@ -36,8 +36,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import geo  # noqa: E402
 import osm  # noqa: E402
+import regions  # noqa: E402
 
-DATA = Path(__file__).parent.parent / "data"
 LEVEL_NAMES = {"CN": {4: "province", 5: "prefecture", 6: "county", 7: "township"}, "FR": {4: "region", 6: "department", 8: "commune"},
                "US": {4: "state", 6: "county", 8: "city"}, "*": {2: "country", 4: "first-level admin division", 6: "second-level admin division", 8: "third-level admin division"}}
 MIN_COVER = 0.3   # children auto level pick: this level's combined bbox area must be at least this fraction of the parent's bbox
@@ -112,38 +112,10 @@ def children(parent: str, proxy: str | None, cache: Path, level: int | None, wit
     return p, first or []
 
 
-def _cn_admin_children(parent: str) -> list[str]:
-    """Names of parent's direct children in the local three-level admin table (empty if the table doesn't exist)."""
-    f = DATA / "cn_admin.json"
-    if not f.exists():
-        return []
-    try:
-        d = json.loads(f.read_text(encoding="utf-8"))
-    except Exception:  # noqa: BLE001
-        return []
-    # Two structures supported: {"_meta":…, "items":[{name, code, parent, level}]} or modood's nested [{name, code, children:[…]}]
-    items = d.get("items") if isinstance(d, dict) else None
-    if items:
-        names = {it["name"] for it in items if it.get("parent") == parent}
-        if not names:  # parent may be "重庆市" while the table has "重庆", or the other way round
-            names = {it["name"] for it in items if it.get("parent", "").rstrip("市省") == parent.rstrip("市省")}
-        return sorted(names)
-    nodes = d if isinstance(d, list) else d.get("data") or []
-
-    def walk(ns):
-        for n in ns:
-            if n.get("name", "").rstrip("市省") == parent.rstrip("市省"):
-                ch = n.get("children") or []
-                # Municipality: province → 市辖区 ("city districts", a fake layer) → districts
-                if len(ch) == 1 and (ch[0].get("children") or []):
-                    ch = ch[0]["children"]
-                return [c["name"] for c in ch]
-            r = walk(n.get("children") or [])
-            if r:
-                return r
-        return []
-
-    return walk(nodes)
+def _local_children(parent: str) -> tuple[list[str], str]:
+    """Names of parent's direct children in a region pack's admin table, and the pack code ([] and "" when no pack knows the parent)."""
+    pk, kids = regions.admin_children(parent)
+    return sorted({k["name"] for k in kids}), (pk["code"] if pk else "")
 
 
 def urban(name: str, proxy: str | None, cache: Path, within: str | None) -> dict:
@@ -299,17 +271,18 @@ def main() -> None:
         return
     if args.cmd == "children":
         p, rows = children(args.name, args.proxy, cache, args.level, args.within)
-        local = _cn_admin_children(p["name"])
+        local, code = _local_children(p["name"])
         names = {r["name"] for r in rows}
-        missing = [n for n in local if n not in names and not any(n.rstrip("区县市") == m.rstrip("区县市") for m in names)]
+        pk = regions.resolve(code) or {}
+        missing = [n for n in local if n not in names and not any(regions.strip_suffix(n, pk) == regions.strip_suffix(m, pk) for m in names)]
         out = {r["name"]: {k: r[k] for k in ("osm_id", "admin_level", "bbox", "bbox_km2", "center", "name_en")} for r in rows}
         for n in missing:
             out[n] = {"osm_id": None, "admin_level": None, "bbox": None, "bbox_km2": None, "center": None,
                       "name_en": "", "note": "only in the local admin table, no OSM relation found: fill in the bbox with info/urban, or estimate from the parent's extent for now"}
         lvl = rows[0]["admin_level"] if rows else None
         print(f"{p['name']} (admin_level {p['admin_level']}) children admin_level {lvl}: OSM {len(rows)}"
-              + (f", local table adds {len(missing)} ({', '.join(missing)})" if missing else "")
-              + ("; the local table doesn't have this parent, can't check the list is complete" if not local else ""))
+              + (f", {code} pack's admin table adds {len(missing)} ({', '.join(missing)})" if missing else "")
+              + ("; no region pack's admin table has this parent, can't check the list is complete" if not local else ""))
         for name, r in sorted(out.items(), key=lambda kv: -(kv[1]["bbox_km2"] or 0)):
             b = r["bbox"]
             print(f"  {name:<14} {r['bbox_km2'] or '?':>9} km²  {b if b else '(no bbox)'}")

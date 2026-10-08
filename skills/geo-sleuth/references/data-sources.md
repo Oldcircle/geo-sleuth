@@ -9,7 +9,7 @@
 | `imgprep.py` | zoom (enlarge to read text) / edges (four edges, four corners) / variants (image-search variants) / grid (split into tiles) / `piers` (brightness profile along a given row to find pixel columns of evenly spaced structures; outputs a check image) |
 | `revimg.py` | Baidu image search + Yandex reverse image search; `--query` Chinese keyword search (Bing China, Baidu/Sogou Images) |
 | `geo.py` | Coordinate conversion, bearing and distance, camera geometry (`range --hfov a:b` distance range), `line` alignment line, `intersect` sight-line intersection, `frame` computes the frame and occlusion before excluding, `spacing` pixel columns of evenly spaced structures × known polyline → solve for camera position (optionally scored jointly with the skyline) |
-| `poi.py` | Place names, residential compound names, housing development names, shop names → candidate coordinates (360 Maps + OSM Nominatim + Baidu suggestions); lists every same-name point nationwide |
+| `poi.py` | Place names, residential compound names, housing development names, shop names → candidate coordinates; `--region <cc>` picks the pack's sources (CN: 360 Maps + OSM Nominatim + Baidu suggestions), otherwise OSM; lists every same-name point |
 | `sun.py` | Sun position, shadow-length ratio, `locate` location band, `when` time, `street` street orientation, `facing` heading from lit faces, `dish` satellite dish |
 | `osm.py` | Overpass: find / near (co-occurrence) / crossings (line-to-point) / route (route corridor) / intersect (crossings of two kinds of lines; bends are only labeled, `--rank-near` ranks) / street-scan (street-view geometry template) / geom (export geometry) |
 | `tiles.py` | Satellite tile mosaic, `mark` plots points + overlays GeoJSON lines + field-of-view wedge, `sheet` numbered thumbnails of candidate points |
@@ -20,7 +20,9 @@
 | `evidence.py` | Evidence image: satellite image + camera-position wedge + comparison panels |
 | `intake.py` | Steps 0–3 in one command: exif + edge crops + variants + OCR + Baidu/Yandex reverse image search in parallel; outputs intake.md (tiered vote count, possible place names) |
 | `ocr.py` | Reads text in the photo (Apple Vision, falls back to RapidOCR): full image + zoomed + tiles, merged; text read only after zooming is marked in `pass` |
-| `clues.py` | Lookup tables: license plate prefixes, landline area codes, country calling codes, driving side, overseas territories, admin hierarchy; tables are in `data/`, `update` re-fetches them |
+| `clues.py` | Lookup tables: country calling codes, driving side, overseas territories (`data/`); plates, area codes, admin hierarchy and other country tables from region packs (`--country`) |
+| `regions.py` | Region packs: `list`, `show <cc>` (lookups, services, tips, clue index with line numbers), `lint` (pack contract) |
+| `refresh.py` | Maintainers: re-fetch the global tables and the China pack's tables from their sources |
 | `board.py` | Candidate board: candidates, clues, evidence likelihood ratios, exclusions (require a computed file), ranking, scan cost, next step, pre-conclusion check, generates result.json fields |
 | `gazetteer.py` | Admin-division gazetteer: lists all subdivisions (with bbox), built-up area extents, scan pages |
 | `sat_scan.py` | CLIP zero-shot scoring and ranking of satellite grid cells/candidate points (sports fields, factory buildings, silos, dams…), top-N thumbnails + heatmap |

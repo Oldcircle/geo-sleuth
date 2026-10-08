@@ -58,7 +58,29 @@ On first use, ask the agent to run `doctor.py` from the installed skill’s `scr
 - **One skill, every agent.** A standard Agent Skill — `SKILL.md` plus plain Python scripts — so the same folder runs in Claude Code, Codex, Cursor, Gemini CLI, OpenCode and GitHub Copilot.
 - **Answers carry an error radius.** Coordinates ± radius, the camera heading, an evidence image and a graded confidence.
 
-## The case: one photo, nothing to read
+## Cases
+
+Three photos, three different ways in. None of them had GPS data; each one ends with a camera position someone could walk to.
+
+<table>
+<tr>
+<td width="33%" align="center"><a href="#1-a-rice-paddy-and-a-viaduct"><img src="docs/case/thumb.jpg" alt="An oven at the edge of a rice paddy, a viaduct and a mountain behind"></a></td>
+<td width="33%" align="center"><a href="#2-a-desert-skyline-one-degree-off"><img src="docs/cases/desert/thumb.jpg" alt="A sand dune ridge and a range of bare dark mountains"></a></td>
+<td width="33%" align="center"><a href="#3-a-cherry-tree-from-a-viral-post"><img src="docs/cases/cherry/thumb.jpg" alt="A flowering cherry tree over a sidewalk"></a></td>
+</tr>
+<tr>
+<td><b>1 · Rice paddy and viaduct</b><br><sub>Nothing to read. Railway bridges × skyline × pier count.</sub></td>
+<td><b>2 · Desert skyline</b><br><sub>Nothing to read. Power lines × skyline × a phone tilted by 1°.</sub></td>
+<td><b>3 · Cherry street</b><br><sub>A licence plate and a tree. Street-tree open data × shadows × street view.</sub></td>
+</tr>
+<tr>
+<td align="center"><b>±2 m</b><br><sub>Qingyuan, Guangdong</sub></td>
+<td align="center"><b>within 100 m</b><br><sub>Da Qaidam, Qinghai</sub></td>
+<td align="center"><b>3 m</b><br><sub>Vancouver, Canada</sub></td>
+</tr>
+</table>
+
+### 1. A rice paddy and a viaduct
 
 A phone photo with the EXIF stripped: a white oven at the edge of a harvested rice paddy, a long viaduct in the distance, a steep mountain on the right. Not a single character in the frame. One message to an agent with this skill installed, and it came back with the camera position and the direction the camera was facing.
 
@@ -88,6 +110,55 @@ A phone photo with the EXIF stripped: a white oven at the edge of a harvested ri
 <sub>Pier count: bearings to the 17 piers intersect the line; only one camera position makes the spacing even.</sub><br><br>
 <sub>The run took about 72 minutes end to end, roughly half of it waiting on computation.</sub>
 </details>
+
+### 2. A desert skyline, one degree off
+
+A follower sent this one as a dare: a sand dune, a wall of bare dark mountains, a few pylons at their foot. No text, no road, no building. Reverse image search found nothing but generic desert pictures from northwest China.
+
+**photo → 12,537 power lines → 1,537 sites → stuck at ~10 px → solve a 1° tilt → 1 site → one dune crest**
+
+| Step | What it did | Left |
+|---|---|---|
+| **Read the photo** | The only man-made thing is a row of high-voltage pylons at the foot of the mountains, so the camera stands within a few km of a power line. Sand, gravel and bare rock: northwest China. | 6 provinces |
+| **Power lines × terrain** | Pulled every power line in six northwest provinces from OpenStreetMap (**12,537**) and computed the horizon along each from elevation data, keeping places where mountains fill the view (`osm.py geom` → `terrain.py scan`). | **1,537 sites** |
+| **Skyline fit** | Traced the ridge line in the photo and scored the rendered ridge from every site against it (`terrain.py ridge` / `fit`). The top 25 in Qinghai all landed between 9.6 and 11.7 px. No winner. | **stuck** |
+| **One degree** | A phone held 1° off level moves the frame edge by 1024 px × tan 1° ≈ 18 px, about 10 px on average: exactly the size of the plateau. Plotting the residual across the frame gave a straight line whose slope is tan θ, θ ≈ 1°. So `fit` now solves the roll together with the horizon offset. | |
+| **Re-run** | With roll solved, one site dropped from 11.1 px to 6.2 px; every other site improved by a pixel or two at most. | **1** |
+| **Satellite and the pylons** | Within 1 km along the line of sight: three crescent dunes and a tent camp; 1–2 km east, a 750/330/110 kV bundle, which is why the pylons only appear on the left. The camera stands on the crest of the western dune, facing 205°. | **one dune** |
+
+<div align="center">
+<img src="docs/cases/desert/01-power-lines.webp" width="270" alt="Power lines across northwest China light up, then candidate sites are compared one by one"> <img src="docs/cases/desert/03-roll-fix.webp" width="270" alt="After solving the tilt, one site breaks away from the cloud at 6.2 px"> <img src="docs/cases/desert/04-reveal.webp" width="270" alt="Zoom into Da Qaidam: three dunes, the camp, the power-line bundle, the dune crest"><br>
+<sub>Left: 12,537 power lines, then the skyline seen from each candidate site. Middle: re-run with the tilt solved, one site breaks away at 6.2 px. Right: Da Qaidam, three dunes, the camp and the line bundle.</sub><br><br>
+<img src="docs/cases/desert/02-one-degree.jpg" width="820" alt="Photo ridge (cyan) against the computed ridge (red); 1024 × tan 1° ≈ 18 px; residuals across the frame form a line with slope tan θ, θ = 1.05°"><br>
+<sub>Why it was stuck: a 1° tilt bends the comparison by up to 18 px at the frame edge. The residuals line up, and the slope gives the angle.</sub>
+</div>
+
+**Blind re-run.** A fresh agent with today's skill, the photo and one hint (*it is in China*) went straight down the same path: 5,334 power lines in Qinghai → 792 sites → one skyline fit at 0.224° against 0.357° for the runner-up → the same dune crest, **87 m from the confirmed camera position** in 32 minutes. The tilt fix found in this case is now part of `terrain.py fit` for every photo; [Contributing](#contributing) explains why this case is the bar for core changes.
+
+<sub>Animations are from our video on this case; labels are in Chinese.</sub>
+
+### 3. A cherry tree from a viral post
+
+A flowering cherry over a sidewalk, from a post with over a million likes. People had narrowed it to Vancouver, but nobody had found the street: Vancouver has close to ten thousand blocks.
+
+**photo → Vancouver → 1,095 big cherries → 97 blocks → 72 cross-slopes → W 60th Ave → 3 m**
+
+| Step | What it did | Left |
+|---|---|---|
+| **Read the photo** | White-and-blue BC plates, a dark-green streetlight pole in a grass boulevard, Vancouver Special houses. | **Vancouver** |
+| **Street-tree data** | Vancouver publishes every street tree with species, trunk diameter and address. Candidates came from the data, not from famous cherry streets: large flowering cherries (trunk ≥ 40 cm), then blocks lined with at least three of them. | **1,095 trees → 97 blocks** |
+| **Shadows and slope** | Car shadows fall to the left and toward the camera, so the sun is front-right. The yards on the camera side sit above the sidewalk behind rock walls, so that side is uphill. Cross-slope from elevation data for 72 blocks, matched against which side the big trees stand on. | **a handful** |
+| **Tree by tree** | On W 60th Ave, 100 block, the data has big trees on the north side and only 7.6 cm saplings on the south side for 30–60 m ahead, then a big one about 75 m away: in the photo, nothing tall on the near right, pink canopy in the distance. | **1 block** |
+| **Street view** | Captures from 2009-04 and 2024-05: the rock retaining wall with stone steps, the rooftop-deck house behind a white stucco one, the green pole about 10 m behind the tree. North sidewalk, facing east. | **3 m** |
+
+<div align="center">
+<img src="docs/cases/cherry/01-tree-funnel.webp" width="270" alt="Vancouver's street trees, then only cherries, then only old ones"> <img src="docs/cases/cherry/02-shadow.webp" width="270" alt="Car shadows give the sun direction; which side of the street the camera is on"> <img src="docs/cases/cherry/03-street-view.webp" width="270" alt="The photo against street view on W 60th Ave"><br>
+<sub>Left: every street tree in the city, then cherries, then old ones. Middle: shadows decide which side of which street. Right: the photo against a 2024 street view capture.</sub><br><br>
+<img src="docs/cases/cherry/00-photo.jpg" width="300" alt="The photo"> <img src="docs/cases/cherry/04-reveal.jpg" width="381" alt="W 60th Ave, 100 block, north sidewalk, facing east"><br>
+<sub>The photo, and where it was taken: W 60th Ave, 100 block, north sidewalk, facing east.</sub>
+</div>
+
+**Blind re-run.** The table is the blind run: a fresh agent with today's skill and only the photo, no hint, finished in 53 minutes **3 m from the confirmed camera position**. The animations come from our video on this case, which used a stricter funnel (trunk ≥ 60 cm, 184,518 → 17,052 → 3,891 → 90 places); labels are in Chinese.
 
 ## Installation
 
@@ -147,7 +218,7 @@ Every conclusion has to point at a command that actually ran in the session and 
 
 ## Toolbox
 
-Twenty scripts, one job each. The full table with data sources is in `skills/geo-sleuth/references/data-sources.md`.
+Twenty-odd scripts, one job each. The full table with data sources is in `skills/geo-sleuth/references/data-sources.md`.
 
 | What it does | Script |
 |---|---|
@@ -157,7 +228,8 @@ Twenty scripts, one job each. The full table with data sources is in `skills/geo
 | Reverse image search on Baidu and Yandex, similar images tiled into a numbered sheet; keyword image search | `revimg.py` |
 | Steps 0–3 in one command: metadata, edge crops, variants, OCR, reverse search → `intake.md` | `intake.py` |
 | Zoom crops, edge and corner crops, tiling, pixel columns of evenly spaced structures such as piers | `imgprep.py` |
-| Lookup tables: plate prefixes, landline area codes, calling codes, driving side, dependent territories, administrative divisions | `clues.py` + `data/` |
+| Lookup tables: calling codes, driving side, dependent territories worldwide; plate prefixes, area codes and admin divisions from region packs | `clues.py` + `data/` + `regions/` |
+| Region packs: list them, print a country's card and clue index, lint a pack | `regions.py` |
 | Candidate board: candidates, clues, likelihood ratios, exclusion, ranking, scan order, pre-report checks | `board.py` |
 | Gazetteer: list sub-divisions with bounding boxes, built-up area extent | `gazetteer.py` |
 | Place, compound or shop name → coordinate candidates, every namesake listed | `poi.py` |
@@ -172,7 +244,7 @@ Twenty scripts, one job each. The full table with data sources is in `skills/geo
 | Bearings, distances, line-of-sight intersections, alignment lines, frame/occlusion checks, camera position from evenly spaced structures | `geo.py` |
 | Evidence image: satellite tile + camera fan + comparison grid | `evidence.py` |
 
-The three steps from the case above (region scan, batch skyline scoring, camera position from pier spacing) are built into the skill as subcommands: `terrain.py scan / ridge / fit`, `imgprep.py piers`, `geo.py spacing`. Case scripts tuned to that photo are kept in `examples/rail-skyline-session/` for reference.
+The steps from case 1 (region scan, batch skyline scoring, camera position from pier spacing) are built into the skill as subcommands: `terrain.py scan / ridge / fit`, `imgprep.py piers`, `geo.py spacing`; case scripts tuned to that photo are kept in `examples/rail-skyline-session/`. The tilt from case 2 is solved by `terrain.py fit` itself (`--roll-max`, default 1°); `examples/desert-roll-fix/` reproduces the before and after.
 
 ## Benchmarks
 
@@ -183,7 +255,18 @@ Per-operator measurements:
 | `match.py` | 8 cases: a historical Baidu panorama batch rendered as the photo, panoramas within 150 m as candidates (Shenzhen) | ground truth ranked 1/2/4/1/1 and 5/1/6, all in the top 6, half at #1 |
 | `sat_scan.py` | 4×8 km, 364 cells at z17, 40 OSM-tagged running tracks as ground truth, multi-scale (Shenzhen) | recall@20 17/40, @30 22/40, @100 32/40, median rank 23 |
 | `terrain.py scan / fit` + `geo.py spacing` | bounded re-run on the case photo above | true cluster ranks #1, final position about 2 m from ground truth |
+| `terrain.py fit --roll-max` | 8 synthetic skyline cases (random heading, focal length, ±1° roll) | median position error 324 → 238 m (untilted cases 324 → 89 m, tilted 1,695 → 265 m) |
+| `terrain.py fit --roll-max` | the 12 best sites from the desert case | true site #8 at 12.0 px → #1 at 6.2 px (runner-up 9.9 px) |
 | `clues.py` | 6 tables, 9 values spot-checked | 9/9 correct |
+
+End to end, blind re-runs with a fresh agent that had only the photo (and the hint shown):
+
+| Case | Hint | Result | Time |
+|---|---|---|---|
+| [Desert skyline](#2-a-desert-skyline-one-degree-off) | "it is in China" | 87 m from the confirmed camera position | 32 min |
+| [Cherry street](#3-a-cherry-tree-from-a-viral-post) | none | 3 m from the confirmed camera position | 53 min |
+
+Both photos had been solved before and lessons from them are in the skill, so these are regression checks, not accuracy on unseen photos.
 
 The method comes from breaking down 14 videos by online-geolocation creators, 22 puzzles and a set of real runs, then turning what works into rules and scripts. v2 moves every rule that can be code into `board.py`, so the rules get executed, not just read.
 
@@ -239,7 +322,16 @@ Language: maintained instructions, CLI help, errors, generated report headings a
 
 ## Contributing
 
-Issues and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md). The most useful contributions are a transferable clue for `references/clues/` (with a source), a new data source with its licence, or a run on your own photo where the skill went wrong and why.
+Issues and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+| You have | Where it goes | Bar |
+|---|---|---|
+| A clue that separates countries | `references/clues/global.md` | a source and a counterexample |
+| Clues, tables or services for one country | a region pack, `regions/<cc>/` ([contract](skills/geo-sleuth/regions/README.md)) | data and docs only; `regions.py lint` prints `ok` |
+| A change to the core scripts | its own PR | a photo it fails on before and solves after, plus no regression elsewhere |
+| A run that went wrong | an issue | the first step that went off |
+
+The [desert case](#2-a-desert-skyline-one-degree-off) is the model for core changes: the skill was stuck on a real photo (top 25 sites within 9.6–11.7 px), the change was general rather than tuned to that photo (solve camera roll in `terrain.py fit`, capped at 1°, `--roll-max 0` gives the old output), the same photo was then solved (the true site broke away at 6.2 px), and it held up on cases it was not built for (8 synthetic skylines, an earlier real case). `examples/desert-roll-fix/` reruns the before and after with two commands.
 
 ## Star History
 

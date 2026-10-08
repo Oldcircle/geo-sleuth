@@ -29,17 +29,23 @@ from pathlib import Path
 
 from _browser import launch_browser
 from _net import PROXY_HELP, curl_args, resolve_proxy
+import regions
 
 SERVICES = {
     "Baidu image search": "https://graph.baidu.com/pcpage/index?tpl_from=pc",
     "Baidu panoramas": "https://mapsv0.bdimg.com/?qt=qsdata&x=0&y=0",
     "Yandex Images": "https://yandex.com/images/",
     "Google satellite tiles": "https://mt1.google.com/vt/lyrs=s&x=0&y=0&z=0",
-    "Google Street View": "https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=!1m5!1sapiv3!5sUS!11m2!1m1!1b0!2m4!1m2!3d35.6595!4d139.7005!2d50!3m10!2m2!1sen!2sUS!9m1!1e2!11m4!1m3!1e2!2b1!3e2!4m6!1e1!1e2!1e3!1e4!1e8!1e6&callback=cb",
     "Overpass": "https://overpass-api.de/api/status",
     "Elevation tiles": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/0/0/0.png",
     "Hugging Face": "https://huggingface.co/",
 }
+
+
+# gsv.py's panorama lookup at a covered point (Shibuya). An HTTP probe isn't enough here: a turned-down endpoint still answers 200.
+STREET_VIEW = ("https://maps.googleapis.com/$rpc/google.internal.maps.mapsjs.v1.MapsJsInternalService/SingleImageSearch",
+               '[["apiv3",null,null,null,"US",null,null,null,null,null,[[0]]],[[null,null,35.6595,139.7005],50],'
+               '[null,["en","US"],null,null,null,null,null,null,[2],null,[[[2,true,2]]]],[[1,2,3,4,8,6]]]')
 
 
 def check(name: str, status: str, detail: str, fix: str = "") -> dict:
@@ -63,6 +69,29 @@ def probe(item: tuple[str, str], proxy: str | None) -> dict:
                      "Retry later or inspect the service in a browser. HTTP 403/429 may mean a challenge or rate limit.")
     except (OSError, subprocess.TimeoutExpired):
         return check(name, "FAIL", "Probe could not complete within its time limit.", "Check curl and network access, then retry.")
+
+
+def street_view_check(proxy: str | None) -> dict:
+    name = "Google Street View"
+    url, query = STREET_VIEW
+    try:
+        result = subprocess.run(
+            ["curl", "-q", "-sS", "--max-time", "12", *curl_args(proxy), "-X", "POST",
+             "-H", "content-type: application/json+protobuf", "-H", "x-user-agent: grpc-web-javascript/0.1",
+             "--data", query, url],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15)
+    except (OSError, subprocess.TimeoutExpired):
+        return check(name, "FAIL", "Probe could not complete within its time limit.", "Check curl and network access, then retry.")
+    if result.returncode:
+        return check(name, "FAIL", f"Connection failed (curl exit {result.returncode}).", "Check DNS, TLS certificates and network access.")
+    try:
+        pano = json.loads(result.stdout)[1][1][1]
+    except (ValueError, IndexError, TypeError, KeyError):
+        pano = None
+    if isinstance(pano, str) and pano:
+        return check(name, "PASS", "Panorama lookup returned a panorama at a covered test point.")
+    return check(name, "FAIL", f"Panorama lookup failed: {' '.join(result.stdout.split())[:160] or 'empty reply'}",
+                 "gsv.py near/sheet won't work. If the reply says the service changed or was turned down, gsv.py needs updating.")
 
 
 async def browser_check(proxy: str | None) -> dict:
@@ -100,15 +129,24 @@ def diagnose(network: bool, proxy: str | None) -> dict:
     except OSError:
         rows.append(check("Working directory", "FAIL", "Cannot write here.", "Run from a writable folder."))
     data = Path(__file__).resolve().parent.parent / "data"
-    names = ("cn_plates", "cn_area_codes", "calling_codes", "driving_side", "territories", "cn_admin")
+    names = ("calling_codes", "driving_side", "territories", "country_names")
     bad = []
     for name in names:
         try:
             json.loads((data / f"{name}.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             bad.append(name)
-    rows.append(check("Lookup tables", "FAIL" if bad else "PASS", "Missing or invalid: " + ", ".join(bad) if bad else "All six tables are readable.",
+    rows.append(check("Global lookup tables", "FAIL" if bad else "PASS", "Missing or invalid: " + ", ".join(bad) if bad else f"All {len(names)} tables are readable.",
                       "Reinstall the complete skill folder (including data/)." if bad else ""))
+    # A broken region pack only disables that country's lookups and tips; it never fails the core
+    for code, pack in sorted(regions.packs().items()):
+        try:
+            errs, _ = regions.lint(pack)
+        except regions.PACK_ERRORS as exc:
+            errs = [str(exc)]
+        rows.append(check(f"Region pack {code.lower()}", "WARN" if errs else "PASS",
+                          "; ".join(errs[:2]) if errs else f"{pack.get('name', code)}: lookups {', '.join(pack.get('lookups') or {}) or 'none'}.",
+                          f"`regions.py lint {code.lower()}` lists every problem; reinstall regions/{code.lower()}/ or remove it." if errs else ""))
     route = "configured proxy" if resolve_proxy(proxy) else "direct"
     rows.append(check("Service connection", "PASS", f"Using {route}."))
     rows.append(asyncio.run(browser_check(proxy)))
@@ -118,6 +156,7 @@ def diagnose(network: bool, proxy: str | None) -> dict:
     if network and shutil.which("curl"):
         with ThreadPoolExecutor(max_workers=8) as pool:
             rows.extend(pool.map(lambda item: probe(item, proxy), SERVICES.items()))
+        rows.append(street_view_check(proxy))
     else:
         rows.append(check("Network probes", "SKIP", "Run with --network to check service reachability."))
     return {"ok": not any(row["status"] == "FAIL" for row in rows), "connection": route, "checks": rows}

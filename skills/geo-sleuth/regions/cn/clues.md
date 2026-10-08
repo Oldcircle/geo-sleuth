@@ -1,6 +1,6 @@
 # Mainland China clues
 
-Ordered by the layers in `observe.md`: platform metadata → text and plates → vehicles and traffic → infrastructure → climate and phenology → terrain and water → urban form.
+Entries use the shared format (`references/clues/README.md`); lookups: `clues.py lookup plate|area-code|admin --country cn`. Ordered by the layers in `references/observe.md`: platform metadata → text and plates → vehicles and traffic → infrastructure → climate and phenology → terrain and water → urban form.
 
 ## Platform and metadata (all of it is a hypothesis to verify)
 

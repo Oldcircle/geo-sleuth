@@ -25,6 +25,8 @@ import _net
 import _browser
 import baidu_pano
 import doctor
+import gsv
+import osm
 import poi
 import revimg
 
@@ -168,6 +170,99 @@ class DoctorTests(unittest.TestCase):
             self.assertTrue(report["ok"])
             self.assertNotIn("secret", json.dumps(report))
             self.assertEqual(report["connection"], "configured proxy")
+
+
+QH = '[out:json][timeout:180];(area["name"="青海省"];area["name:zh"="青海省"];area["name:zh-Hans"="青海省"];)->.searchArea;nwr["power"="line"](area.searchArea);out geom tags;'
+LINE = {"type": "way", "id": 1, "geometry": [{"lat": 37.7, "lon": 95.3}, {"lat": 37.8, "lon": 95.4}], "tags": {"power": "line"}}
+
+
+def count(n):
+    return {"elements": [{"type": "count", "tags": {"total": str(n)}}]}
+
+
+class OverpassMirrorTests(unittest.TestCase):
+    """One mirror answered a whole-province --area query with a clean empty result while others had thousands of lines; it got cached."""
+
+    def run_with(self, replies, ql=QH):
+        calls = []
+
+        def post(ep, q, proxy, timeout):
+            calls.append(ep)
+            return replies(ep, q)
+
+        with tempfile.TemporaryDirectory() as d, patch.object(osm, "_post", side_effect=post), patch.object(osm.time, "sleep"):
+            data = osm.run(ql, None, Path(d))
+            cached = list(Path(d).glob("*.json"))
+        return data, calls, cached
+
+    def test_empty_from_one_mirror_is_checked_on_another(self):
+        data, calls, cached = self.run_with(lambda ep, q: ({"elements": []} if ep == osm.ENDPOINTS[0] else {"elements": [LINE]}, ""))
+        self.assertEqual(len(data["elements"]), 1)
+        self.assertEqual(calls, osm.ENDPOINTS[:2])
+        self.assertEqual(len(cached), 1)
+
+    def test_empty_confirmed_by_two_mirrors_is_cached(self):
+        data, calls, cached = self.run_with(lambda ep, q: ({"elements": []}, ""))
+        self.assertEqual(data["elements"], [])
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(cached), 1)
+
+    def test_unconfirmed_empty_is_returned_but_not_cached(self):
+        data, calls, cached = self.run_with(lambda ep, q: ({"elements": []}, "") if ep == osm.ENDPOINTS[0] else (None, "503"))
+        self.assertEqual(data["elements"], [])
+        self.assertEqual(cached, [])
+        self.assertEqual(len(calls), len(osm.ENDPOINTS))           # one round, no retry sleeps
+
+    def test_zero_area_count_needs_a_second_mirror(self):
+        ql = '[out:json][timeout:120];(area["name"="青海省"];)->.a;.a out count;'
+        data, _, _ = self.run_with(lambda ep, q: (count(0) if ep == osm.ENDPOINTS[0] else count(1), ""), ql)
+        self.assertEqual(data["elements"][0]["tags"]["total"], "1")
+
+    def test_bbox_empty_is_trusted(self):
+        ql = '[out:json][timeout:180];nwr["power"="line"](37.6,95.2,37.8,95.4);out geom tags;'
+        _, calls, cached = self.run_with(lambda ep, q: ({"elements": []}, ""), ql)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(cached), 1)
+
+    def test_failure_names_every_mirror(self):
+        replies = {osm.ENDPOINTS[0]: (None, "HTTP 406: Not Acceptable"), osm.ENDPOINTS[1]: (None, "HTTP 500: Internal Server Error"),
+                   osm.ENDPOINTS[2]: (None, "HTTP 504: server too busy")}
+        with self.assertRaises(SystemExit) as cm:
+            self.run_with(lambda ep, q: replies[ep])
+        for code in ("406", "500", "504"):
+            self.assertIn(code, str(cm.exception))
+
+    def test_error_remark_not_cached(self):
+        def replies(ep, q):
+            if ep == osm.ENDPOINTS[0]:
+                return {"elements": [], "remark": "runtime error: Query timed out"}, ""
+            return {"elements": [LINE]}, ""
+        data, _, cached = self.run_with(replies)
+        self.assertEqual(len(data["elements"]), 1)
+        self.assertEqual(len(cached), 1)
+
+
+class StreetViewTests(unittest.TestCase):
+    def test_lookup_replies(self):
+        ok = json.dumps([[0], [[1], [2, "Z4kP7jsHKunVOqfsg_khyw"], None, [None, None, [["168 W 60th Ave"], ["Vancouver"]]], None,
+                               [[None, [[None, None, 49.21598, -123.10927], None, [90.4]], None, [[]], None, None, None, None, []]],
+                               [None] * 7 + [[2024, 5]]]])
+        cases = {
+            ok: "Z4kP7jsHKunVOqfsg_khyw",
+            '[[5,"generic","Search returned no images."]]': None,
+        }
+        for reply, want in cases.items():
+            with patch.object(gsv, "_curl", return_value=reply.encode()):
+                res = gsv.near(49.2161, -123.1093, 50, None)
+                self.assertEqual(res and res["id"], want)
+        ok_res = None
+        with patch.object(gsv, "_curl", return_value=ok.encode()):
+            ok_res = gsv.near(49.2161, -123.1093, 50, None)
+        self.assertEqual(ok_res["date"], "2024-05")
+        for bad in ('[[5,"generic","GeoPhotoService.SingleImageSearch is decommissioned and turned down."]]',
+                    '[3,"Invalid JSON payload received."]', "<html>blocked</html>", ""):
+            with patch.object(gsv, "_curl", return_value=bad.encode()), self.assertRaises(gsv.ServiceError):
+                gsv.near(49.2161, -123.1093, 50, None)
 
 
 if __name__ == "__main__":

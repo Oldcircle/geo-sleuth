@@ -19,8 +19,8 @@ uv run scripts/revimg.py photo.jpg v/*.jpg --out-dir rev/
 - Place level: when a label is the name of a residential compound, housing development, hotel or organization, get its coordinates with `poi.py` and check; this often gets you to the area in one step:
 
 ```bash
-uv run scripts/poi.py "<compound name>" --city <city> --out pois.json      # list every same-name point in the city (360 Maps + OSM, WGS84)
-uv run scripts/poi.py "<compound name>"                                    # no city: which cities nationwide have a same-name point
+uv run scripts/poi.py "<compound name>" --city <city> --region <cc> --out pois.json   # every same-name point in the city (sources from the region pack, WGS84)
+uv run scripts/poi.py "<compound name>" --region <cc>                                  # no city: which cities in the country have a same-name point
 uv run scripts/tiles.py sheet --points pois.json --zoom 18 --out pois_sheet.jpg
 ```
 
@@ -43,17 +43,9 @@ uv run scripts/tiles.py sheet --points pois.json --zoom 18 --out pois_sheet.jpg
 
 Without a browser tool, when Baidu and Yandex both have no results and the frame shows a foreign landmark or object, ask the user to try Lens once in their own browser.
 
-### Chinese keyword search
+### Keyword search in the local language
 
-General web search tools are often ineffective for Chinese content inside China. Use the script:
-
-```bash
-uv run scripts/revimg.py --query "蓝色拱形顶棚 人行天桥 高架" --query "<city> 出租车 颜色" --out-dir q/
-```
-
-(Queries in Chinese: "blue arched canopy, pedestrian bridge, elevated road"; "<city> taxi color".)
-
-Bing China gives web results (title + link); Baidu Images and Sogou Images give result-page screenshots (look at photos of similar scenes). For long descriptive queries ("楼顶操场 学校" rooftop playground school, "黄色公交" yellow bus) Bing mostly returns travel-guide pages; look directly at the Baidu Images screenshot. Baidu web search pops up a verification challenge, so it isn't done.
+Write queries in the local language as well as English. `revimg.py --query "<words>"` runs keyword search on Chinese engines only (Bing China, Baidu Images, Sogou Images); elsewhere use your general web and image search tools. Region packs describe which local engines and platforms work and how to phrase queries (`regions.py show <cc>`).
 
 ### After a hit
 
@@ -64,31 +56,33 @@ Bing China gives web results (title + link); Baidu Images and Sogou Images give 
 
 ## 2. Choose where to search by object type
 
+Region packs add local platforms per object type (`regions.py show <cc>`).
+
 | Object | Where to search | Source |
 |---|---|---|
-| Scenic-area buildings, viral check-in spots | Douyin, Xiaohongshu, Weibo keyword and image search; official scenic-area accounts post videos from the same angle | v010-2, v009 |
-| Statues, small park features, foreign attractions | User photos on travel review sites (Tripadvisor, Ctrip reviews); Google Lens | v010-6 |
-| New residential developments, commercial complexes | Housing-development albums on property sites (Anjuke, Fang.com, Loupan.com, etc.): the "周边配套" (nearby amenities) and "实景图" (real photos) sections; page all the way to the signboard | v010-5 |
-| Old buildings, historic sites | Local culture-and-tourism and protected-heritage-site pages; stock image sites (Visual China Group, Getty, Alamy), whose captions carry place names and years | v004 |
-| Ordinary streets and residential areas | Image search adds little; prioritize geometry and infrastructure; when even the city isn't fixed, sample one page of arterial-road street view per candidate city and compare municipal fixtures (`baidu_pano.py sample`) | — |
+| Scenic-area buildings, viral check-in spots | The local short-video and photo-sharing platforms (the region pack names them); official scenic-area accounts post videos from the same angle | v010-2, v009 |
+| Statues, small park features, foreign attractions | User photos on travel review sites (Tripadvisor and local equivalents); Google Lens | v010-6 |
+| New residential developments, commercial complexes | Development albums and listing photos on local property sites; page all the way to the signboard | v010-5 |
+| Old buildings, historic sites | Local culture-and-tourism and protected-heritage-site pages; stock image sites (Getty, Alamy and local agencies), whose captions carry place names and years | v004 |
+| Ordinary streets and residential areas | Image search adds little; prioritize geometry and infrastructure; when even the city isn't fixed, sample one page of arterial-road street view per candidate city and compare municipal fixtures (the street-view script the region pack names) | — |
 | Sub-brand stores of chain brands (truck service, refurbishment, specialty stores) | **Search opening press releases first** ("开业 / inaugura / abre / opens + sub-brand + state or city"; 开业 = opens), trade media often give the street address; treat the official store locator only as a candidate pool: it doesn't tag sub-brands, and its coordinates may be off by several km | blind test |
 | Nameless facilities found on satellite imagery (plants, warehouses, farms, mines) | Search the web and news for the facility-type word in the local language + nearby place names, and compare the accompanying photos with the facade; once you find the name, search images another round | v013 |
-| Vehicle livery (bus, taxi, school bus) | `revimg.py --query "<city> <color description> 公交"` (query in Chinese: <city> <color description> bus), and read route signs and company names from the result images; first resolve any place name you read to a district (county) with `poi.py` before using it; don't treat a vehicle from district A as a clue for district B | v014 |
+| Vehicle livery (bus, taxi, school bus) | `revimg.py --query "<city> <color description> bus"` in the local language, and read route signs and company names from the result images; first resolve any place name you read to a district with `poi.py` before using it; don't treat a vehicle from district A as a clue for district B | v014 |
 
 ## 3. Descriptive keyword image search
 
 Suits objects that "you can't name, but have a rare shape" (the v004 fountain).
 
 1. Write the object as a "shape + components + position" phrase: `顶上有金色球形装饰的白色钟楼` (white clock tower with a golden ball ornament on top), `蓝色拱形顶棚的人行天桥` (pedestrian bridge with a blue arched canopy).
-2. Prepare both a version **with place names** and one **without**, one set each in Chinese and in English (or the local language), and search them together. Finding nothing with place names is normal: replicas and obscure places have few photos online, while there is more material on the original and on similar objects.
+2. Prepare both a version **with place names** and one **without**, one set each in the local language and in English, and search them together. Finding nothing with place names is normal: replicas and obscure places have few photos online, while there is more material on the original and on similar objects.
 3. If you can't count the shapes, use broad words; don't write a wrong count.
 4. Use style words (Romanesque, Gothic, Hui-style) only after checking the form: if the arches are pointed, it isn't Romanesque.
 
 ## 4. Social media and check-in spot search
 
-- Viral scenery (cherry-blossom streets, ginkgo avenues, influencer walls, check-in cafés): search `<city> + <scenery>` on Douyin, Xiaohongshu and Weibo, **in both Chinese and English** (English posts about popular foreign streets often include the street name).
+- Viral scenery (cherry-blossom streets, ginkgo avenues, influencer walls, check-in cafés): search `<city> + <scenery>` on the local platforms, **in both the local language and English** (English posts about popular foreign streets often include the street name).
 - Other posts from the same place give more angles (houses, steps, chimneys) and even location tags.
-- Locals' photos of the same mountains or the same river: look in the candidate township's "同城" (local) feed or its place page (the v010-1 creator spoofed the device location to the candidate township to browse local content).
+- Locals' photos of the same mountains or the same river: look in the candidate town's local feed or its place page on those platforms (the v010-1 creator spoofed the device location to the candidate township to browse local content).
 - A city usually has only a dozen or so popular check-in streets; find the list first, then check them one by one.
 
 ## 5. Open data (use when clearly effective)

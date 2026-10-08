@@ -870,7 +870,7 @@ def main() -> None:
 
     v = sub.add_parser("view")
     common(v)
-    v.add_argument("--pitch", type=float, default=0, help="pitch of the frame center, looking up is positive")
+    v.add_argument("--pitch", type=float, default=0, help="pitch of the frame center, looking up is positive: a photo whose horizon sits below its middle was shot looking up (positive pitch)")
     v.add_argument("--vfov", type=float, help="vertical field of view; default derived from hfov for a 3:2 frame")
     v.add_argument("--photo", type=Path, help="scale the photo to the same width and place it above the render for comparison")
     v.add_argument("--roll", type=float, default=0, help="frame roll angle (clockwise positive), for downward shots from tall buildings and handheld tilt")

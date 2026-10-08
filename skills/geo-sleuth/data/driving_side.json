@@ -3,8 +3,9 @@
   "source": [
    "https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic"
   ],
-  "fetched": "2026-09-14",
-  "count": 236
+  "fetched": "2026-10-08",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 241
  },
  "Afghanistan": {
   "side": "right",
@@ -156,11 +157,6 @@
   "switched": "1961",
   "note": ""
  },
- "Canada": {
-  "side": "right",
-  "switched": "",
-  "note": ""
- },
  "Cape Verde": {
   "side": "right",
   "switched": "1928",
@@ -180,11 +176,6 @@
   "side": "right",
   "switched": "",
   "note": ""
- },
- "China": {
-  "side": "left",
-  "switched": "",
-  "note": "Macau was under Portuguese rule until 1999, when the dependent territory was transferred to China."
  },
  "Colombia": {
   "side": "right",
@@ -210,11 +201,6 @@
   "side": "right",
   "switched": "",
   "note": ""
- },
- "Ivory Coast(Côte d'Ivoire)": {
-  "side": "right",
-  "switched": "",
-  "note": "Part of French West Africa before 1960."
  },
  "Croatia": {
   "side": "right",
@@ -425,6 +411,11 @@
   "side": "right",
   "switched": "1924–26",
   "note": ""
+ },
+ "Ivory Coast": {
+  "side": "right",
+  "switched": "",
+  "note": "Part of French West Africa before 1960."
  },
  "Jamaica": {
   "side": "left",
@@ -941,16 +932,6 @@
   "switched": "1 September 1966",
   "note": "Former British protectorate."
  },
- "United Kingdom and overseas territories": {
-  "side": "left",
-  "switched": "",
-  "note": "Most passenger vehicles are LHD due to imports from the United States, which has RHT."
- },
- "United States": {
-  "side": "right",
-  "switched": "",
-  "note": ""
- },
  "Uruguay": {
   "side": "right",
   "switched": "2 September 1945",
@@ -1001,17 +982,145 @@
   "switched": "",
   "note": "British colony before 1965 (de facto) or 1980 (de jure)."
  },
+ "Canada": {
+  "side": "right",
+  "switched": "",
+  "note": "British Columbia: Interior changed 15 July 1920, Vancouver and the coastal area 1 January 1922; Newfoundland and Labrador: Was a British Dominion until 1949."
+ },
+ "China": {
+  "side": "right",
+  "switched": "1946",
+  "note": "Parts of China were LHT in the 1930s."
+ },
  "Hong Kong": {
   "side": "left",
   "switched": "",
-  "note": "kept from British rule, opposite to the mainland",
-  "curated": true
+  "note": "part of China; Hong Kong was a British colony from 1841 to 1941 and from 1945 to 1997, when the dependent territory was transferred to China.",
+  "part_of": "China"
  },
  "Macau": {
   "side": "left",
   "switched": "",
-  "note": "kept from Portuguese rule, opposite to the mainland",
-  "curated": true
+  "note": "part of China; Macau was under Portuguese rule until 1999, when the dependent territory was transferred to China.",
+  "part_of": "China"
+ },
+ "United Kingdom": {
+  "side": "left",
+  "switched": "",
+  "note": "An island nation with a land border with the Republic of Ireland, which is also LHT. Also LHT are the British Overseas Territories of Anguilla, Ascension Island, Montserrat, Saint Helena, and Tristan da Cunha. The Heathrow airport PRT uses RHT."
+ },
+ "Bermuda": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; Some commercial vehicles are LHD due to imports from the United States, which has RHT.",
+  "part_of": "United Kingdom"
+ },
+ "British Indian Ocean Territory": {
+  "side": "right",
+  "switched": "",
+  "note": "part of United Kingdom; The largest island, Diego Garcia, was leased to the United States Navy as a military base; the United States is RHT.",
+  "part_of": "United Kingdom"
+ },
+ "British Virgin Islands": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; Most passenger vehicles are LHD due to imports from the United States, which is RHT.",
+  "part_of": "United Kingdom"
+ },
+ "Cayman Islands": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; Most passenger vehicles are LHD due to imports from the United States, which has RHT.",
+  "part_of": "United Kingdom"
+ },
+ "Falkland Islands": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; Briefly switched to RHT during the Falklands War.",
+  "part_of": "United Kingdom"
+ },
+ "Guernsey": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; Was RHT from 1940 to 1945 due to the German occupation.",
+  "part_of": "United Kingdom"
+ },
+ "Isle of Man": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom",
+  "part_of": "United Kingdom"
+ },
+ "Jersey": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; Was RHT from 1940 to 1945 due to the German occupation.",
+  "part_of": "United Kingdom"
+ },
+ "Pitcairn Islands": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; There is no official vehicle registration system.",
+  "part_of": "United Kingdom"
+ },
+ "South Georgia and the South Sandwich Islands": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; Briefly switched to RHT during the Falklands War.",
+  "part_of": "United Kingdom"
+ },
+ "Turks and Caicos Islands": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United Kingdom; Most passenger vehicles are LHD due to imports from the United States, which has RHT.",
+  "part_of": "United Kingdom"
+ },
+ "United States": {
+  "side": "right",
+  "switched": "",
+  "note": "British colonies before 1776 (de facto) or 1783 (de jure)"
+ },
+ "Alaska": {
+  "side": "right",
+  "switched": "",
+  "note": "part of United States",
+  "part_of": "United States"
+ },
+ "Hawaii": {
+  "side": "right",
+  "switched": "",
+  "note": "part of United States",
+  "part_of": "United States"
+ },
+ "Puerto Rico": {
+  "side": "right",
+  "switched": "",
+  "note": "part of United States",
+  "part_of": "United States"
+ },
+ "U.S. Virgin Islands": {
+  "side": "left",
+  "switched": "",
+  "note": "part of United States; U.S. Virgin Islands, like much of the Caribbean, is LHT and is the only American jurisdiction that still has LHT, because the islands drove on the left when the US purchased the former Danish West Indies in the 1917 Treaty of the Danish West Indies. Most passenger vehicles are LHD due to them being imported from the American mainland.",
+  "part_of": "United States"
+ },
+ "Guam": {
+  "side": "right",
+  "switched": "",
+  "note": "part of United States",
+  "part_of": "United States"
+ },
+ "Northern Mariana Islands": {
+  "side": "right",
+  "switched": "",
+  "note": "part of United States",
+  "part_of": "United States"
+ },
+ "American Samoa": {
+  "side": "right",
+  "switched": "",
+  "note": "part of United States",
+  "part_of": "United States"
  },
  "French Guiana": {
   "side": "right",
@@ -1055,36 +1164,6 @@
   "note": "French territory",
   "curated": true
  },
- "Puerto Rico": {
-  "side": "right",
-  "switched": "",
-  "note": "US territory",
-  "curated": true
- },
- "Guam": {
-  "side": "right",
-  "switched": "",
-  "note": "US territory",
-  "curated": true
- },
- "U.S. Virgin Islands": {
-  "side": "left",
-  "switched": "",
-  "note": "US territory, a rare left-hand one",
-  "curated": true
- },
- "American Samoa": {
-  "side": "right",
-  "switched": "",
-  "note": "US territory",
-  "curated": true
- },
- "Northern Mariana Islands": {
-  "side": "right",
-  "switched": "",
-  "note": "US territory",
-  "curated": true
- },
  "Greenland": {
   "side": "right",
   "switched": "",
@@ -1115,24 +1194,6 @@
   "note": "Netherlands",
   "curated": true
  },
- "Bermuda": {
-  "side": "left",
-  "switched": "",
-  "note": "British territory",
-  "curated": true
- },
- "Cayman Islands": {
-  "side": "left",
-  "switched": "",
-  "note": "British territory",
-  "curated": true
- },
- "British Virgin Islands": {
-  "side": "left",
-  "switched": "",
-  "note": "British territory",
-  "curated": true
- },
  "Anguilla": {
   "side": "left",
   "switched": "",
@@ -1145,40 +1206,10 @@
   "note": "British territory",
   "curated": true
  },
- "Turks and Caicos Islands": {
-  "side": "left",
-  "switched": "",
-  "note": "British territory",
-  "curated": true
- },
- "Falkland Islands": {
-  "side": "left",
-  "switched": "",
-  "note": "British territory",
-  "curated": true
- },
  "Saint Helena": {
   "side": "left",
   "switched": "",
   "note": "British territory",
-  "curated": true
- },
- "Isle of Man": {
-  "side": "left",
-  "switched": "",
-  "note": "British Crown Dependency",
-  "curated": true
- },
- "Jersey": {
-  "side": "left",
-  "switched": "",
-  "note": "British Crown Dependency",
-  "curated": true
- },
- "Guernsey": {
-  "side": "left",
-  "switched": "",
-  "note": "British Crown Dependency",
   "curated": true
  },
  "Cook Islands": {
