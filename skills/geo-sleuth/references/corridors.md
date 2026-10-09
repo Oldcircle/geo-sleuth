@@ -119,7 +119,7 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/terrain.py scan --lines lines.geojson --out h
   [--near-flat 40] [--near-radius 1200] [--near-step 300] \
   [--min-peak 4.5] [--max-low 1.2] [--flat-run 20] [--min-low-deg default=--flat-run] [--flat-run-cap 100] \
   [--eye 1.5] [--az-step 5] [--dist 1500,2000,2500,3000,3500,4000,5000,6000,7000,8000,9000] \
-  [--skip-tag electrified=no ...] [--cluster-km 3.5] [--threads 24] [--max-tiles 4000]
+  [--skip-tag electrified=no ...] [--cluster-km 3.5] [--threads 8] [--max-tiles 4000] [--allow-missing]
 ```
 
 - `--step` is the sampling spacing along the line (meters); `--zoom` is the elevation tile level (at z10 one cell is about 150 m; good enough, with few tiles).

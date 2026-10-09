@@ -43,6 +43,8 @@ import os
 import re
 import subprocess
 import sys
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -57,23 +59,71 @@ R_EARTH = 6371008.8
 K_REFRACTION = 0.13
 
 
-def _fetch(z: int, x: int, y: int, cache: Path, proxy: str | None) -> np.ndarray:
-    p = cache / f"terrarium_{z}_{x}_{y}.png"
-    if not (p.exists() and p.stat().st_size > 100):
-        cmd = ["curl", "-q", "-s", "-m", "60", "-o", str(p), TILE.format(z=z, x=x, y=y)]
-        cmd += curl_args(proxy)
-        subprocess.run(cmd, check=False)
+FETCH_TRIES = 4
+MISSING_HELP = ("fill tiles that still fail after retries as missing (skipped in scan/fit, see-through in view/profile) instead of exiting; "
+                "default: any failed tile is an error, because treating it as 0 m silently fakes sea-level terrain")
+
+
+def _decode(p: Path) -> np.ndarray | None:
+    """Decode a cached Terrarium tile; None if it is not a valid 256×256 image (truncated download, HTTP error body)."""
     try:
-        a = np.asarray(Image.open(p).convert("RGB"), dtype=np.float32)
+        with Image.open(p) as im:
+            if im.size != (256, 256):
+                return None
+            a = np.asarray(im.convert("RGB"), dtype=np.float32)
     except Exception:  # noqa: BLE001
-        return np.zeros((256, 256), dtype=np.float32)
+        return None
     return a[..., 0] * 256 + a[..., 1] + a[..., 2] / 256 - 32768
+
+
+def _fetch(z: int, x: int, y: int, cache: Path, proxy: str | None) -> np.ndarray | None:
+    """Elevation of one tile, or None if it could not be downloaded after FETCH_TRIES attempts. Never caches a bad response."""
+    p = cache / f"terrarium_{z}_{x}_{y}.png"
+    if p.exists():
+        a = _decode(p)
+        if a is not None:
+            return a
+        p.unlink(missing_ok=True)                                     # bad file left by an older version: download again
+    tmp = p.with_name(f"{p.name}.{os.getpid()}.{threading.get_ident()}.part")
+    cmd = ["curl", "-q", "-fsS", "-m", "60", "-o", str(tmp), TILE.format(z=z, x=x, y=y)] + curl_args(proxy)
+    for k in range(FETCH_TRIES):
+        if k:
+            time.sleep(2 ** (k - 1))                                  # 1, 2, 4 s backoff
+        r = subprocess.run(cmd, check=False, capture_output=True)
+        a = _decode(tmp) if r.returncode == 0 else None
+        if a is not None:
+            os.replace(tmp, p)
+            return a
+        tmp.unlink(missing_ok=True)
+    return None
+
+
+def _fetch_all(jobs: list[tuple[int, int]], zoom: int, cache: Path, proxy: str | None, threads: int, progress: bool = False):
+    """Yield ((x, y), array or None) for every tile; download failures come back as None."""
+    with ThreadPoolExecutor(threads) as ex:
+        for i, item in enumerate(zip(jobs, ex.map(lambda t: _fetch(zoom, t[0], t[1], cache, proxy), jobs)), 1):
+            if progress and i % 200 == 0:
+                print(f"  tiles {i}/{len(jobs)}", file=sys.stderr)
+            yield item
+
+
+def _report_missing(failed: list[tuple[int, int]], total: int, zoom: int, allow_missing: bool) -> None:
+    """Fail loudly on missing tiles; with --allow-missing only warn."""
+    if not failed:
+        return
+    eg = ", ".join(f"{zoom}/{x}/{y}" for x, y in failed[:5]) + (" …" if len(failed) > 5 else "")
+    msg = f"{len(failed)}/{total} elevation tiles failed to download after {FETCH_TRIES} tries ({eg})"
+    if not allow_missing:
+        sys.exit(f"{msg}. Good tiles are cached, so just re-run (lower --threads if it keeps failing, "
+                 "or check the network with doctor.py --network); --allow-missing proceeds without them")
+    print(f"WARNING: {msg}; --allow-missing: continuing without them", file=sys.stderr)
 
 
 class DEM:
     """Elevation mosaic indexed by Web Mercator pixels."""
 
-    def __init__(self, center: tuple[float, float], radius_m: float, zoom: int, cache: Path, proxy: str | None):
+    def __init__(self, center: tuple[float, float], radius_m: float, zoom: int, cache: Path, proxy: str | None,
+                 allow_missing: bool = False):
         cache.mkdir(parents=True, exist_ok=True)
         self.z = zoom
         mpp = geo.meters_per_px(zoom, center[0])
@@ -84,11 +134,15 @@ class DEM:
         nx, ny = tx1 - self.tx0 + 1, ty1 - self.ty0 + 1
         if nx * ny > 400:
             sys.exit(f"Area too large ({nx}x{ny} tiles); reduce --range or lower --zoom")
-        self.h = np.zeros((ny * 256, nx * 256), dtype=np.float32)
+        self.h = np.full((ny * 256, nx * 256), np.nan, dtype=np.float32)   # missing tiles stay NaN, never 0 m
         jobs = [(x, y) for y in range(self.ty0, ty1 + 1) for x in range(self.tx0, tx1 + 1)]
-        with ThreadPoolExecutor(16) as ex:
-            for (x, y), arr in zip(jobs, ex.map(lambda t: _fetch(zoom, t[0], t[1], cache, proxy), jobs)):
-                self.h[(y - self.ty0) * 256:(y - self.ty0 + 1) * 256, (x - self.tx0) * 256:(x - self.tx0 + 1) * 256] = arr
+        failed = []
+        for (x, y), arr in _fetch_all(jobs, zoom, cache, proxy, 8):
+            if arr is None:
+                failed.append((x, y))
+                continue
+            self.h[(y - self.ty0) * 256:(y - self.ty0 + 1) * 256, (x - self.tx0) * 256:(x - self.tx0 + 1) * 256] = arr
+        _report_missing(failed, len(jobs), zoom, allow_missing)
 
     def sample(self, lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
         n = 256 * 2 ** self.z
@@ -112,14 +166,15 @@ def _dest_np(lat0: float, lon0: float, brg: np.ndarray, dist: np.ndarray) -> tup
     return np.degrees(la2), np.degrees(lo2)
 
 
-def cast(dem: DEM, at, eye_alt: float, azimuths: np.ndarray, rng: float, near: float = 40.0, n: int = 900):
-    """Return (elevation angle ° of each sample in each column, sample distance m). n = samples per sight line (view/profile use 900; fit uses --nsamp)."""
+def cast(dem: DEM, at, eye_alt: float, azimuths: np.ndarray, rng: float, near: float = 40.0, n: int = 900, keep_nan: bool = False):
+    """Return (elevation angle ° of each sample in each column, sample distance m). n = samples per sight line (view/profile use 900; fit uses --nsamp).
+    Samples on missing tiles (--allow-missing) become -90° so they never form a skyline; keep_nan=True leaves them NaN for the caller to detect."""
     dist = near * (rng / near) ** (np.arange(n) / (n - 1))          # dense near, sparse far
     lat, lon = _dest_np(at[0], at[1], azimuths, dist)
     h = dem.sample(lat, lon)
     drop = dist ** 2 / (2 * R_EARTH) * (1 - K_REFRACTION)
     ang = np.degrees(np.arctan2(h - drop[None, :] - eye_alt, dist[None, :]))
-    return ang, dist
+    return (ang if keep_nan else np.nan_to_num(ang, nan=-90.0)), dist
 
 
 def render(ang: np.ndarray, dist: np.ndarray, azimuths: np.ndarray, pitch: float, vfov: float, height: int) -> tuple[Image.Image, np.ndarray, np.ndarray]:
@@ -210,9 +265,12 @@ def _haversine(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 
 class _Mosaic:
-    """A large mosaic stitched from a batch of Terrarium tiles, nearest-neighbor sampling. Tiles that failed to download stay 0 (treated as sea level)."""
+    """A large mosaic stitched from a batch of Terrarium tiles, nearest-neighbor sampling. Tiles that failed to download hold MISSING."""
 
-    def __init__(self, need: set[tuple[int, int]], zoom: int, cache: Path, proxy: str | None, threads: int):
+    MISSING = -32768                                                  # real elevations are clipped to -500…9000, so this never collides
+
+    def __init__(self, need: set[tuple[int, int]], zoom: int, cache: Path, proxy: str | None, threads: int,
+                 allow_missing: bool = False):
         cache.mkdir(parents=True, exist_ok=True)
         self.z = zoom
         self.tx0 = min(t[0] for t in need)
@@ -221,16 +279,17 @@ class _Mosaic:
         ny = max(t[1] for t in need) - self.ty0 + 1
         gb = nx * ny * 256 * 256 * 2 / 1e9
         print(f"mosaic {nx}x{ny} tiles, {gb:.2f} GB memory", file=sys.stderr)
-        self.h = np.zeros((ny * 256, nx * 256), dtype=np.int16)
+        self.h = np.full((ny * 256, nx * 256), self.MISSING, dtype=np.int16)
         jobs = sorted(need)
-        done = 0
-        with ThreadPoolExecutor(threads) as ex:
-            for (x, y), arr in zip(jobs, ex.map(lambda t: _fetch(zoom, t[0], t[1], cache, proxy), jobs)):
-                self.h[(y - self.ty0) * 256:(y - self.ty0 + 1) * 256,
-                       (x - self.tx0) * 256:(x - self.tx0 + 1) * 256] = np.clip(arr, -500, 9000).astype(np.int16)
-                done += 1
-                if done % 200 == 0:
-                    print(f"  tiles {done}/{len(jobs)}", file=sys.stderr)
+        failed = []
+        for (x, y), arr in _fetch_all(jobs, zoom, cache, proxy, threads, progress=True):
+            if arr is None:
+                failed.append((x, y))
+                continue
+            self.h[(y - self.ty0) * 256:(y - self.ty0 + 1) * 256,
+                   (x - self.tx0) * 256:(x - self.tx0 + 1) * 256] = np.clip(arr, -500, 9000).astype(np.int16)
+        self.n_failed = len(failed)
+        _report_missing(failed, len(jobs), zoom, allow_missing)
 
     def sample(self, lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
         n = 256 * 2 ** self.z
@@ -335,23 +394,30 @@ def _cmd_scan(args) -> None:
     print(f"need {len(need)} z{args.zoom} tiles", file=sys.stderr)
     if len(need) > args.max_tiles:
         sys.exit(f"{len(need)} tiles > --max-tiles {args.max_tiles}: shrink --bbox, lower --zoom, or run in chunks")
-    mos = _Mosaic(need, args.zoom, args.cache, args.proxy, args.threads)
+    mos = _Mosaic(need, args.zoom, args.cache, args.proxy, args.threads, args.allow_missing)
 
     az = np.arange(0, 360, az_step)
     min_low = int(round((args.min_low_deg if args.min_low_deg is not None else args.flat_run) / az_step))
     need_run = int(round(args.flat_run / az_step))
     cap = int(round(args.flat_run_cap / az_step))
     hits = []
+    n_missing = 0
     for idx, (lat, lon, tags) in enumerate(pts):
         if idx and idx % 2000 == 0:
             print(f"  scanned {idx}/{len(pts)}, hits {len(hits)}", file=sys.stderr)
         ln, lo = _dest_np(lat, lon, az, near)
         hn = mos.sample(ln, lo)
+        if (hn == mos.MISSING).any():
+            n_missing += 1
+            continue
         if hn.max() - hn.min() > args.near_flat:                      # not flat nearby: a valley or hillside, not the flat ground seen in the frame
             continue
         h0 = float(np.median(hn))
         la, lo = _dest_np(lat, lon, az, dist)
         h = mos.sample(la, lo)
+        if (h == mos.MISSING).any():                                  # a hole would read as a deep valley or flat horizon
+            n_missing += 1
+            continue
         ang = np.degrees(np.arctan2(h - h0 - args.eye, dist[None, :]))  # within a few km earth curvature is <5 m, negligible next to z10 error
         hor = ang.max(axis=1)                                         # horizon elevation angle at each bearing
         rel = (h - h0).max(axis=1)
@@ -385,6 +451,8 @@ def _cmd_scan(args) -> None:
 
     clusters = _cluster(hits, args.cluster_km)
     print(f"{len(hits)} hit points → {len(clusters)} clusters", file=sys.stderr)
+    if n_missing:
+        print(f"WARNING: {n_missing}/{len(pts)} sample points not scanned because they touch missing tiles", file=sys.stderr)
     out = {
         "params": {"lines": str(args.lines), "bbox": list(bbox) if bbox else None, "step_m": args.step,
                    "zoom": args.zoom, "near_flat_m": args.near_flat, "near_radius_m": args.near_radius,
@@ -393,6 +461,7 @@ def _cmd_scan(args) -> None:
                    "eye_m": args.eye, "az_step_deg": az_step, "dist_m": dist.tolist(),
                    "skip_tag": [f"{k}={v}" for k, v in skip], "cluster_km": args.cluster_km},
         "n_samples": len(pts), "n_hits": len(hits), "n_clusters": len(clusters),
+        "n_failed_tiles": mos.n_failed, "n_samples_missing_dem": n_missing,
         "hits": hits, "clusters": clusters,
     }
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=0), encoding="utf-8")
@@ -596,7 +665,7 @@ def _fit_sheet(recs: list[dict], ridge: dict, photo: Path | None, out: Path, arg
         if ridge.get("flat"):
             d.line([(ridge["flat"][0] * s, hrow * s), (ridge["flat"][1] * s, hrow * s)], fill=(0, 200, 255), width=3)
         try:
-            dem = DEM(tuple(r["cam"]), args.range + 500, args.zoom, args.cache, args.proxy)
+            dem = DEM(tuple(r["cam"]), args.range + 500, args.zoom, args.cache, args.proxy, args.allow_missing)
             ang, _ = cast(dem, tuple(r["cam"]), r["g"] + args.eye, az, args.range, near=args.near, n=dist_n)
             pts = _skyline_xy(ang.max(axis=1), az, r["H"], f, r["cc"], cx, hrow, W / 2, r.get("roll", 0.0))
             d.line([(x * s, y * s) for x, y in pts], fill=(255, 40, 40), width=2)
@@ -675,7 +744,8 @@ def _cmd_fit(args) -> None:
     done: set[tuple[int, int]] = set()
     recs: list[dict] = []
     clusters_out: list[dict] = []
-    skipped = {"not_flat": 0, "no_peak": 0, "no_line": 0, "dup": 0}
+    skipped = {"not_flat": 0, "no_peak": 0, "no_line": 0, "dup": 0, "missing_dem": 0}
+    dem_failed = []
     grid_pts = [(dx, dy) for dy in np.arange(-args.radius, args.radius + 1e-6, args.grid)
                 for dx in np.arange(-args.radius, args.radius + 1e-6, args.grid) if dx * dx + dy * dy <= args.radius ** 2]
     if args.radius == 0:
@@ -684,9 +754,10 @@ def _cmd_fit(args) -> None:
         lat, lon = float(c["lat"]), float(c["lon"])
         name = c.get("name", "")
         try:
-            dem = DEM((lat, lon), args.radius + args.range + 500, args.zoom, args.cache, args.proxy)
+            dem = DEM((lat, lon), args.radius + args.range + 500, args.zoom, args.cache, args.proxy, args.allow_missing)
         except SystemExit as e:
             print(f"cluster {c['src_idx']} {name}: DEM failed ({e}), skipped", file=sys.stderr)
+            dem_failed.append(c["src_idx"])
             continue
         kx = 111320 * math.cos(math.radians(lat))
         sub = None
@@ -706,11 +777,17 @@ def _cmd_fit(args) -> None:
             done.add(key)
             rla, rlo = _dest_np(clat, clon, ring_az, ring_d)
             g = dem.sample(rla, rlo)
+            if np.isnan(g).any():
+                skipped["missing_dem"] += 1
+                continue
             if g.max() - g.min() > args.cam_flat:
                 skipped["not_flat"] += 1
                 continue
             g0 = float(g[:, 0].mean())
-            ang, _ = cast(dem, (clat, clon), g0 + args.eye, AZ, args.range, near=args.near, n=args.nsamp)
+            ang, _ = cast(dem, (clat, clon), g0 + args.eye, AZ, args.range, near=args.near, n=args.nsamp, keep_nan=True)
+            if np.isnan(ang).any():                                   # a missing far tile would drop a ridge out of the skyline; don't rank on it
+                skipped["missing_dem"] += 1
+                continue
             hor = ang.max(axis=1)
             if hor.max() < args.min_peak:
                 skipped["no_peak"] += 1
@@ -811,12 +888,14 @@ def _cmd_fit(args) -> None:
                    "line_scale": args.line_scale if args.line else None, "line_order": args.line_order if args.line else None,
                    "line_w": args.line_w, "line_min_m": args.line_min, "line_sample_m": args.line_sample, "line_reach_m": args.line_reach,
                    "photo": {"f0_px": f0, "hrow": hrow, "cx": cx, "hfov_deg_at_fs1": round(hfov, 1), "n_ridge": int(RX.size), "flat": flat}},
-        "n_clusters": len(clusters_out), "n_cams": len(recs), "n_skipped": skipped,
+        "n_clusters": len(clusters_out), "n_cams": len(recs), "n_skipped": skipped, "dem_failed_clusters": dem_failed,
         "clusters": clusters_out,
         "cams": recs[:args.keep],
     }
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=0), encoding="utf-8")
     print(f"clusters {len(clusters_out)}, camera positions {len(recs)}, skipped {skipped} → {args.out}", file=sys.stderr)
+    if skipped["missing_dem"]:
+        print(f"WARNING: {skipped['missing_dem']} camera positions not scored because their sight lines touch missing tiles", file=sys.stderr)
     for x in clusters_out[:min(args.top, 10)]:
         b = x["best"]
         if b:
@@ -827,16 +906,19 @@ def _cmd_fit(args) -> None:
         top = [x["best"] for x in clusters_out if x["best"]][:args.top] if len(clusters_out) > 1 else recs[:args.top]
         if not top:
             print("no camera positions to draw, no overlay", file=sys.stderr)
-            return
-        photo = Path(args.photo) if args.photo else None
-        if photo is None and ridge.get("photo"):
-            # ridge.json records the path exactly as given on the command line, possibly relative: try the current directory first, then the directory of ridge.json
-            cands = [Path(ridge["photo"]), Path(args.ridge).parent / ridge["photo"]]
-            photo = next((p for p in cands if p.exists()), cands[0])
-        if photo is None or not photo.exists():
-            print("photo not found (--overlay not given, and the photo path in ridge.json can't be found either); drawing the overlay on a gray background", file=sys.stderr)
-            photo = None
-        _fit_sheet(top, ridge, photo, Path(args.sheet), args, AZ, args.nsamp)
+        else:
+            photo = Path(args.photo) if args.photo else None
+            if photo is None and ridge.get("photo"):
+                # ridge.json records the path exactly as given on the command line, possibly relative: try the current directory first, then the directory of ridge.json
+                cands = [Path(ridge["photo"]), Path(args.ridge).parent / ridge["photo"]]
+                photo = next((p for p in cands if p.exists()), cands[0])
+            if photo is None or not photo.exists():
+                print("photo not found (--overlay not given, and the photo path in ridge.json can't be found either); drawing the overlay on a gray background", file=sys.stderr)
+                photo = None
+            _fit_sheet(top, ridge, photo, Path(args.sheet), args, AZ, args.nsamp)
+    if dem_failed:                                                    # output is written, but the ranking is missing these clusters
+        sys.exit(f"{len(dem_failed)}/{len(centers)} clusters not scored because their DEM failed "
+                 f"(hit {', '.join(map(str, dem_failed))}); re-run to retry them, the ranking above is incomplete")
 
 
 def _neg_coords(argv: list[str]) -> list[str]:
@@ -854,6 +936,7 @@ def main() -> None:
     e = sub.add_parser("elev")
     e.add_argument("--at", required=True)
     e.add_argument("--zoom", type=int, default=13)
+    e.add_argument("--allow-missing", action="store_true", help=MISSING_HELP)
 
     def common(sp):
         sp.add_argument("--at", required=True, help="candidate camera position lat,lon (WGS84)")
@@ -867,6 +950,7 @@ def main() -> None:
         sp.add_argument("--width", type=int, default=1400)
         sp.add_argument("--near", type=float, default=40, help="how near to start sampling, m; if spiky false ridgelines appear up close, raise to 150–300")
         sp.add_argument("--out", type=Path, required=True)
+        sp.add_argument("--allow-missing", action="store_true", help=MISSING_HELP)
 
     v = sub.add_parser("view")
     common(v)
@@ -923,7 +1007,8 @@ Output JSON (--out):
     sc.add_argument("--skip-tag", action="append",
                     help="skip lines carrying this tag, key=value, repeatable (default electrified=no; --skip-tag none means skip none)")
     sc.add_argument("--cluster-km", type=float, default=3.5, help="clustering radius km (default 3.5)")
-    sc.add_argument("--threads", type=int, default=24, help="tile download concurrency (default 24)")
+    sc.add_argument("--threads", type=int, default=8, help="tile download concurrency (default 8; failed tiles are retried with backoff)")
+    sc.add_argument("--allow-missing", action="store_true", help=MISSING_HELP)
     sc.add_argument("--max-tiles", type=int, default=4000,
                     help="limit on the number of tiles to download; exits immediately if exceeded (default 4000). Memory is set by the bounding rectangle of these tiles, "
                          "which can be several times the tile count when the line network is sparse; the actual usage is printed before the mosaic is built")
@@ -993,7 +1078,8 @@ Method in references/geometry.md 7.4, corridors.md 4.3.
 
 Output JSON (--out):
   {"params": {...all parameters used in this run, including f0/hrow/cx/hfov under photo...},
-   "n_clusters", "n_cams": number of camera positions scored, "n_skipped": {"not_flat","no_peak","no_line","dup"},
+   "n_clusters", "n_cams": number of camera positions scored, "n_skipped": {"not_flat","no_peak","no_line","dup","missing_dem"},
+   "dem_failed_clusters": hit indices whose elevation tiles failed to download (not scored),
    "clusters": [{"hit": the cluster's index in --hits, "name", "hit_ll": [lat,lon], "n", "max_ang", "n_cams", "rank",
                  "best": <camera record>}, ...],                      # best camera position of each cluster, ascending by total
    "cams":     [<camera record>, ...]}                                 # all camera positions ascending by total, at most --keep entries
@@ -1044,6 +1130,7 @@ Output JSON (--out):
     ft.add_argument("--overlay", "--photo", dest="photo", help="photo for the overlay; if omitted, uses the path recorded in ridge.json")
     ft.add_argument("--sheet-cols", type=int, default=4, help="overlay images per row (default 4)")
     ft.add_argument("--sheet-width", type=int, default=360, help="width of each overlay image px (default 360)")
+    ft.add_argument("--allow-missing", action="store_true", help=MISSING_HELP)
 
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
     if args.cmd == "scan":
@@ -1057,12 +1144,17 @@ Output JSON (--out):
         return
     lat, lon = map(float, args.at.split(","))
     if args.cmd == "elev":
-        dem = DEM((lat, lon), 300, args.zoom, args.cache, args.proxy)
-        print(f"{float(dem.sample(np.array([lat]), np.array([lon]))[0]):.0f} m")
+        dem = DEM((lat, lon), 300, args.zoom, args.cache, args.proxy, args.allow_missing)
+        h = float(dem.sample(np.array([lat]), np.array([lon]))[0])
+        if math.isnan(h):
+            sys.exit("no elevation here: the tile under this point failed to download")
+        print(f"{h:.0f} m")
         return
 
-    dem = DEM((lat, lon), args.range, args.zoom, args.cache, args.proxy)
+    dem = DEM((lat, lon), args.range, args.zoom, args.cache, args.proxy, args.allow_missing)
     ground = float(dem.sample(np.array([lat]), np.array([lon]))[0])
+    if math.isnan(ground):
+        sys.exit("no elevation at the camera position: the tile under it failed to download")
     eye = args.alt if args.alt is not None else ground + args.height
     az = np.linspace(args.heading - args.hfov / 2, args.heading + args.hfov / 2, args.width)
     if eye < ground + 1:
