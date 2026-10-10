@@ -96,6 +96,22 @@ Suits objects that "you can't name, but have a rare shape" (the v004 fountain).
   6. For street view, first pick historical captures from the same season as the photo (`gsv.py near` to see the history, `sheet --date <year>`) and compare facades, retaining walls and lamp-post positions; in summer captures tree crowns and bloom differ a lot, so don't skip a segment because "the trees look small".
 - Local government and media reports: after locating, look up the name, size and year built of unusual man-made objects in the frame (scenic spots, towers, statues) (v008).
 
+## 6. Building-class scan (every church / mosque / station in a region)
+
+Use when the frame shows a building of a class you can name (church, mosque, temple, station, water tower, school) seen from the street, the country or a region is known, and nothing names this particular one. Instead of guessing which one, look at all of them and let `match.py` rank:
+
+```bash
+uv run ${CLAUDE_SKILL_DIR}/scripts/osm.py find --bbox <s,w,n,e> '["building"="church"]' --out targets.json        # or ["amenity"="place_of_worship"]["religion"="muslim"], ["railway"="station"] …
+uv run ${CLAUDE_SKILL_DIR}/scripts/gsv.py targets --points targets.json --per 2 --out targets.index.json --sheet first.jpg
+uv run ${CLAUDE_SKILL_DIR}/scripts/match.py rank --query photo.jpg --query-box <building part> --items targets.index.json --render gsv --refine sift --max-candidates <views> --top 24 --out r.json --sheet r.jpg
+```
+
+- `gsv.py targets` lists the official panoramas in the z17 coverage tiles around each target and keeps up to `--per` of them between `--min-dist` and `--max-dist` (default 12–70 m, ≥15 m apart), each rendered facing the target. One coverage request per tile, cached, so a city takes seconds and a country minutes.
+- `match.py` caps candidates at 400 by default; pass `--max-candidates` with the view count `targets` prints.
+- **Read the top 24 by target, not by image**: the true building usually shows up with both of its views near the top, while a false positive is one view lifted by SIFT on repetitive brickwork or kerbs. Measured on a Street View screenshot of a city church: 50 churches → 100 views, the true church's two views ranked #2 and #3 (highest global similarity), #1 was a single 16-inlier false match. Country-wide with the same settings (bbox split 4×4; 8,769 church buildings, 16,571 views) the true church's two views were both in the top 15.
+- Country-wide Overpass queries time out: split the bbox into tiles (e.g. 4×4) and merge; `["building"="church"]` is a much lighter query than an `around` join with roads.
+- Then confirm as in SKILL step 5: render every panorama within ~130 m of the winning target facing it and compare ≥3 invariant features.
+
 ## Common mistakes
 
 - Using only one engine and searching only the whole image; after a failure, not changing the image or the engine.
