@@ -88,3 +88,12 @@ When you recognize infrastructure built to "country X's standard", the candidate
 - Strength: medium (narrows the whole world to a few regions in the French system; then use IP, continent, and climate to fix one)
 - Counterexamples: border areas of neighboring countries have similar styles; former colonies later changed pole types; in small distant images an ordinary straight crossarm is easily seen as arched, so zoom in to verify
 - Sources: v013
+
+## South Asia
+
+### Sinhala script on official signs (Sri Lanka)
+- Look for: Sinhala script (rounded, looping letters with no line along the top, unlike Hindi script) on road signs, street-name boards and government signs; official signs often repeat the same text in Sinhala, Tamil and English, but many carry only one or two of the three
+- Points to: Sri Lanka; Sinhala is an official language there and is written almost nowhere else
+- Strength: medium
+- Counterexamples: Sinhala on temples, shops or embassies outside Sri Lanka; Malayalam (Kerala, India) is also rounded and can pass for Sinhala at low resolution; when only Tamil and English are visible (Sinhala cropped, blurred or absent from that sign), the sign can be mistaken for Tamil Nadu, India, so Tamil alone does not exclude Sri Lanka; private shop signs follow no official layout
+- Sources: Constitution of Sri Lanka, Articles 18–19 (https://www.constituteproject.org/constitution/Sri_Lanka_2015.pdf?lang=en); Wikipedia "Sinhala script" (https://en.wikipedia.org/wiki/Sinhala_script)

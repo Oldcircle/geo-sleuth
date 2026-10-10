@@ -6,7 +6,7 @@ Check against it in steps 2 and 4. Entry sources are marked `vNNN` (the number o
 
 | Place | Scope |
 |---|---|
-| `global.md` (this folder) | Cross-country: telling countries and continents apart (driving side, plate shape, multilingual signs), Europe-wide patterns, inherited standards |
+| `global.md` (this folder) | Cross-country: telling countries and continents apart (driving side, plate shape, multilingual signs), Europe-wide patterns, South Asia, inherited standards |
 | `regions/<cc>/clues.md` | Inside one country: plates and codes to the province/state, local vehicles, infrastructure, climate, urban form. `regions.py show <cc>` prints a one-line index with line numbers |
 
 Rule for placing a new entry: if its "Points to" stays inside one country, it goes into that country's pack; if it separates countries, it goes into `global.md`.
