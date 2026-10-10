@@ -15,7 +15,8 @@ Elevation comes from AWS Terrain Tiles (Terrarium encoding, ~30 m worldwide, no 
            and cluster them — when the frame shows only one piece of infrastructure and a mountain you can't recognize, use it to cut a whole large region down to a few hundred patches
   ridge    sample the photo's ridgeline: per column, find the sky-to-mountain brightness jump; output a pixel point list + flat-horizon column range + horizon row + focal length (ridge.json)
   fit      score each scan cluster against ridge.json: lay a camera-position grid in each cluster, search heading × focal length × horizon offset,
-           skyline RMS + flat-horizon penalty (+ optional: how far the linear infrastructure is at the frame's left/center/right), sort by score, --sheet draws overlays of the top N
+           skyline RMS + flat-horizon penalty (+ optional: near layer of a two-layer photo, heading perpendicular to a line, how far the linear
+           infrastructure is at the frame's left/center/right), sort by score, --sheet draws overlays of the top N
 
 Important: a matching skyline outline only shows that the camera position is near some sight line — moving a few hundred meters forward or back along the sight line barely changes the distant mountain outline.
 To pin a point you need a second independent constraint (another near–far object alignment, a road or riverbank on the map). See references/geometry.md.
@@ -27,9 +28,11 @@ Examples:
   terrain.py profile --at 35.4983,138.7688 --heading 194 --hfov 50 --out prof.json
   terrain.py scan --lines rail_bridges.geojson --bbox 35.1,138.3,36.0,139.2 --out hits.json   # get the lines with osm.py geom first
   terrain.py ridge photo.jpg --x0 760 --x1 1260 --step 20 --flat 0:280 --out ridge.json --png ridge.png
+  terrain.py ridge photo.jpg --points "X,Y;X,Y;..." --near "X,Y;X,Y;..." --near-clear X0:X1@ROW --hrow ROW --out ridge.json   # two-layer
   terrain.py fit --hits hits.json --ridge ridge.json --out fit.json --sheet top.jpg            # coarse search: per cluster 2 km / 250 m / z11
   terrain.py fit --at 35.4983,138.7688 --ridge ridge.json --radius 800 --grid 100 --zoom 13 --az-step 0.25 \\
              --line rail.geojson --line-dist 350-750:550-900:800-1700 --out fine.json          # fine search + infrastructure distance constraint
+  terrain.py fit --hits hits.json --ridge ridge.json --range 45000 --min-peak 2 --perp-line lines.geojson --out fit.json   # far range + wires overhead
 
 For the fields of ridge.json and fit.json, see each subcommand's --help.
 """
@@ -57,6 +60,8 @@ import geo  # noqa: E402
 TILE = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
 R_EARTH = 6371008.8
 K_REFRACTION = 0.13
+F35_RANGE = (13.0, 135.0)          # fit's focal ladder when the photo has no EXIF focal length: 0.5x ultra-wide to ~5x telephoto
+F35_RATIO = 1.18                   # step between ladder rungs
 
 
 FETCH_TRIES = 4
@@ -492,6 +497,27 @@ def _focal_px(photo: Path, w: int, h: int, f0_arg: float | None, f35_default: fl
     return f35_default / 43.2666 * diag, "assumed", f35_default
 
 
+def _parse_pts(spec: str, name: str, W: int, H: int) -> list[list[int]]:
+    """Pixel points as "x,y;x,y;..." or a JSON file holding [[x,y],...]."""
+    p = Path(spec)
+    if p.suffix == ".json" and p.exists():
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        pts = raw.get("ridge", raw) if isinstance(raw, dict) else raw
+    else:
+        try:
+            pts = [[float(v) for v in part.split(",")] for part in spec.split(";") if part.strip()]
+        except ValueError:
+            sys.exit(f"{name} must be x,y;x,y;... or a .json file of [[x,y],...], got {spec!r}")
+    out = []
+    for q in pts:
+        if len(q) != 2 or not (0 <= q[0] < W and 0 <= q[1] < H):
+            sys.exit(f"{name}: point {q} is not x,y inside the {W}x{H} photo")
+        out.append([int(round(q[0])), int(round(q[1]))])
+    if len(out) < 3:
+        sys.exit(f"{name} needs at least 3 points, got {len(out)}")
+    return sorted(out)
+
+
 def _sky_edge(prof: np.ndarray, ymin: int, ymax: int, k: int, drop: float, hold: int) -> int | None:
     """In one column's brightness profile, top to bottom, find the first row where "the mean of the k rows above exceeds the mean of the k rows below by drop, and the hold rows further down are still dark",
     then take the maximum-gradient row within ±k rows of it. Return the row index of the mountain's first row; None if not found.
@@ -518,6 +544,8 @@ def _cmd_ridge(args) -> None:
     W, H = im.size
     a = np.asarray(im, dtype=np.float32)
     L = a[..., 0] * 0.299 + a[..., 1] * 0.587 + a[..., 2] * 0.114
+    if args.x1 is None:
+        args.x1 = W - 1
     if not (0 <= args.x0 < args.x1 < W):
         sys.exit(f"--x0/--x1 must satisfy 0 ≤ x0 < x1 < width {W}")
     if args.step <= 0:
@@ -531,9 +559,19 @@ def _cmd_ridge(args) -> None:
         return _sky_edge(L[:, x0:x1].mean(axis=1), ymin, ymax, args.k, args.drop, args.hold)
 
     ridge, missing = [], []
-    for x in range(args.x0, args.x1 + 1, args.step):
-        y = edge(x)
-        (ridge.append([x, y]) if y is not None else missing.append(x))
+    if args.points:                                                   # hand-picked skyline replaces detection (cloud on the peaks, haze, snow against sky)
+        ridge = _parse_pts(args.points, "--points", W, H)
+    else:
+        for x in range(args.x0, args.x1 + 1, args.step):
+            y = edge(x)
+            (ridge.append([x, y]) if y is not None else missing.append(x))
+    near = _parse_pts(args.near, "--near", W, H) if args.near else []
+    near_clear = []
+    for spec in args.near_clear or []:
+        m = re.match(r"^\s*(\d+):(\d+)@(\d+(?:\.\d+)?)\s*$", spec)
+        if not m or not 0 <= int(m[1]) < int(m[2]) < W:
+            sys.exit(f"--near-clear must be x0:x1@row with 0 ≤ x0 < x1 < width {W}, got {spec!r}")
+        near_clear.append([int(m[1]), int(m[2]), float(m[3])])
     flat = None
     flat_rows: list[int] = []
     flat_pts: list[list[int]] = []                                    # for drawing the check image: flat_rows has only row indices and omits columns with no jump found, so index order can't map back to columns
@@ -559,7 +597,8 @@ def _cmd_ridge(args) -> None:
         print(f"warning: only {len(ridge)} ridge points found ({len(missing)} columns missing), fit needs at least 3; adjust --drop/--ymin/--ymax or check --png", file=sys.stderr)
     out = {
         "photo": str(args.photo), "image_size": [W, H], "cx": W / 2,
-        "ridge": ridge, "missing_cols": missing,
+        "ridge": ridge, "missing_cols": missing, "ridge_source": "points" if args.points else "detected",
+        "near": near, "near_clear": near_clear,
         "flat": flat, "flat_rows": flat_rows,
         "hrow": round(hrow, 1), "hrow_source": h_src,
         "f0": round(f0, 1), "f0_source": f_src, "f35_equiv": f35,
@@ -567,10 +606,12 @@ def _cmd_ridge(args) -> None:
                    "drop": args.drop, "k": args.k, "hold": args.hold, "halfw": args.halfw},
     }
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
-    src_txt = {"arg": "--f0", "exif": "EXIF 35mm equivalent", "assumed": f"no EXIF, assumed {f35} mm equivalent"}[f_src]
+    src_txt = {"arg": "--f0", "exif": "EXIF 35mm equivalent",
+               "assumed": f"no EXIF, assumed {f35} mm equivalent; fit tries {F35_RANGE[0]:g}–{F35_RANGE[1]:g} mm by default"}[f_src]
     h_txt = {"arg": "--hrow", "flat": f"median sky→ground row in the --flat columns ({len(flat_rows)} columns)", "center": "no --flat given, frame midline"}[h_src]
     print(f"{W}x{H}  ridge {len(ridge)} points ({len(missing)} columns missing)  flat-horizon columns {flat}  "
-          f"hrow {hrow:.0f} ({h_txt})  f0 {f0:.0f} px ({src_txt}, horizontal FOV {2 * math.degrees(math.atan(W / 2 / f0)):.1f}°) → {args.out}")
+          f"hrow {hrow:.0f} ({h_txt})  f0 {f0:.0f} px ({src_txt}, horizontal FOV {2 * math.degrees(math.atan(W / 2 / f0)):.1f}°)"
+          + (f"  near layer {len(near)} points, {len(near_clear)} clear ranges" if near or near_clear else "") + f" → {args.out}")
     if args.png:
         d = ImageDraw.Draw(im)
         d.line([(0, hrow), (W, hrow)], fill=(80, 80, 255), width=1)
@@ -582,9 +623,14 @@ def _cmd_ridge(args) -> None:
             d.ellipse([x - 4, y - 4, x + 4, y + 4], fill=(255, 220, 0))
         for x in missing:
             d.line([(x, ymin), (x, ymax - 1)], fill=(255, 0, 0), width=1)
+        for x, y in near:
+            d.ellipse([x - 4, y - 4, x + 4, y + 4], fill=(255, 120, 0))
+        for x0, x1, row in near_clear:
+            d.line([(x0, row), (x1, row)], fill=(255, 120, 0), width=3)
         d.text((8, 8), f"ridge {len(ridge)} pts  hrow {hrow:.0f} ({h_src})  f0 {f0:.0f}px ({f_src})", fill="yellow", font=_font(20))
         im.save(args.png, quality=90)
-        print(f"check image → {args.png} (yellow dots = ridge points, red vertical lines = columns not found, blue line = hrow, cyan line = flat-horizon column range)")
+        print(f"check image → {args.png} (yellow dots = ridge points, red vertical lines = columns not found, blue line = hrow, cyan line = flat-horizon column range, "
+              "orange dots = near-layer points, orange lines = near-clear ranges)")
 
 
 # ------------------------------------------------------------------ fit ----
@@ -596,6 +642,9 @@ def _cmd_ridge(args) -> None:
 # With --line, also add: for each heading, the nearest distance dL/dC/dR of infrastructure sample points inside the frame's left/center/right bearing windows,
 #   line_pen = meters each falls outside its --line-dist interval / --line-scale (+ penalty 1 for wrong order)
 #   total = score + line_w × line_pen; without --line, total = score.
+# Two-layer photos (ridge.json has near / near_clear): near(az) = highest angle within D1 m, D1 tried from --near-dist; near points join
+#   the far ridge points in the same rms (one cc and roll for both), near_clear columns add nclearpen = mean of max(0, near − row angle).
+# --perp-line keeps only headings within --perp-tol of perpendicular to the nearest line (wires crossing the frame almost level).
 
 
 def _parse_pairs(s: str, name: str, n: int = 3, sep: str = ",", rng: str = ":") -> list[tuple[float, float]]:
@@ -666,22 +715,30 @@ def _fit_sheet(recs: list[dict], ridge: dict, photo: Path | None, out: Path, arg
             d.line([(ridge["flat"][0] * s, hrow * s), (ridge["flat"][1] * s, hrow * s)], fill=(0, 200, 255), width=3)
         try:
             dem = DEM(tuple(r["cam"]), args.range + 500, args.zoom, args.cache, args.proxy, args.allow_missing)
-            ang, _ = cast(dem, tuple(r["cam"]), r["g"] + args.eye, az, args.range, near=args.near, n=dist_n)
+            ang, dist_v = cast(dem, tuple(r["cam"]), r["g"] + args.eye, az, args.range, near=args.near, n=dist_n)
             pts = _skyline_xy(ang.max(axis=1), az, r["H"], f, r["cc"], cx, hrow, W / 2, r.get("roll", 0.0))
             d.line([(x * s, y * s) for x, y in pts], fill=(255, 40, 40), width=2)
+            if r.get("D1"):
+                pts = _skyline_xy(ang[:, dist_v <= r["D1"]].max(axis=1), az, r["H"], f, r["cc"], cx, hrow, W / 2, r.get("roll", 0.0))
+                d.line([(x * s, y * s) for x, y in pts], fill=(255, 140, 0), width=2)
         except SystemExit as e:
             d.text((6, th - 20), f"DEM failed: {e}", fill="red", font=font)
         for x, y in ridge["ridge"]:
             d.ellipse([x * s - 2, y * s - 2, x * s + 2, y * s + 2], fill=(255, 220, 0))
+        for x, y in ridge.get("near") or []:
+            d.ellipse([x * s - 2, y * s - 2, x * s + 2, y * s + 2], fill=(0, 220, 255))
+        for x0, x1, row in ridge.get("near_clear") or []:
+            d.line([(x0 * s, row * s), (x1 * s, row * s)], fill=(0, 220, 255), width=2)
         line_txt = f"  L/C/R {r['dL']:.0f}/{r['dC']:.0f}/{r['dR']:.0f} pen {r['line_pen']:.2f}" if "line_pen" in r else ""
         txt = (f"#{i + 1} hit{r['hit']} {r['name'] or '-'}  {r['cam'][0]:.5f},{r['cam'][1]:.5f}\n"
-               f"H {r['H']:.1f}  f {f:.0f}  cc {r['cc']:+.2f}  rms {r['rms']:.3f}  flat {r['flatpen']:.3f}{line_txt}\n"
+               f"H {r['H']:.1f}  f {f:.0f} ({r.get('f35', 0):.0f}mm)  cc {r['cc']:+.2f}  rms {r['rms']:.3f}  flat {r['flatpen']:.3f}{line_txt}\n"
                f"total {r['total']:.3f}")
         d.rectangle([0, 0, tw, 46], fill=(0, 0, 0))
         d.text((4, 2), txt, fill="yellow", font=font)
         sheet.paste(tile, ((i % cols) * tw, (i // cols) * th))
     sheet.save(out, quality=88)
-    print(f"overlay → {out} (red line = synthetic skyline, yellow dots = photo ridge points, blue line = hrow, cyan line = flat-horizon columns)", file=sys.stderr)
+    print(f"overlay → {out} (red line = synthetic skyline, orange line = synthetic near layer, yellow dots = photo ridge points, "
+          "cyan dots/lines = photo near points / near-clear rows, blue line = hrow, cyan line on hrow = flat-horizon columns)", file=sys.stderr)
 
 
 def _cmd_fit(args) -> None:
@@ -696,7 +753,46 @@ def _cmd_fit(args) -> None:
     hrow, f0, cx = float(ridge["hrow"]), float(ridge["f0"]), float(ridge.get("cx", W / 2))
     flat = ridge.get("flat")
     FLX = np.arange(flat[0], flat[1] + 1e-6, args.flat_step, dtype=float) if flat else np.zeros(0)
-    fscales = [float(x) for x in args.focal_scales.split(",")]
+    NX = np.array([p[0] for p in ridge.get("near") or []], float)
+    NY = np.array([p[1] for p in ridge.get("near") or []], float)
+    ncl = ridge.get("near_clear") or []
+    NCX = np.concatenate([np.arange(a, b + 1e-6, args.flat_step) for a, b, _ in ncl]) if ncl else np.zeros(0)
+    NCR = np.concatenate([np.full(len(np.arange(a, b + 1e-6, args.flat_step)), r) for a, b, r in ncl]) if ncl else np.zeros(0)
+    two = bool(NX.size or NCX.size)
+    near_dists = [float(x) for x in args.near_dist.split(",")] if two else [None]
+    if two:
+        dropped = [d_ for d_ in near_dists if d_ <= args.near]
+        near_dists = [d_ for d_ in near_dists if d_ > args.near]
+        if not near_dists:
+            sys.exit(f"every --near-dist value ({args.near_dist}) is within --near {args.near:g} m, where sight lines start: "
+                     "give near distances beyond --near")
+        if dropped:
+            print(f"note: --near-dist {', '.join(f'{d_:g}' for d_ in dropped)} m dropped, within --near {args.near:g} m", file=sys.stderr)
+    diag = math.hypot(W, Hh)
+    f35_0 = f0 * 43.2666 / diag
+    f_src = ridge.get("f0_source", "assumed")
+    if args.focal_scales != "auto" and args.f35_range:
+        sys.exit("give --focal-scales or --f35-range, not both")
+    if args.focal_scales != "auto":
+        fscales = [float(x) for x in args.focal_scales.split(",")]
+        focal_how = "--focal-scales"
+    elif args.f35_range or f_src == "assumed":
+        try:
+            lo, hi = (float(x) for x in args.f35_range.split(":")) if args.f35_range else F35_RANGE
+        except ValueError:
+            sys.exit(f"--f35-range must be lo:hi in mm, got {args.f35_range!r}")
+        if not 0 < lo < hi:
+            sys.exit("--f35-range needs 0 < lo < hi")
+        n = max(2, math.ceil(math.log(hi / lo) / math.log(F35_RATIO)) + 1)
+        fscales = [round(lo * (hi / lo) ** (i / (n - 1)) / f35_0, 4) for i in range(n)]
+        focal_how = f"{lo:g}–{hi:g} mm equivalent, {n} steps"
+    else:
+        fscales = [0.9, 1.0, 1.12]
+        focal_how = f"focal from {'EXIF' if f_src == 'exif' else '--f0'} × 0.9–1.12"
+    px_metric = args.focal_metric == "px" or (args.focal_metric == "auto" and focal_how.endswith("steps"))
+    print(f"focal ladder: {focal_how}, compared in {'pixels' if px_metric else 'degrees'} → " + ", ".join(f"{f35_0 * x:.0f}" for x in fscales) + " mm"
+          + (f"; two-layer: {NX.size} near points, {NCX.size} near-clear columns, near distance {args.near_dist} m" if two else ""),
+          file=sys.stderr)
     if args.grid <= 0 or args.radius < 0 or args.nsamp < 2 or args.near <= 0 or args.range <= args.near:
         sys.exit("need --grid > 0, --radius ≥ 0, --nsamp ≥ 2, 0 < --near < --range")
     az_step = args.az_step
@@ -712,6 +808,18 @@ def _cmd_fit(args) -> None:
     centers = _load_centers(args)
     if not centers:
         sys.exit("no candidate clusters")
+
+    PS = None                                                         # (n, 4) segments lat1, lon1, lat2, lon2 for the heading constraint
+    if args.perp_line:
+        segs = []
+        for f_ in json.loads(Path(args.perp_line).read_text(encoding="utf-8")).get("features", []):
+            g_ = f_.get("geometry") or {}
+            parts = [g_["coordinates"]] if g_.get("type") == "LineString" else g_.get("coordinates", []) if g_.get("type") == "MultiLineString" else []
+            for c_ in parts:
+                segs += [(y1, x1, y2, x2) for (x1, y1, *_), (x2, y2, *_) in zip(c_, c_[1:])]
+        if not segs:
+            sys.exit(f"--perp-line {args.perp_line}: no LineString in it")
+        PS = np.array(segs, float)
 
     # linear infrastructure sample points (optional)
     LP = None
@@ -744,7 +852,7 @@ def _cmd_fit(args) -> None:
     done: set[tuple[int, int]] = set()
     recs: list[dict] = []
     clusters_out: list[dict] = []
-    skipped = {"not_flat": 0, "no_peak": 0, "no_line": 0, "dup": 0, "missing_dem": 0}
+    skipped = {"not_flat": 0, "no_peak": 0, "no_line": 0, "dup": 0, "missing_dem": 0, "no_perp_line": 0}
     dem_failed = []
     grid_pts = [(dx, dy) for dy in np.arange(-args.radius, args.radius + 1e-6, args.grid)
                 for dx in np.arange(-args.radius, args.radius + 1e-6, args.grid) if dx * dx + dy * dy <= args.radius ** 2]
@@ -784,7 +892,7 @@ def _cmd_fit(args) -> None:
                 skipped["not_flat"] += 1
                 continue
             g0 = float(g[:, 0].mean())
-            ang, _ = cast(dem, (clat, clon), g0 + args.eye, AZ, args.range, near=args.near, n=args.nsamp, keep_nan=True)
+            ang, dist_v = cast(dem, (clat, clon), g0 + args.eye, AZ, args.range, near=args.near, n=args.nsamp, keep_nan=True)
             if np.isnan(ang).any():                                   # a missing far tile would drop a ridge out of the skyline; don't rank on it
                 skipped["missing_dem"] += 1
                 continue
@@ -792,6 +900,23 @@ def _cmd_fit(args) -> None:
             if hor.max() < args.min_peak:
                 skipped["no_peak"] += 1
                 continue
+            h_ok = None
+            line_brg = None
+            if PS is not None:
+                kxc = math.cos(math.radians(clat))
+                # distance to each segment, not its midpoint: a long span's midpoint can be km away while the wire passes overhead
+                ay, ax = (PS[:, 0] - clat) * 110540, (PS[:, 1] - clon) * 111320 * kxc
+                by, bx = (PS[:, 2] - clat) * 110540, (PS[:, 3] - clon) * 111320 * kxc
+                L2 = (bx - ax) ** 2 + (by - ay) ** 2
+                t = np.clip(-(ax * (bx - ax) + ay * (by - ay)) / np.where(L2 > 0, L2, 1), 0, 1)
+                d2 = (ax + t * (bx - ax)) ** 2 + (ay + t * (by - ay)) ** 2
+                i_ = int(np.argmin(d2))
+                if d2[i_] > args.perp_reach ** 2:
+                    skipped["no_perp_line"] += 1
+                    continue
+                y1, x1, y2, x2 = PS[i_]
+                line_brg = math.degrees(math.atan2((x2 - x1) * kxc, y2 - y1)) % 180
+                h_ok = np.abs((AZ - line_brg) % 180 - 90) <= args.perp_tol
             line_pen = None
             dmins = None
             if LP is not None:
@@ -819,14 +944,21 @@ def _cmd_fit(args) -> None:
                     skipped["no_line"] += 1
                     continue
             best = None
-            for fs in fscales:
+            def idx(off):
+                return (HS[:, None] + np.round(off / az_step).astype(int)[None, :]) % naz
+            nhs = {D1: ang[:, dist_v <= D1].max(axis=1) if D1 else None for D1 in near_dists}   # near layer: highest angle within D1 m
+            for D1, fs in ((d_, f_) for d_ in near_dists for f_ in fscales):
+                nh = nhs[D1]
                 f = f0 * fs
                 r_off = np.degrees(np.arctan((RX - cx) / f))
                 r_el = np.degrees(np.arctan((hrow - RY) / f))
-                ri = (HS[:, None] + np.round(r_off / az_step).astype(int)[None, :]) % naz
                 # solve horizon offset cc (pitch/hrow inaccurate) and roll rr together by least squares: a 1° handheld tilt puts the ridgeline at both ends of the frame
                 # off by a dozen-plus pixels; left unsolved, the ground truth gets crowded into the same rms tier as a pile of wrong candidates (one real photo: 11.1 → 6.2 px, only then did the ground truth stand out)
-                diff = hor[ri] - r_el[None, :]
+                diff = hor[idx(r_off)] - r_el[None, :]
+                if NX.size:                                        # near points share cc and roll with the far ridge
+                    n_off = np.degrees(np.arctan((NX - cx) / f))
+                    diff = np.concatenate([diff, nh[idx(n_off)] - np.degrees(np.arctan((hrow - NY) / f))[None, :]], axis=1)
+                    r_off = np.concatenate([r_off, n_off])
                 if roll_max > 0 and (r_off != r_off.mean()).any():
                     oc = r_off - r_off.mean()
                     dmean = diff.mean(axis=1)
@@ -835,16 +967,26 @@ def _cmd_fit(args) -> None:
                 else:                                              # --roll-max 0: like the old version, subtract only the median
                     rr = np.zeros(naz)
                     cc = np.clip(np.median(diff, axis=1), -args.cc_max, args.cc_max)
-                rms = np.sqrt(np.mean((diff - cc[:, None] - rr[:, None] * r_off[None, :]) ** 2, axis=1))
+                res = diff - cc[:, None] - rr[:, None] * r_off[None, :]
+                rms = np.sqrt(np.mean(res ** 2, axis=1))
+                rms_near = np.sqrt(np.mean(res[:, RX.size:] ** 2, axis=1)) if NX.size else None
                 if FLX.size:
                     fl_off = np.degrees(np.arctan((FLX - cx) / f))
-                    fi = (HS[:, None] + np.round(fl_off / az_step).astype(int)[None, :]) % naz
-                    pen = np.mean(np.clip(hor[fi] - cc[:, None] - args.flat_clear, 0, None), axis=1)
+                    pen = np.mean(np.clip(hor[idx(fl_off)] - cc[:, None] - args.flat_clear, 0, None), axis=1)
                 else:
                     pen = np.zeros(naz)
-                # compare across focal lengths in degrees. Tried converting to pixels (× fs): in the real-photo regression focal lengths came out short and camera positions farther, so not adopted
-                score = rms + args.flat_w * pen
+                if NCX.size:                                       # near-clear columns: the near layer must stay below the given row
+                    c_off = np.degrees(np.arctan((NCX - cx) / f))
+                    c_el = np.degrees(np.arctan((hrow - NCR) / f))
+                    ncpen = np.mean(np.clip(nh[idx(c_off)] - cc[:, None] - rr[:, None] * c_off[None, :] - c_el[None, :], 0, None), axis=1)
+                else:
+                    ncpen = np.zeros(naz)
+                # across a wide focal ladder, compare in pixels (× fs, i.e. degrees at the base focal): in degrees the same pixel mismatch shrinks as f grows, and on a
+                # real photo every candidate ran to the longest rung. Within ×0.9–1.12 degrees stay: there pixels pushed focal short and camera positions farther
+                score = (rms + args.flat_w * pen + args.near_clear_w * ncpen) * (fs if px_metric else 1.0)
                 total = score + args.line_w * line_pen if line_pen is not None else score
+                if h_ok is not None:
+                    total = np.where(h_ok, total, np.inf)
                 k = int(np.argmin(total))
                 if not np.isfinite(total[k]):
                     continue
@@ -852,11 +994,17 @@ def _cmd_fit(args) -> None:
                     best = {"hit": c["src_idx"], "name": name, "hit_ll": [round(lat, 5), round(lon, 5)],
                             "cam": [round(clat, 5), round(clon, 5)],
                             "d": round(math.hypot(dx, dy)), "brg": round(math.degrees(math.atan2(dx, dy)) % 360),
-                            "g": round(g0, 1), "H": round(k * az_step, 2), "fs": fs, "f": round(f, 1),
+                            "g": round(g0, 1), "H": round(k * az_step, 2), "fs": fs, "f": round(f, 1), "f35": round(f35_0 * fs, 1),
                             "cc": round(float(cc[k]), 2), "roll": round(math.degrees(math.atan(float(rr[k]))), 2),
                             "rms": round(float(rms[k]), 3),
                             "rms_px": round(float(rms[k]) * f * math.pi / 180, 1), "flatpen": round(float(pen[k]), 3),
                             "score": round(float(score[k]), 3)}
+                    if D1:
+                        best.update({"D1": D1, "nclearpen": round(float(ncpen[k]), 3)})
+                        if rms_near is not None:
+                            best["rms_near_px"] = round(float(rms_near[k]) * f * math.pi / 180, 1)
+                    if line_brg is not None:
+                        best["line_brg"] = round(line_brg, 1)
                     if line_pen is not None:
                         best.update({"dL": round(float(dmins[0][k])), "dC": round(float(dmins[1][k])), "dR": round(float(dmins[2][k])),
                                      "line_pen": round(float(line_pen[k]), 3)})
@@ -878,10 +1026,24 @@ def _cmd_fit(args) -> None:
     for i, x in enumerate(clusters_out):
         x["rank"] = i + 1
     hfov = 2 * math.degrees(math.atan(cx / f0))
+    lead = [x["best"] for x in clusters_out if x["best"]] if len(clusters_out) > 1 else recs
+    lead = lead[:10]
+    focal_edge = None
+    if len(fscales) > 1 and lead:
+        lo_s, hi_s = min(fscales), max(fscales)
+        n_long = sum(r["fs"] == hi_s for r in lead)
+        n_short = sum(r["fs"] == lo_s for r in lead)
+        top1 = "long" if lead[0]["fs"] == hi_s else "short" if lead[0]["fs"] == lo_s else None
+        if top1 or max(n_long, n_short) * 2 >= len(lead):
+            focal_edge = {"top1": top1, "long": n_long, "short": n_short, "of": len(lead),
+                          "range_f35": [round(f35_0 * lo_s, 1), round(f35_0 * hi_s, 1)]}
     out = {
         "params": {"hits": args.hits, "at": args.at, "select": args.select, "ridge": str(args.ridge),
                    "radius_m": args.radius, "grid_m": args.grid, "zoom": args.zoom, "focal_scales": fscales,
                    "az_step_deg": az_step, "near_m": args.near, "range_m": args.range, "nsamp": args.nsamp, "eye_m": args.eye,
+                   "focal": focal_how, "focal_metric": "px" if px_metric else "deg", "f35_ladder": [round(f35_0 * x, 1) for x in fscales],
+                   "near_dist_m": near_dists if two else None, "near_clear_w": args.near_clear_w,
+                   "perp_line": args.perp_line, "perp_tol_deg": args.perp_tol if args.perp_line else None,
                    "cam_flat_m": args.cam_flat, "cam_flat_radius_m": args.cam_flat_radius, "min_peak_deg": args.min_peak,
                    "cc_max_deg": args.cc_max, "roll_max_deg": args.roll_max, "flat_clear_deg": args.flat_clear, "flat_w": args.flat_w, "flat_step_px": args.flat_step,
                    "line": args.line, "line_dist": args.line_dist, "line_win": args.line_win if args.line else None,
@@ -889,6 +1051,7 @@ def _cmd_fit(args) -> None:
                    "line_w": args.line_w, "line_min_m": args.line_min, "line_sample_m": args.line_sample, "line_reach_m": args.line_reach,
                    "photo": {"f0_px": f0, "hrow": hrow, "cx": cx, "hfov_deg_at_fs1": round(hfov, 1), "n_ridge": int(RX.size), "flat": flat}},
         "n_clusters": len(clusters_out), "n_cams": len(recs), "n_skipped": skipped, "dem_failed_clusters": dem_failed,
+        "focal_edge": focal_edge,
         "clusters": clusters_out,
         "cams": recs[:args.keep],
     }
@@ -900,8 +1063,22 @@ def _cmd_fit(args) -> None:
         b = x["best"]
         if b:
             line_txt = f"  L/C/R {b['dL']}/{b['dC']}/{b['dR']} pen {b['line_pen']}" if "line_pen" in b else ""
-            print(f"  {x['rank']:>3}. hit{x['hit']} {x['name'] or '-'}  cam {b['cam']}  H {b['H']}  f {b['f']:.0f}  "
-                  f"rms {b['rms']} ({b['rms_px']} px)  flat {b['flatpen']}{line_txt}  total {b['total']}", file=sys.stderr)
+            near_txt = (f"  D1 {b['D1'] / 1000:g} km near {b.get('rms_near_px', '-')} px clear {b['nclearpen']}" if "D1" in b else "")
+            print(f"  {x['rank']:>3}. hit{x['hit']} {x['name'] or '-'}  cam {b['cam']}  H {b['H']}  f {b['f']:.0f} ({b['f35']:.0f} mm)  "
+                  f"rms {b['rms']} ({b['rms_px']} px)  flat {b['flatpen']}{near_txt}{line_txt}  total {b['total']}", file=sys.stderr)
+    if focal_edge:
+        lo_mm, hi_mm = focal_edge["range_f35"]
+        side = focal_edge["top1"] or ("long" if focal_edge["long"] >= focal_edge["short"] else "short")
+        n_side = focal_edge[side]
+        if f_src != "assumed" and args.focal_scales == "auto" and not args.f35_range:
+            print(f"WARNING: focal is known ({'EXIF' if f_src == 'exif' else '--f0'}) yet {n_side}/{focal_edge['of']} leading results sit on the {side} end "
+                  f"of ×0.9–1.12: it is absorbing another error (hrow, ridge points, crop, wrong place). Check ridge --png before widening.", file=sys.stderr)
+        else:
+            wider = f"{hi_mm * 0.6:.0f}:{hi_mm * 2:.0f}" if side == "long" else f"{max(8, lo_mm / 2):.0f}:{lo_mm * 1.7:.0f}"
+            print(f"WARNING: best focal sits on the {side} end of the ladder ({hi_mm if side == 'long' else lo_mm:.0f} mm) for {n_side}/{focal_edge['of']} "
+                  f"leading results{' including #1' if focal_edge['top1'] else ''}. That is a signal, not noise: the photo is probably "
+                  f"{'more zoomed in' if side == 'long' else 'wider'} than the ladder. Rerun with --f35-range {wider} before trusting the ranking, "
+                  f"heading or focal; only if it runs to the new edge again is the focal absorbing another error (geometry.md 7.4).", file=sys.stderr)
     if args.sheet:
         top = [x["best"] for x in clusters_out if x["best"]][:args.top] if len(clusters_out) > 1 else recs[:args.top]
         if not top:
@@ -1022,20 +1199,29 @@ Without --hrow, the horizon row is the median of the sky→ground jump rows in t
 Note that this estimate lands on top of things like distant treetops and bridge decks, 10–30 px above the true 0° horizon (on that photo: auto estimate 909,
 hand-set 935); fit's horizon offset cc only absorbs ±0.7° (about ±16 px at f≈1300 px), so when there are tall objects in the distance, give --hrow by hand.
 Focal length: --f0 > EXIF 35mm-equivalent focal length > assumed from --f35 (default 26 mm, phone main camera), converted to pixels via the diagonal; the source is written to f0_source.
+An assumed focal is only the base: fit then searches 13–135 mm equivalent by default, so a zoomed shot is not forced into a main-camera fit.
+
+--points replaces detection with hand-picked skyline points (cloud on the peaks, snow against a pale sky).
+Two-layer photos (a lower near range in front of a higher far range, the near range ending mid-frame so the far range's foot shows):
+  --near x,y;...        points on the near range's top edge; fit scores them against the highest terrain within a near distance
+  --near-clear x0:x1@ROW columns past the near range's end, where nothing near may rise above ROW (the far range's foot / plain)
 
 Output JSON (--out):
   {"photo": photo path (recorded exactly as given on the command line; if fit can't find it, it retries relative to the directory of ridge.json),
    "image_size": [width, height], "cx": center column,
    "ridge": [[x, y], ...],           # ridge pixel points, x column y row (y is the mountain's first row)
    "missing_cols": [x, ...],         # columns where no jump was found
+   "ridge_source": "detected"|"points",
+   "near": [[x, y], ...], "near_clear": [[x0, x1, row], ...],   # two-layer input, empty when not given
    "flat": [x0, x1] | null, "flat_rows": [jump row of each column in that range],
    "hrow": horizon row, "hrow_source": "arg"|"flat"|"center",
    "f0": focal length px, "f0_source": "arg"|"exif"|"assumed", "f35_equiv": 35mm-equivalent focal length,
    "params": {...parameters used in this run...}}
---png also outputs a check image: yellow dots = ridge points, red vertical lines = columns not found, blue line = hrow, cyan line = flat-horizon column range. Look at the image before going to fit.""")
+--png also outputs a check image: yellow dots = ridge points, red vertical lines = columns not found, blue line = hrow, cyan line = flat-horizon column range,
+orange dots / lines = near points / near-clear rows. Look at the image before going to fit.""")
     rg.add_argument("photo", type=Path, help="photo")
-    rg.add_argument("--x0", type=int, required=True, help="ridge start column (inclusive)")
-    rg.add_argument("--x1", type=int, required=True, help="ridge end column (inclusive)")
+    rg.add_argument("--x0", type=int, default=0, help="ridge start column (inclusive, default 0)")
+    rg.add_argument("--x1", type=int, help="ridge end column (inclusive, default the last column)")
     rg.add_argument("--step", type=int, default=20, help="take one point every this many columns (default 20)")
     rg.add_argument("--flat", help="flat-horizon column range x0:x1 (e.g. 0:280); omit if there is none")
     rg.add_argument("--hrow", type=float, help="row of the horizon; if omitted, estimated from the --flat columns, and failing that, the frame midline")
@@ -1047,6 +1233,13 @@ Output JSON (--out):
     rg.add_argument("--k", type=int, default=4, help="rows taken above and below each when comparing brightness (default 4)")
     rg.add_argument("--hold", type=int, default=12, help="rows that must stay dark below the jump for it to count as mountain (default 12, used to skip wires and antennas)")
     rg.add_argument("--halfw", type=int, default=1, help="also average this many columns on each side of each column (default 1, i.e. 3 columns)")
+    rg.add_argument("--points", help="hand-picked skyline points x,y;x,y;... (or a .json of [[x,y],...]) used instead of detection, "
+                    "when cloud, haze or snow against a pale sky breaks the brightness jump; --x0/--x1 are then ignored")
+    rg.add_argument("--near", help="two-layer photos: points x,y;x,y;... on the top edge of the NEAR range where it stands in front of a higher far range "
+                    "(or a .json of [[x,y],...]); fit then scores the near layer too, see geometry.md 7.4")
+    rg.add_argument("--near-clear", action="append",
+                    help="two-layer photos: x0:x1@row = in these columns the near layer ends and the far range's foot or plain shows, "
+                         "so nothing within the near distance may rise above this row; repeatable")
     rg.add_argument("--out", required=True, help="output ridge.json")
     rg.add_argument("--png", help="check image path")
 
@@ -1055,14 +1248,22 @@ Batch skyline scoring: in each candidate cluster, lay a camera-position grid (on
 convert ridge.json's ridge points to (bearing offset, elevation angle), and compare against all headings × --focal-scales at once:
   rms     = RMS of the ridge elevation-angle residuals (the residual median serves as horizon offset cc, clamped to ±--cc-max)
   flatpen = mean of max(0, horizon elevation angle − cc − --flat-clear) over the flat-horizon columns
-  score   = rms + --flat-w × flatpen
-  rms_px  = rms converted to pixels (rms × f × π/180), only for judging whether candidates can be separated, not used in ranking: when the top few all come out about as large as
+  score   = rms + --flat-w × flatpen (+ --near-clear-w × nclearpen for two-layer ridge.json)
+  rms_px  = rms converted to pixels (rms × f × π/180), for judging whether candidates can be separated (on an f35 ladder the score itself is compared in pixels, --focal-metric): when the top few all come out about as large as
             the error of the ridge sampling itself (a few to a dozen or so pixels), the skyline can't separate them; you need a second constraint
 Camera positions first pass two filters: height difference within --cam-flat-radius ≤ --cam-flat (the camera stands on flat ground in the frame),
 highest horizon elevation angle ≥ --min-peak (there are mountains to compare).
 With --line (GeoJSON from osm.py geom), one more independent constraint is added: for each heading, the nearest distance dL/dC/dR of infrastructure sample points inside the frame's left/center/right bearing windows
 (--line-win); distances outside the --line-dist intervals are penalized by meters/--line-scale (--line-order can also penalize the order),
 total = score + --line-w × line_pen; headings where any of the three windows has no infrastructure don't count. Without --line, total = score.
+
+Focal: --focal-scales auto (default) tries ×0.9/1/1.12 around an EXIF or --f0 focal, and a 13–135 mm equivalent ladder when ridge.json's focal was
+assumed (no EXIF). If the leading results sit on an end of the ladder, fit prints a WARNING and writes focal_edge: rerun with --f35-range widened past
+that end before trusting ranking, heading or focal. Running to the new end again means the focal is absorbing another error (bad ridge points, hrow, wrong place).
+Two-layer (ridge.json has near / near_clear): the near layer = highest terrain within D1 m, D1 tried from --near-dist; near points share rms, cc and roll
+with the far ridge. A far-only fit of a two-layer photo can match the far outline at a wrong heading and focal.
+--perp-line keeps headings within --perp-tol of perpendicular to the nearest line (wires crossing the frame almost level).
+Distant ranges: --range (default 15 km) must reach the far ridge; for ranges 20–40 km away use --range 45000 and lower --min-peak.
 
 The coarse-search defaults are the ones from the real case: 2 km / 250 m / z11 / 0.5°; for fine search switch to --radius 800 --grid 100 --zoom 13 --az-step 0.25.
 The skyline only gives one sight line (moving a few hundred meters forward or back along it doesn't change the outline); always look at the --sheet overlay for the top few, then pin the point with a second constraint.
@@ -1078,15 +1279,18 @@ Method in references/geometry.md 7.4, corridors.md 4.3.
 
 Output JSON (--out):
   {"params": {...all parameters used in this run, including f0/hrow/cx/hfov under photo...},
-   "n_clusters", "n_cams": number of camera positions scored, "n_skipped": {"not_flat","no_peak","no_line","dup","missing_dem"},
+   "n_clusters", "n_cams": number of camera positions scored, "n_skipped": {"not_flat","no_peak","no_line","dup","missing_dem","no_perp_line"},
+   "focal_edge": null | {"top1": "long"|"short"|null, "long", "short", "of": leading results counted, "range_f35": [lo, hi] mm},
    "dem_failed_clusters": hit indices whose elevation tiles failed to download (not scored),
    "clusters": [{"hit": the cluster's index in --hits, "name", "hit_ll": [lat,lon], "n", "max_ang", "n_cams", "rank",
                  "best": <camera record>}, ...],                      # best camera position of each cluster, ascending by total
    "cams":     [<camera record>, ...]}                                 # all camera positions ascending by total, at most --keep entries
   camera record: {"hit","name","hit_ll", "cam": [lat,lon], "d": distance from cluster center m, "brg": bearing cluster center→camera position °,
-            "g": ground elevation m, "H": heading °, "fs": focal scale, "f": focal length px, "cc": horizon offset °,
-            "rms", "rms_px", "flatpen", "score", [with --line: "dL","dC","dR" m, "line_pen"], "total"}
---sheet: with multiple clusters, draws the top --top of the per-cluster best camera positions; with a single cluster/--at, draws the top --top camera positions; red line = synthetic skyline, yellow dots = photo ridge points.""")
+            "g": ground elevation m, "H": heading °, "fs": focal scale, "f": focal length px, "f35": 35mm-equivalent mm, "cc": horizon offset °, "roll",
+            "rms", "rms_px", "flatpen", "score", [two-layer: "D1" m, "rms_near_px", "nclearpen"], [--perp-line: "line_brg"],
+            [with --line: "dL","dC","dR" m, "line_pen"], "total"}
+--sheet: with multiple clusters, draws the top --top of the per-cluster best camera positions; with a single cluster/--at, draws the top --top camera positions; red line = synthetic skyline, orange line = synthetic near layer, yellow dots = photo ridge points,
+cyan dots = photo near points.""")
     src = ft.add_mutually_exclusive_group(required=True)
     src.add_argument("--hits", help="scan output JSON (uses the clusters field) or a cluster-list JSON")
     src.add_argument("--at", help="instead of --hits, give one center lat,lon directly (for fine search)")
@@ -1096,7 +1300,22 @@ Output JSON (--out):
     ft.add_argument("--radius", type=float, default=2000, help="camera-position grid radius per cluster m (default 2000; fine search 800)")
     ft.add_argument("--grid", type=float, default=250, help="camera-position grid spacing m (default 250; fine search 100)")
     ft.add_argument("--zoom", type=int, default=11, help="elevation tile zoom level (default 11, one cell ~70 m; fine search 13)")
-    ft.add_argument("--focal-scales", default="0.9,1,1.12", help="focal length scales, comma-separated (default 0.9,1,1.12; fine search has used 1,1.08,1.16)")
+    ft.add_argument("--focal-scales", default="auto",
+                    help="focal length scales of ridge.json's f0, comma-separated. Default auto: EXIF or --f0 focal → 0.9,1,1.12; "
+                         "no EXIF → a ladder over --f35-range (13–135 mm equivalent, ~18%% steps), because a guessed main camera "
+                         "misses zoomed shots, which are common for distant mountains")
+    ft.add_argument("--f35-range", help="lo:hi 35mm-equivalent focal range for the ladder, e.g. 40:270 after the best focal hit the long end; "
+                    "overrides auto even with EXIF")
+    ft.add_argument("--focal-metric", choices=["auto", "deg", "px"], default="auto",
+                    help="unit in which scores are compared across focal lengths: deg (as before) or px (score × focal scale). "
+                         "Default auto: px for an f35 ladder, deg for ×0.9–1.12; degrees favour the longest focal on a wide ladder")
+    ft.add_argument("--near-dist", default="3000,5000,8000,12000",
+                    help="two-layer only: candidate distances m out to which the near layer reaches, comma-separated (default 3000,5000,8000,12000)")
+    ft.add_argument("--near-clear-w", type=float, default=1.5, help="two-layer only: weight of nclearpen (default 1.5)")
+    ft.add_argument("--perp-line", help="linear infrastructure GeoJSON (osm.py geom); keep only headings near perpendicular to the nearest line, "
+                    "for wires crossing the frame almost level overhead")
+    ft.add_argument("--perp-tol", type=float, default=35, help="with --perp-line: allowed deviation ° from perpendicular (default 35)")
+    ft.add_argument("--perp-reach", type=float, default=1500, help="with --perp-line: camera positions farther than this from any line m are skipped (default 1500)")
     ft.add_argument("--az-step", type=float, default=0.5, help="heading/bearing step ° (default 0.5; fine search 0.25; must divide 360 evenly)")
     ft.add_argument("--near", type=float, default=150, help="how near the sight line starts sampling m (default 150)")
     ft.add_argument("--range", type=float, default=15000, help="how far the sight line looks m (default 15000)")

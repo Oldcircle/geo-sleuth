@@ -75,7 +75,7 @@ The coarse environmental-location rules still apply: terrain before river width 
 | What you have | Approach | Read |
 |---|---|---|
 | A unique anchor (building, statue, tower, scenic-area building) | Anchor geometry: sight-line intersection, alignment lines, tangent lines, filtering buildings by camera height | `geometry.md` |
-| Distant mountains, skyline | Render candidate camera positions with `terrain.py view` and compare; this fixes only one sight line, then find a second constraint | `geometry.md` |
+| Distant mountains, skyline | Render candidate camera positions with `terrain.py view` and compare; this fixes only one sight line, then find a second constraint. No EXIF: don't assume the main camera (distant mountains are often zoomed); a best focal on the edge of the searched range means widen and rerun. Near range in front of a far one: score both layers | `geometry.md` |
 | Clear shadows, lit faces, the sun in the frame | `sun.py locate / when / facing / compass`: latitude band, time, heading, true bearing of objects in the image | `sky.md` |
 | Route numbers, railway or power-line specs, a large river | Linear corridor + line-to-point: `osm.py route / crossings / along` | `corridors.md` |
 | Two or three kinds of infrastructure in one frame | `osm.py near --report`; crossings of two linear types `osm.py intersect` (bends are only annotated, not removed) | `corridors.md` |
