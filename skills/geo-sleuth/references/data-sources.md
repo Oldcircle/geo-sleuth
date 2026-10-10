@@ -14,7 +14,7 @@
 | `osm.py` | Overpass: find / near (co-occurrence) / crossings (line-to-point) / route (route corridor) / intersect (crossings of two kinds of lines; bends are only labeled, `--rank-near` ranks) / street-scan (street-view geometry template) / geom (export geometry) |
 | `tiles.py` | Satellite tile mosaic, `mark` plots points + overlays GeoJSON lines + field-of-view wedge, `sheet` numbered thumbnails of candidate points |
 | `baidu_pano.py` | Baidu panoramas: near / info / scan / render / sheet (`--headings` to look around from one point, `--road` `--spread`) / sample (street view sampling of candidate cities) |
-| `gsv.py` | Google Street View (outside China): near / render / sheet, no key, official coverage only |
+| `gsv.py` | Google Street View (outside China): near / render / sheet / `targets` (panoramas around each target point, rendered facing it, for `match.py --items`), no key, official coverage only |
 | `pose.py` | Solve camera position from multiple points: lat/lon, height, heading, pitch, roll, field of view + error radius + per-point check; `check` scores discrete candidate camera positions; `project` projects map points back onto the photo |
 | `terrain.py` | Elevation: view (synthesized mountain view; `--overlay` overlays the skyline on the photo, `--roll`) / profile (skyline) / elev / `ridge` reads ridgeline pixel points from the photo / `scan` filters a whole region along infrastructure lines for "flat nearby + mountain present" points and clusters them / `fit` batch skyline scoring of candidate camera positions (optional infrastructure-distance constraint; outputs overlays of the top N) |
 | `evidence.py` | Evidence image: satellite image + camera-position wedge + comparison panels |
@@ -74,7 +74,7 @@ The endpoints are all at `https://mapsv0.bdimg.com/`, need no key, and must be a
 
 | Source | Use | Known issues |
 |---|---|---|
-| Google Street View | Street view outside China, with historical dates; `gsv.py` | Almost none in China; user-uploaded panoramas (ids like CIHM0og…) can't produce perspective views, and the script already filters them out |
+| Google Street View | Street view outside China, with historical dates; `gsv.py` | Almost none in China; user-uploaded panoramas (ids like CIHM0og…) can't produce perspective views, and the script already filters them out; `gsv.py targets` lists panoramas per z17 tile through the Maps web client's coverage layer (`/maps/photometa/ac/v1`), undocumented like the other endpoints |
 | Mapillary, KartaView | Crowdsourced street view, rural roads outside China | Almost none in China |
 | Tencent Street View | Backup in China | API not yet investigated |
 | Map POI photos, hotel/scenic-area photos online, tourist photos | Compare skylines and building shapes when there's no street view | Shooting angle can't be controlled |
