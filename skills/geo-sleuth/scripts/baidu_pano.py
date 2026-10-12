@@ -153,8 +153,15 @@ def render(pid: str, heading: float, pitch: float = 10, fov: float = 80,
 
 
 def _font(size: int):
-    for p in ("/System/Library/Fonts/STHeiti Medium.ttc", "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    # Windows CJK fonts first when present; GEO_FONT env var overrides all (evidence/board labels are Chinese)
+    import os
+    for p in (os.environ.get("GEO_FONT"),
+              "C:/Windows/Fonts/msyh.ttc", "C:/Windows/Fonts/msyhbd.ttc",
+              "C:/Windows/Fonts/simhei.ttf", "C:/Windows/Fonts/simsun.ttc",
+              "/System/Library/Fonts/STHeiti Medium.ttc", "/System/Library/Fonts/Hiragino Sans GB.ttc",
               "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"):
+        if not p:
+            continue
         try:
             return ImageFont.truetype(p, size)
         except Exception:
