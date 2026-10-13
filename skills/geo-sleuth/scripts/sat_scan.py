@@ -23,6 +23,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+from _device import torch_device
 from _net import PROXY_HELP
 from _net import model_proxy_env
 import json
@@ -121,7 +122,7 @@ class Scorer:
     def __init__(self, pos: list[str], neg: list[str]):
         import torch
         from transformers import CLIPModel, CLIPTokenizer
-        self.dev = "mps" if torch.backends.mps.is_available() else "cpu"
+        self.dev = torch_device(torch)
         t0 = time.time()
         try:
             tok = CLIPTokenizer.from_pretrained(CLIP_ID)

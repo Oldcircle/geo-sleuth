@@ -29,6 +29,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import _net
 import _browser
+import _device
 import baidu_pano
 import doctor
 import evidence
@@ -540,6 +541,61 @@ class EvidenceSpecTests(unittest.TestCase):
             self.assertIn(expected, result.stderr)
         self.assertNotIn("Traceback", result.stderr)
         self.assertFalse(out.exists())
+
+
+class DeviceTests(unittest.TestCase):
+    @staticmethod
+    def _torch(cuda=False, mps=False):
+        return SimpleNamespace(__version__="2.0.0+test",
+                               cuda=SimpleNamespace(is_available=lambda: cuda),
+                               backends=SimpleNamespace(mps=SimpleNamespace(is_available=lambda: mps)))
+
+    def _pick(self, value=None, **have):
+        env = {} if value is None else {"GEO_DEVICE": value}
+        with patch.dict(os.environ, env, clear=True):
+            return _device.torch_device(self._torch(**have))
+
+    def _exit_message(self, value, **have):
+        with self.assertRaises(SystemExit) as caught:
+            self._pick(value, **have)
+        message = str(caught.exception.code)
+        self.assertEqual(len(message.splitlines()), 1)
+        self.assertIn("torch 2.0.0+test", message)
+        return message
+
+    def test_auto_selection_order(self):
+        self.assertEqual(self._pick(cuda=True, mps=True), "cuda")
+        self.assertEqual(self._pick(cuda=True), "cuda")
+        self.assertEqual(self._pick(mps=True), "mps")
+        self.assertEqual(self._pick(), "cpu")
+        self.assertEqual(self._pick("", cuda=True), "cuda")
+
+    def test_explicit_override(self):
+        self.assertEqual(self._pick("cpu", cuda=True, mps=True), "cpu")
+        self.assertEqual(self._pick("cuda", cuda=True, mps=True), "cuda")
+        self.assertEqual(self._pick("mps", cuda=True, mps=True), "mps")
+        self.assertEqual(self._pick(" CUDA ", cuda=True), "cuda")
+
+    def test_invalid_value_exits_with_one_line(self):
+        for value in ("gpu", "cuda:0", "auto"):
+            message = self._exit_message(value, cuda=True)
+            self.assertIn(repr(value), message)
+            self.assertIn("cpu, cuda, mps", message)
+
+    def test_unavailable_device_exits_instead_of_falling_back(self):
+        message = self._exit_message("cuda", mps=True)
+        self.assertIn("GEO_DEVICE=cuda", message)
+        self.assertIn("cuda=False, mps=True", message)
+        message = self._exit_message("mps", cuda=True)
+        self.assertIn("GEO_DEVICE=mps", message)
+        self.assertIn("cuda=True, mps=False", message)
+
+    def test_both_model_scripts_use_the_shared_helper(self):
+        scripts = Path(_device.__file__).parent
+        for name in ("match.py", "sat_scan.py"):
+            text = (scripts / name).read_text(encoding="utf-8")
+            self.assertIn("self.dev = torch_device(torch)", text)
+            self.assertNotIn("mps.is_available", text)
 
 
 if __name__ == "__main__":

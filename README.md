@@ -288,6 +288,14 @@ uvx playwright install chromium
 
 Linux may also need browser system libraries: `uvx playwright install --with-deps chromium`. See the [Playwright browser setup guide](https://playwright.dev/python/docs/browsers). After a Playwright upgrade, rerun the installer if it reports a missing browser executable.
 
+`match.py` and `sat_scan.py` run their models on CUDA when the installed torch supports it, then MPS, then CPU, and print the device they picked (`model ... ready (cuda, ...)`). `GEO_DEVICE=cpu|cuda|mps` forces one. On Windows the default `uv run` install is a CPU-only torch; to use an NVIDIA GPU, add a CUDA build that your driver supports (`nvidia-smi` shows the highest CUDA version; `cu126` is CUDA 12.6):
+
+```bash
+uv run --find-links https://download.pytorch.org/whl/cu126/torch/ skills/geo-sleuth/scripts/match.py rank --query photo.jpg --images cands/ --out ranked.json
+```
+
+The option adds torch builds only, so every other package still comes from PyPI. The first run downloads about 2.4 GB.
+
 From a clone of this repository, run these commands (also work in PowerShell):
 
 ```bash
