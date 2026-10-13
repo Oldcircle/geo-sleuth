@@ -67,7 +67,7 @@ def fit(ridge: Path, out: Path, *extra: str) -> tuple[dict, str]:
     err = io.StringIO()
     with patch.object(terrain, "DEM", FakeDEM), patch.object(sys, "argv", argv), contextlib.redirect_stderr(err):
         terrain.main()
-    return json.loads(out.read_text()), err.getvalue()
+    return json.loads(out.read_text(encoding="utf-8")), err.getvalue()
 
 
 class FocalTests(unittest.TestCase):
@@ -102,7 +102,7 @@ class FocalTests(unittest.TestCase):
 
     def test_two_layer_scores_near_points(self):
         synth_ridge(self.d / "r.json", 60, 270, two_layer=True)
-        ridge = json.loads((self.d / "r.json").read_text())
+        ridge = json.loads((self.d / "r.json").read_text(encoding="utf-8"))
         self.assertGreaterEqual(len(ridge["near"]), 3)
         res, _ = fit(self.d / "r.json", self.d / "f.json")
         best = res["cams"][0]
@@ -167,7 +167,7 @@ class RidgeTests(unittest.TestCase):
                                             "--near", "10,140;100,150;180,160", "--near-clear", "250:390@170", "--out", str(out)]), \
                     contextlib.redirect_stdout(io.StringIO()):
                 terrain.main()
-            r = json.loads(out.read_text())
+            r = json.loads(out.read_text(encoding="utf-8"))
             self.assertEqual(r["ridge_source"], "points")
             self.assertEqual(r["ridge"], [[10, 100], [200, 90], [390, 110]])
             self.assertEqual(len(r["near"]), 3)

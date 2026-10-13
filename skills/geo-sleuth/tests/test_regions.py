@@ -239,7 +239,7 @@ class FixturePack(unittest.TestCase):
         bad["clues.md"] = FIXTURE["clues.md"].replace("- Counterexamples: none seen\n", "")
         d = write_pack(self.root / "bad", bad)
         regions.packs(reload=True)
-        errs, _ = regions.lint(dict(json.loads((d / "region.json").read_text()), dir=d))
+        errs, _ = regions.lint(dict(json.loads((d / "region.json").read_text(encoding="utf-8")), dir=d))
         text = "\n".join(errs)
         self.assertIn("helper.py", text)
         self.assertIn("_meta.source", text)

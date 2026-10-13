@@ -75,7 +75,8 @@ class NetworkTests(unittest.TestCase):
         with patch.dict(os.environ, {"GEO_PROXY": "http://chosen:8080", "https_proxy": "http://old:8080", "NO_PROXY": "*"}, clear=True):
             _net.model_proxy_env()
             self.assertEqual(os.environ["HTTPS_PROXY"], "http://chosen:8080")
-            self.assertNotIn("https_proxy", os.environ)
+            if os.name != "nt":   # Windows environment variable names are case-insensitive
+                self.assertNotIn("https_proxy", os.environ)
             self.assertNotIn("NO_PROXY", os.environ)
             _net.model_proxy_env("direct")
             self.assertNotIn("HTTPS_PROXY", os.environ)
@@ -341,7 +342,7 @@ class CoverageTests(unittest.TestCase):
         with patch.object(Path, "read_text", read), patch.object(gsv, "_curl", return_value=good) as fetch:
             self.assertEqual(gsv.tile_panos(7, 7, None, self.cache), [(self.PID, 51.44, 5.47)])
         self.assertEqual(fetch.call_count, 1)
-        self.assertEqual(gsv._coverage_rows(cached.read_text()), gsv._coverage_rows(good.decode()))
+        self.assertEqual(gsv._coverage_rows(cached.read_text(encoding="utf-8")), gsv._coverage_rows(good.decode()))
 
     def test_shared_coverage_tile_uses_one_fetch(self):
         for stale in (False, True):
