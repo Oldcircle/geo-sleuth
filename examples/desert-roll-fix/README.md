@@ -15,17 +15,19 @@ From the repository root (downloads elevation tiles on first run, a minute or tw
 cd examples/desert-roll-fix
 S=../../skills/geo-sleuth/scripts
 # before: the image is assumed level, as fit did before the change
-uv run $S/terrain.py fit --hits clusters.json --ridge ridge.json --min-peak 3 --cam-flat 30 --eye 10 --range 20000 --roll-max 0 --out before.json
+uv run $S/terrain.py fit --hits clusters.json --ridge ridge.json --min-peak 3 --cam-flat 30 --eye 10 --range 20000 --focal-scales 0.9,1,1.12 --roll-max 0 --out before.json
 # after: roll solved together with the horizon offset (default --roll-max 1)
-uv run $S/terrain.py fit --hits clusters.json --ridge ridge.json --min-peak 3 --cam-flat 30 --eye 10 --range 20000 --out after.json
+uv run $S/terrain.py fit --hits clusters.json --ridge ridge.json --min-peak 3 --cam-flat 30 --eye 10 --range 20000 --focal-scales 0.9,1,1.12 --out after.json
 ```
+
+Both commands pin the historical focal scales so that the comparison below is reproducible. The fixture records an assumed focal length; current auto settings instead search a 13–135 mm equivalent ladder and compare scores in pixels. Explicit scales retain the historical angular scoring under `--focal-metric auto`. Keep these settings identical when comparing roll off and on.
 
 ## What you should see
 
 | | true site (`hit0`) | best other site | spread of the other 11 |
 |---|---|---|---|
 | before, `--roll-max 0` | **#8**, 12.0 px | 10.2 px | 10.2–13.6 px |
-| after, default | **#1, 6.2 px** | 9.9 px | 9.1–10.4 px |
+| after, default roll cap | **#1, 6.2 px** | 9.9 px | 9.1–10.4 px |
 
 Before the change, the true site is one of many with nearly equal scores. After it, every site improves a little, since each can absorb some tilt, but only the true site drops by about half, because most of its error was the tilt. The solved roll is about 1° (the printout's `roll`).
 
