@@ -34,6 +34,13 @@ General order when the country is still open: driving side and plate shape to ex
 - Counterexamples: bilingual private shop signs don't count; foreign-language signs added for tourists in tourist areas don't count
 - Sources: v001
 
+### Simplified vs traditional Chinese script on signs
+- Look for: whether Chinese characters on official signs, street-name boards and shop signs are in simplified or traditional form
+- Points to: simplified Chinese → mainland China, and Chinese-speaking communities in Singapore and Malaysia; traditional Chinese → Taiwan (China), Hong Kong (China), Macau (China), and overseas Chinatowns; together with other cues this separates mainland China from the other Chinese-script regions, and from everywhere that does not use Chinese at all
+- Strength: medium (the script form is official and consistent within each jurisdiction; one clear sign reaches the region level)
+- Counterexamples: traditional characters still appear on heritage or religious signage inside mainland China; simplified characters appear on some cross-strait brand signage; overseas Chinatowns may mix the two; foreign-language-only signs do not count
+- Sources: Wikipedia "Simplified Chinese characters" (https://en.wikipedia.org/wiki/Simplified_Chinese_characters); Wikipedia "Traditional Chinese characters" (https://en.wikipedia.org/wiki/Traditional_Chinese_characters)
+
 ### Sub-brands and business lines of chain brands
 - Look for: small marks on the sign besides the parent brand (truck tire retreading, commercial vehicle service, etc.)
 - Points to: sub-brands have far fewer stores, so listing all their stores nationwide gives a candidate point list; also suggests a freight corridor or the outskirts of an industrial zone
