@@ -260,14 +260,16 @@ def admin_chain(pack: dict, item: dict) -> list[str]:
 
 
 def admin_find(name: str, country: str | None = None) -> list[tuple[dict, dict]]:
-    """Exact name first, then a match ignoring the pack's generic suffixes (市/省/区/县 in CN). [(pack, item)]"""
+    """Exact name first, then a match on the name or an alias ignoring the pack's generic suffixes (市/省/区/县 in CN). [(pack, item)]"""
     pk = [resolve(country)] if country else list(packs().values())
     out = []
     for p in pk:
         if not p:
             continue
         items, by = admin_index(p)
-        hits = by.get(name) or [it for it in items if strip_suffix(it["name"], p) == strip_suffix(name, p)]
+        want = strip_suffix(name, p)
+        hits = by.get(name) or [it for it in items
+                                if want in {strip_suffix(n, p) for n in [it["name"], *(it.get("aliases") or [])]}]
         out += [(p, it) for it in hits]
     return out
 

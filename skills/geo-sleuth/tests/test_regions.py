@@ -104,6 +104,18 @@ class FixturePack(unittest.TestCase):
         self.assertEqual(sorted(m["country_code"] for m in d["matches"]), ["CN", "QQ"])
         self.assertIn("several countries", d["note"])
 
+    def test_admin_alias_finds_the_table_name(self):
+        files = json.loads(json.dumps(FIXTURE))
+        files["region.json"]["admin_table"] = "data/admin.json"
+        files["data/admin.json"] = {"_meta": {"source": ["test"], "fetched": "2026-10-18", "license": "CC0"},
+                                    "items": [{"name": "North", "code": "1", "level": 1, "parent": ""},
+                                              {"name": "Ålda", "code": "11", "level": 2, "parent": "North", "aliases": ["Alda"]}]}
+        write_pack(self.root / "alias", files)
+        env = {"GEO_SLEUTH_REGIONS": str(self.root / "alias")}
+        for q in ("Ålda", "Alda"):
+            d = json.loads(run("clues.py", "lookup", "admin", q, "--country", "qq", "--json", env=env).stdout)
+            self.assertEqual([m["admin2"] for m in d["matches"]], ["Ålda"], q)
+
     def test_country_restricts(self):
         d = self.lookup("area-code", "020", "--country", "Testland")
         self.assertEqual([m["admin2"] for m in d["matches"]], ["Porta"])
