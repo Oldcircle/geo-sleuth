@@ -35,11 +35,11 @@ General order when the country is still open: driving side and plate shape to ex
 - Sources: v001
 
 ### Simplified vs traditional Chinese script on signs
-- Look for: whether Chinese characters on official signs, street-name boards and shop signs are in simplified or traditional form
-- Points to: simplified Chinese → mainland China, and Chinese-speaking communities in Singapore and Malaysia; traditional Chinese → Taiwan (China), Hong Kong (China), Macau (China), and overseas Chinatowns; together with other cues this separates mainland China from the other Chinese-script regions, and from everywhere that does not use Chinese at all
-- Strength: medium (the script form is official and consistent within each jurisdiction; one clear sign reaches the region level)
-- Counterexamples: traditional characters still appear on heritage or religious signage inside mainland China; simplified characters appear on some cross-strait brand signage; overseas Chinatowns may mix the two; foreign-language-only signs do not count
-- Sources: Wikipedia "Simplified Chinese characters" (https://en.wikipedia.org/wiki/Simplified_Chinese_characters); Wikipedia "Traditional Chinese characters" (https://en.wikipedia.org/wiki/Traditional_Chinese_characters)
+- Look for: simplified vs traditional forms on signs, judged only from characters that differ between the two systems (门/門, 车/車, 东/東, 马/馬); characters the two share (中, 大, 山, 路) tell you nothing. Read official signs (street-name boards, road signs, government notices) separately from shop signs. First rule out Japanese: kana anywhere means this is not the clue, and Japanese kanji often keep the traditional forms (門, 車)
+- Points to: consistent simplified on official signs → mainland China or Singapore; consistent traditional on official signs → Taiwan (China), Hong Kong (China) or Macau (China); Malaysia and overseas Chinatowns mix both
+- Strength: medium when several independent official signs agree (still needs one more clue — plates, driving side or another language — to settle the place); weak for a single sign or shop signs only; never excludes a candidate on its own
+- Counterexamples: traditional characters on handwritten, calligraphic, heritage and old-brand shop signs in mainland China (allowed by law); simplified on tourist-facing shops in Hong Kong/Macau; mixed use in Malaysia and Chinatowns; Japanese kanji resemble traditional forms
+- Sources: Wikipedia "Simplified Chinese characters" (https://en.wikipedia.org/wiki/Simplified_Chinese_characters); Wikipedia "Traditional Chinese characters" (https://en.wikipedia.org/wiki/Traditional_Chinese_characters); Law of the PRC on the Standard Spoken and Written Chinese Language, Article 17
 
 ### Sub-brands and business lines of chain brands
 - Look for: small marks on the sign besides the parent brand (truck tire retreading, commercial vehicle service, etc.)
