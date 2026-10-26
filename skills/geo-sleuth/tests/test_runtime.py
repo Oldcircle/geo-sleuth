@@ -24,6 +24,7 @@ import threading
 from types import SimpleNamespace
 import unittest
 from unittest.mock import AsyncMock, patch
+import urllib.parse
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -297,6 +298,33 @@ class OverpassMirrorTests(unittest.TestCase):
         data, _, cached = self.run_with(replies)
         self.assertEqual(len(data["elements"]), 1)
         self.assertEqual(len(cached), 1)
+
+    def test_tls_failure_resends_the_same_post_without_curl(self):
+        """Windows 10's Schannel curl has no TLS 1.3, which overpass-api.de requires, so curl exits 35 before any HTTP."""
+        got = []
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                body = self.rfile.read(int(self.headers["Content-Length"])).decode()
+                got.append((self.headers["User-Agent"], urllib.parse.parse_qs(body)["data"]))
+                busy = self.path == "/busy"
+                self.send_response(504 if busy else 200)
+                self.end_headers()
+                self.wfile.write(b"server too busy" if busy else json.dumps({"elements": [LINE]}).encode())
+            def log_message(self, *args):
+                pass
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = f"http://127.0.0.1:{server.server_port}"
+        try:
+            with patch.object(osm.subprocess, "run", return_value=SimpleNamespace(returncode=35, stdout="")):
+                self.assertEqual(osm._post(base + "/ok", QH, "direct", 5), ({"elements": [LINE]}, ""))
+                self.assertEqual(osm._post(base + "/busy", QH, "direct", 5), (None, "HTTP 504: server too busy"))
+            self.assertEqual(got, [(osm.UA, [QH])] * 2)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
 
 
 class StreetViewTests(unittest.TestCase):

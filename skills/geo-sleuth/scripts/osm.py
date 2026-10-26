@@ -42,7 +42,7 @@ Examples (江苏省 = Jiangsu Province, 长江 = Yangtze River):
 from __future__ import annotations
 
 import argparse
-from _net import curl_args, PROXY_HELP
+from _net import curl_args, resolve_proxy, PROXY_HELP
 import hashlib
 import json
 import math
@@ -51,6 +51,9 @@ import re
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -75,7 +78,19 @@ def _post(ep: str, ql: str, proxy: str | None, timeout: int) -> tuple[dict | Non
     cmd += curl_args(proxy)
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     body, _, code = (r.stdout or "").rpartition("\n")
-    if r.returncode:
+    if r.returncode == 35:
+        # TLS handshake failed: Windows 10's Schannel curl has no TLS 1.3, and overpass-api.de accepts nothing older; Python's OpenSSL does
+        value = resolve_proxy(proxy)
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({"http": value, "https": value} if value else {}))
+        req = urllib.request.Request(ep, data=urllib.parse.urlencode({"data": ql}).encode(), headers={"User-Agent": UA})
+        try:
+            with opener.open(req, timeout=timeout + 30) as resp:
+                body, code = resp.read().decode("utf-8", "replace"), str(resp.status)
+        except urllib.error.HTTPError as e:            # 4xx/5xx still carry the server's message, as with curl
+            body, code = e.read().decode("utf-8", "replace"), str(e.code)
+        except OSError as e:
+            return None, f"curl exit 35, urllib: {e}"
+    elif r.returncode:
         return None, f"curl exit {r.returncode}"
     try:
         data = json.loads(body)
