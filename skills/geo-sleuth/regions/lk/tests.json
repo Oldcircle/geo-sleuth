@@ -38,6 +38,10 @@
    {
     "admin1": "Central Province",
     "admin2": "Kandy District"
+   },
+   {
+    "admin1": "Central Province",
+    "admin2": "Nuwara Eliya District"
    }
   ]
  },
@@ -98,5 +102,101 @@
   "kind": "plate",
   "value": "UP 32 AB 1234",
   "expect": []
+ },
+ {
+  "kind": "area-code",
+  "value": "047 226 1674",
+  "expect": [
+   {
+    "admin1": "Southern Province",
+    "admin2": "Hambantota District"
+   },
+   {
+    "admin1": "Uva Province",
+    "admin2": "Monaragala District"
+   },
+   {
+    "admin1": "Sabaragamuwa Province",
+    "admin2": "Ratnapura District"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "036 226 5275",
+  "expect": [
+   {
+    "admin1": "Western Province",
+    "admin2": "Colombo District"
+   },
+   {
+    "admin1": "Sabaragamuwa Province",
+    "admin2": "Ratnapura District"
+   },
+   {
+    "admin1": "Sabaragamuwa Province",
+    "admin2": "Kegalle District"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "027 225 0329",
+  "expect": [
+   {
+    "admin1": "North Central Province",
+    "admin2": "Polonnaruwa District"
+   },
+   {
+    "admin1": "Eastern Province",
+    "admin2": "Ampara District"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "081 236 9039",
+  "expect": [
+   {
+    "admin1": "Central Province",
+    "admin2": "Kandy District"
+   },
+   {
+    "admin1": "Central Province",
+    "admin2": "Nuwara Eliya District"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "025 325 4810",
+  "expect": [
+   {
+    "admin1": "North Central Province",
+    "admin2": "Anuradhapura District"
+   },
+   {
+    "admin1": "Northern Province",
+    "admin2": "Vavuniya District"
+   },
+   {
+    "admin1": "Northern Province",
+    "admin2": "Mullaitivu District"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "091 228 3315",
+  "expect": [
+   {
+    "admin1": "Southern Province",
+    "admin2": "Galle District"
+   },
+   {
+    "admin1": "Southern Province",
+    "admin2": "Matara District"
+   }
+  ]
  }
 ]
