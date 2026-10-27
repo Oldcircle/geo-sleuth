@@ -104,17 +104,39 @@ class FixturePack(unittest.TestCase):
         self.assertEqual(sorted(m["country_code"] for m in d["matches"]), ["CN", "QQ"])
         self.assertIn("several countries", d["note"])
 
-    def test_admin_alias_finds_the_table_name(self):
+    def alias_pack(self, **alias) -> tuple[Path, dict]:
+        """Fixture pack with an admin table whose 'Ålda' item carries `alias` (aliases=...), suffix ' District'."""
         files = json.loads(json.dumps(FIXTURE))
-        files["region.json"]["admin_table"] = "data/admin.json"
+        files["region.json"].update(admin_table="data/admin.json", name_suffixes=[" District"])
         files["data/admin.json"] = {"_meta": {"source": ["test"], "fetched": "2026-10-18", "license": "CC0"},
                                     "items": [{"name": "North", "code": "1", "level": 1, "parent": ""},
-                                              {"name": "Ålda", "code": "11", "level": 2, "parent": "North", "aliases": ["Alda"]}]}
-        write_pack(self.root / "alias", files)
-        env = {"GEO_SLEUTH_REGIONS": str(self.root / "alias")}
-        for q in ("Ålda", "Alda"):
-            d = json.loads(run("clues.py", "lookup", "admin", q, "--country", "qq", "--json", env=env).stdout)
-            self.assertEqual([m["admin2"] for m in d["matches"]], ["Ålda"], q)
+                                              {"name": "Ålda", "code": "11", "level": 2, "parent": "North", **alias}]}
+        d = write_pack(self.root / "alias", files)
+        return d, {"GEO_SLEUTH_REGIONS": str(self.root / "alias")}
+
+    def admin(self, q, env, *country):
+        r = run("clues.py", "lookup", "admin", q, *country, "--json", env=env)
+        self.assertNotIn("Traceback", r.stderr, q)
+        return json.loads(r.stdout)["matches"]
+
+    def test_admin_alias_finds_the_table_name(self):
+        _, env = self.alias_pack(aliases=["Alda District"])
+        for q in ("Ålda", "Ålda District", "Alda", "Alda District"):   # suffix stripped on the query and on the alias
+            self.assertEqual([m["admin2"] for m in self.admin(q, env, "--country", "qq")], ["Ålda"], q)
+
+    def test_malformed_aliases_fail_lint_and_leave_lookups_working(self):
+        for bad in ("Alda", [7], [""], ["Alda", None], {"Alda": 1}, None):
+            d, env = self.alias_pack(aliases=bad)
+            errs, _ = regions.lint(dict(json.loads((d / "region.json").read_text(encoding="utf-8")), dir=d))
+            self.assertTrue(any("aliases must be a list" in e for e in errs), (bad, errs))
+            # an unrelated pack stays queryable while the malformed one is scanned
+            self.assertIn(("北京市", "朝阳区"), {tuple(m["chain"]) for m in self.admin("朝阳区", env)}, bad)
+            self.assertEqual([m["admin2"] for m in self.admin("Ålda", env, "--country", "qq")], ["Ålda"], bad)
+            self.assertEqual(self.admin("A", env, "--country", "qq"), [], bad)   # a bare string isn't split into characters
+        for ok in ({}, {"aliases": []}):
+            d, _ = self.alias_pack(**ok)
+            errs, _ = regions.lint(dict(json.loads((d / "region.json").read_text(encoding="utf-8")), dir=d))
+            self.assertFalse(any("aliases" in e for e in errs), (ok, errs))
 
     def test_country_restricts(self):
         d = self.lookup("area-code", "020", "--country", "Testland")

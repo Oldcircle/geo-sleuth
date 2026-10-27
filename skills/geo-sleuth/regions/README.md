@@ -84,7 +84,7 @@ regions/<cc>/
 
 ### Admin table (`admin_table`)
 
-`{"_meta": {source, fetched, license, count}, "items": [{"name", "code", "level", "parent"}]}` — `parent` is the parent's `name`; top-level items have `"parent": ""`. An item may add `"aliases": [...]` for other spellings `clues.py lookup admin` should accept; `name` stays the one lookup tables and the board use. Every `level` needs an entry in `admin_levels`.
+`{"_meta": {source, fetched, license, count}, "items": [{"name", "code", "level", "parent"}]}` — `parent` is the parent's `name`; top-level items have `"parent": ""`. An item may add `"aliases": [...]` (a list of non-empty strings) for other spellings `clues.py lookup admin` should accept; `name` stays the one lookup tables and the board use. Every `level` needs an entry in `admin_levels`.
 
 ### clues.md
 
