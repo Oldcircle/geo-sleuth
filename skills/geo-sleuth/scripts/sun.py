@@ -411,7 +411,7 @@ def cmd_street(args) -> None:
     for k, (lt, az, el, shadow, cands) in enumerate(rows):
         if k % step and k != len(rows) - 1:
             continue
-        half = "morning" if lt.hour < 12 else "afternoon"
+        half = "morning" if az < 180 else "afternoon"      # sun east of the meridian; clock noon can be hours off solar noon
         print(f"{lt:%H:%M} {half}  sun {az:5.1f}°/{el:4.1f}°  shadow bearing {shadow:5.1f}°  → street orientation "
               + " or ".join(f"{c}°–{c + 180}°" for c in cands))
     print("Street orientation is given as 0–180° (47° means northeast–southwest). You must keep both the morning and the afternoon group, unless other evidence tells morning from afternoon.")
@@ -458,7 +458,7 @@ def cmd_compass(args) -> None:
                 lt = start + timedelta(minutes=i)
                 az, el = sun_position(lat, lon, lt.astimezone(timezone.utc))
                 if (0 < el <= args.elev_max) if lo_el is None else (lo_el <= el <= hi_el):
-                    groups.setdefault("morning (sunrise side)" if lt.hour < 12 else "evening (sunset side)", []).append(az)
+                    groups.setdefault("morning (sunrise side)" if az < 180 else "evening (sunset side)", []).append(az)
         d += timedelta(days=max(1, args.step_days))
     if dropped:
         runs, s0 = [], dropped[0]
