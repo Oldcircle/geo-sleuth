@@ -1,0 +1,151 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -.",
+   "upper": true
+  },
+  "key_pattern": "^(AG|AI|AR|BE|BL|BS|FR|GE|GL|GR|JU|LU|NE|NW|OW|SG|SH|SO|SZ|TG|TI|UR|VD|VS|ZG|ZH)(?=\\d)",
+  "usage": "the two-letter canton code that opens a Swiss plate, e.g. ZH 123456 or GE 1; the digits are ignored",
+  "note": "The code is the canton of registration, not where the photo was taken. Customs, military, diplomat and short-term plates use other shapes and miss.",
+  "miss_note": "no canton code (customs, military, diplomat or short-term plate), a misread code, or a foreign plate",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Switzerland"
+  ],
+  "fetched": "2026-10-31",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 26
+ },
+ "entries": {
+  "AG": [
+   {
+    "admin1": "Aargau"
+   }
+  ],
+  "AI": [
+   {
+    "admin1": "Appenzell Innerrhoden"
+   }
+  ],
+  "AR": [
+   {
+    "admin1": "Appenzell Ausserrhoden"
+   }
+  ],
+  "BE": [
+   {
+    "admin1": "Bern"
+   }
+  ],
+  "BL": [
+   {
+    "admin1": "Basel-Landschaft"
+   }
+  ],
+  "BS": [
+   {
+    "admin1": "Basel-Stadt"
+   }
+  ],
+  "FR": [
+   {
+    "admin1": "Fribourg"
+   }
+  ],
+  "GE": [
+   {
+    "admin1": "Geneva"
+   }
+  ],
+  "GL": [
+   {
+    "admin1": "Glarus"
+   }
+  ],
+  "GR": [
+   {
+    "admin1": "Graubünden"
+   }
+  ],
+  "JU": [
+   {
+    "admin1": "Jura"
+   }
+  ],
+  "LU": [
+   {
+    "admin1": "Lucerne"
+   }
+  ],
+  "NE": [
+   {
+    "admin1": "Neuchâtel"
+   }
+  ],
+  "NW": [
+   {
+    "admin1": "Nidwalden"
+   }
+  ],
+  "OW": [
+   {
+    "admin1": "Obwalden"
+   }
+  ],
+  "SG": [
+   {
+    "admin1": "St. Gallen"
+   }
+  ],
+  "SH": [
+   {
+    "admin1": "Schaffhausen"
+   }
+  ],
+  "SO": [
+   {
+    "admin1": "Solothurn"
+   }
+  ],
+  "SZ": [
+   {
+    "admin1": "Schwyz"
+   }
+  ],
+  "TG": [
+   {
+    "admin1": "Thurgau"
+   }
+  ],
+  "TI": [
+   {
+    "admin1": "Ticino"
+   }
+  ],
+  "UR": [
+   {
+    "admin1": "Uri"
+   }
+  ],
+  "VD": [
+   {
+    "admin1": "Vaud"
+   }
+  ],
+  "VS": [
+   {
+    "admin1": "Valais"
+   }
+  ],
+  "ZG": [
+   {
+    "admin1": "Zug"
+   }
+  ],
+  "ZH": [
+   {
+    "admin1": "Zürich"
+   }
+  ]
+ }
+}
