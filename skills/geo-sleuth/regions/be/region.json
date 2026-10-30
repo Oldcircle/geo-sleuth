@@ -1,0 +1,22 @@
+{
+ "code": "BE",
+ "name": "Belgium",
+ "names": [
+  "Belgium",
+  "België",
+  "Belgique",
+  "Belgien",
+  "BE"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "be"
+  },
+  "street_view": "gsv.py"
+ }
+}
