@@ -1,0 +1,29 @@
+{
+ "code": "CH",
+ "name": "Switzerland",
+ "names": [
+  "Switzerland",
+  "Schweiz",
+  "Suisse",
+  "Svizzera",
+  "Svizra",
+  "Swiss",
+  "CH"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "lookups": {
+  "plate": {
+   "file": "data/plates.json"
+  }
+ },
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "ch"
+  },
+  "street_view": "gsv.py"
+ }
+}
