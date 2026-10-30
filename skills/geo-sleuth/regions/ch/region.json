@@ -14,6 +14,13 @@
  "docs": [
   "clues.md"
  ],
+ "admin_levels": {
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "canton"
+ },
+ "admin_table": "data/admin.json",
  "lookups": {
   "plate": {
    "file": "data/plates.json"

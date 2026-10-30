@@ -1,6 +1,6 @@
 # Switzerland clues
 
-Entries use the shared format (`references/clues/README.md`). Use these only after Switzerland is a candidate; cross-country clues belong in `references/clues/global.md`. Sources checked on 2026-10-31. The pack is a stub: it carries clues and a plate lookup, but no admin table yet, so `board.py children Switzerland` still needs one.
+Entries use the shared format (`references/clues/README.md`). Use these only after Switzerland is a candidate; cross-country clues belong in `references/clues/global.md`. Sources checked on 2026-10-31. The pack is a stub: it carries clues, a plate lookup and the canton admin table, but no municipalities, so `board.py children` for a canton still returns none.
 
 ## Plates
 
