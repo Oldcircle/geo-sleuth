@@ -50,11 +50,30 @@ def _bbox_km2(b: list[float]) -> float:
     return abs(n - s) * 110.574 * abs(e - w) * 111.320 * math.cos(math.radians((s + n) / 2))
 
 
+def _by_names(names: tuple[str, ...], extra: str = "", scope: str = "") -> str:
+    """Union of admin-relation selectors matching any of `names` on `name` and the region packs' extra name keys
+    (regions.osm_name_keys): a bilingual OSM name ("<local> <second script>") never equals the plain name.
+    Indexed tag lookups, fast."""
+    return "(" + "".join(
+        f'rel{scope}["{k}"="{n.replace(chr(92), chr(92) * 2).replace(chr(34), chr(92) + chr(34))}"]'
+        f'["boundary"="administrative"]{extra};'
+        for n in names for k in regions.osm_name_keys()) + ")"
+
+
 def _by_name(name: str, extra: str = "", scope: str = "") -> str:
-    """Union of admin-relation selectors matching name on `name` and the region packs' extra name keys (regions.osm_name_keys):
-    a bilingual OSM name ("<local> <second script>") never equals the plain name. Indexed tag lookups, fast."""
-    q = name.replace("\\", "\\\\").replace('"', '\\"')
-    return "(" + "".join(f'rel{scope}["{k}"="{q}"]["boundary"="administrative"]{extra};' for k in regions.osm_name_keys()) + ")"
+    """Same as `_by_names` for a single name."""
+    return _by_names((name,), extra, scope)
+
+
+def _parent_names(name: str) -> tuple[str, ...]:
+    """The name plus the names its region pack lists (an English name → the pack's local OSM name).
+
+    A country's OSM `name` is often not its English one (China is 中国), so the plain name only finds
+    unrelated places called "China"; the pack already knows both spellings."""
+    pack = regions.resolve(name)
+    if not pack:
+        return (name,)
+    return tuple(dict.fromkeys([name, *(n for n in pack.get("names", []) if isinstance(n, str) and n)]))
 
 
 def _plain_name(t: dict, fallback: str) -> str:
@@ -93,7 +112,9 @@ def find_relation(name: str, proxy: str | None, cache: Path, within: str | None 
     if within:
         ql = f'[out:json][timeout:120];{_by_name(within)};map_to_area->.p;{_by_name(name, lv, "(area.p)")};out tags bb;'
     else:
-        ql = f'[out:json][timeout:120];{_by_name(name, lv)};out tags bb;'
+        # A parent is looked up by every name its region pack knows: the OSM name of a country is often the
+        # local-script one, and the plain English name finds namesakes instead (issue #46).
+        ql = f'[out:json][timeout:120];{_by_names(_parent_names(name), lv)};out tags bb;'
     rows = _rel_rows(osm.run(ql, proxy, cache))
     rows.sort(key=lambda r: (r["admin_level"], -r["bbox_km2"]))
     return rows

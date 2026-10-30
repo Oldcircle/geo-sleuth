@@ -92,6 +92,27 @@ class AlsoChildren(unittest.TestCase):
         run.assert_not_called()
 
 
+class CountryNameResolution(unittest.TestCase):
+    """A country's OSM name is often the local-script one, while its English name finds namesakes."""
+
+    def test_parent_lookup_asks_for_the_names_its_region_pack_lists(self):
+        reply = {"elements": [
+            rel(5605656, 6, name="China", name_en="China"),                    # China, Nuevo León (MX)
+            rel(270056, 2, name="中国", name_zh="中国", name_en="China"),       # the country
+        ]}
+        with patch.object(gazetteer.osm, "run", return_value=reply) as run:
+            rows = gazetteer.find_relation("China", None, Path("."))
+
+        query = run.call_args.args[0]
+        self.assertIn('"中国"', query)                                         # the CN pack's local name
+        self.assertEqual(rows[0]["osm_id"], 270056)                            # the country, not the municipality
+
+    def test_unknown_name_keeps_a_single_name_selector(self):
+        with patch.object(gazetteer.osm, "run", return_value={"elements": []}) as run:
+            gazetteer.find_relation("Nowhere", None, Path("."))
+        self.assertEqual(run.call_args.args[0].count('["name"='), 1)
+
+
 class LiveMessages(unittest.TestCase):
     def test_live_run_passes_stderr_through_and_still_returns_stdout(self):
         code = "import sys; print('retrying in 15 s', file=sys.stderr); print('result')"
