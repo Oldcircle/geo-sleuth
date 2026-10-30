@@ -1,0 +1,21 @@
+{
+ "code": "NL",
+ "name": "Netherlands",
+ "names": [
+  "Netherlands",
+  "Nederland",
+  "Holland",
+  "NL"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "nl"
+  },
+  "street_view": "gsv.py"
+ }
+}
