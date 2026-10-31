@@ -1,0 +1,20 @@
+{
+ "code": "FR",
+ "name": "France",
+ "names": [
+  "France",
+  "French",
+  "FR"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "fr"
+  },
+  "street_view": "gsv.py"
+ }
+}
