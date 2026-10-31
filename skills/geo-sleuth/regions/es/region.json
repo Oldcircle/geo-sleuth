@@ -1,0 +1,22 @@
+{
+ "code": "ES",
+ "name": "Spain",
+ "names": [
+  "Spain",
+  "España",
+  "Espana",
+  "Spanish",
+  "ES"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "es"
+  },
+  "street_view": "gsv.py"
+ }
+}
