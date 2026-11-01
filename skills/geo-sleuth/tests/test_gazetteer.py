@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -90,6 +91,105 @@ class AlsoChildren(unittest.TestCase):
         with patch.object(gazetteer.osm, "run") as run:
             self.assertEqual(gazetteer.also_children(province, self.provinces, None, Path(".")), ([], []))
         run.assert_not_called()
+
+
+class CountryNameResolution(unittest.TestCase):
+    """Filter the fixture by the actual selectors, so an incorrect query cannot get the right country."""
+
+    def setUp(self):
+        def place(osm_id, level, **tags):
+            return rel(osm_id, level, boundary="administrative", **tags)
+        self.china = place(270056, 2, name="中国", name_zh="中国", name_en="China", **{"ISO3166-1": "CN"})
+        self.swiss = place(51701, 2, name="Schweiz/Suisse/Svizzera/Svizra", name_en="Switzerland", **{"ISO3166-1:alpha2": "CH"})
+        self.mexico = place(114686, 2, name="México", name_en="Mexico", **{"ISO3166-1": "MX"})
+        self.namesake = place(5605656, 6, name="China", name_en="China")
+        self.england = place(58447, 4, name="England", name_en="England")
+        self.uk = place(62149, 2, name="United Kingdom", name_en="United Kingdom", **{"ISO3166-1": "GB"})
+        self.hk = place(913110, 3, name="香港 Hong Kong", name_zh="香港", name_en="Hong Kong", **{"ISO3166-1": "HK"})
+        self.elements = [self.namesake, self.mexico, self.china, self.swiss, self.england, self.uk, self.hk]
+        self.membership = {self.namesake["id"]: {self.mexico["id"]}, self.england["id"]: {self.uk["id"]}}
+
+    def overpass(self, query, *_):
+        def select(text, elements):
+            selectors = re.findall(r'rel(?:\(area\.p\))?((?:\["[^"\\]+"="(?:\\.|[^"\\])*"\])+);', text)
+            self.assertTrue(selectors, text)
+            filters = [[(key, json.loads('"' + value + '"'))
+                        for key, value in re.findall(r'\["([^"\\]+)"="((?:\\.|[^"\\])*)"\]', s)]
+                       for s in selectors]
+            return [el for el in elements if any(all(el["tags"].get(k) == v for k, v in f) for f in filters)]
+        if "map_to_area->.p;" in query:
+            parent_query, child_query = query.split("map_to_area->.p;")
+            parent_ids = {el["id"] for el in select(parent_query, self.elements)}
+            elements = [el for el in self.elements if self.membership.get(el["id"], set()) & parent_ids]
+            return {"elements": select(child_query, elements)}
+        return {"elements": select(query, self.elements)}
+
+    def lookup(self, name, **kwargs):
+        with patch.object(gazetteer.osm, "run", side_effect=self.overpass) as run:
+            rows = gazetteer.find_relation(name, None, Path("."), **kwargs)
+        self.assertEqual(run.call_count, 1)   # no extra network round trip to resolve a country
+        return [r["osm_id"] for r in rows]
+
+    def test_country_names_codes_and_bilingual_tags_without_any_packs(self):
+        with patch.object(gazetteer.regions, "packs", return_value={}):
+            for name, expected in (("China", 270056), ("中国", 270056), ("CN", 270056), (" china ", 270056),
+                                   ("Switzerland", 51701), ("瑞士", 51701), ("ch", 51701)):
+                with self.subTest(name=name):
+                    self.assertEqual(self.lookup(name), [expected])
+
+    def test_pack_alias_remains_usable(self):
+        self.assertEqual(self.lookup("PRC"), [270056])
+
+    def test_english_name_fallback_only_selects_a_country(self):
+        del self.china["tags"]["ISO3166-1"]
+        self.assertEqual(self.lookup("China"), [270056])
+
+    def test_missing_country_does_not_return_a_namesake(self):
+        self.elements.remove(self.china)
+        with self.assertRaisesRegex(SystemExit, "no country/territory boundary.*China.*CN"):
+            self.lookup("China")
+
+    def test_multiple_country_boundaries_are_reported(self):
+        copy = {**self.china, "id": 270057}
+        self.elements.append(copy)
+        with self.assertRaisesRegex(SystemExit, "several country/territory boundaries.*270056.*270057"):
+            self.lookup("China")
+
+    def test_within_resolves_the_country_but_keeps_the_local_target(self):
+        self.assertEqual(self.lookup("China", within="Mexico"), [5605656])
+        self.assertEqual(self.lookup("England", within="United Kingdom"), [58447])
+        self.membership[self.namesake["id"]] = {self.china["id"]}
+        self.assertEqual(self.lookup("China", within="中国"), [5605656])
+
+    def test_missing_scope_country_does_not_search_its_namesake(self):
+        self.elements.remove(self.mexico)
+        self.assertEqual(self.lookup("China", within="Mexico"), [])
+
+    def test_explicit_local_level_is_not_forced_to_a_country(self):
+        self.assertEqual(self.lookup("China", level=6), [5605656])
+        self.assertEqual(self.lookup("China", level=2), [270056])
+
+    def test_subregions_and_iso_territories_keep_their_own_boundaries(self):
+        self.assertEqual(self.lookup("England"), [58447])  # broad clue alias must not turn this into the UK
+        self.assertEqual(self.lookup("香港"), [913110])    # ISO territory, OSM admin_level 3
+        self.assertEqual(self.lookup("Hong Kong"), [913110])
+        self.assertIsNone(gazetteer._country("Canary Islands"))
+        self.assertIsNone(gazetteer._country("Svalbard"))
+
+    def test_country_code_index_is_unambiguous_and_excludes_reserved_codes(self):
+        index, codes = gazetteer._country_index()
+        self.assertEqual(len(codes), 249)
+        for code, names in codes.items():
+            self.assertEqual(index[code.lower()], code)
+            for name in names:
+                self.assertEqual(index[name.casefold()], code)
+        self.assertNotIn("EU", codes)
+        self.assertNotIn("IC", codes)
+
+    def test_unknown_name_keeps_a_single_name_selector(self):
+        with patch.object(gazetteer.osm, "run", return_value={"elements": []}) as run:
+            gazetteer.find_relation("Nowhere", None, Path("."))
+        self.assertEqual(run.call_args.args[0].count('["name"='), 1)
 
 
 class LiveMessages(unittest.TestCase):

@@ -25,6 +25,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+from functools import lru_cache
 from _net import PROXY_HELP
 import json
 import math
@@ -55,6 +56,43 @@ def _by_name(name: str, extra: str = "", scope: str = "") -> str:
     a bilingual OSM name ("<local> <second script>") never equals the plain name. Indexed tag lookups, fast."""
     q = name.replace("\\", "\\\\").replace('"', '\\"')
     return "(" + "".join(f'rel{scope}["{k}"="{q}"]["boundary"="administrative"]{extra};' for k in regions.osm_name_keys()) + ")"
+
+
+@lru_cache(maxsize=1)
+def _country_index() -> tuple[dict[str, str], dict[str, list[str]]]:
+    """Exact names and ISO codes only. Broad clue aliases (e.g. England -> UK) are not boundaries."""
+    data = json.loads((Path(__file__).resolve().parents[1] / "data" / "country_names.json").read_text(encoding="utf-8"))
+    codes = data["iso3166"]
+    index = {}
+    for code, names in codes.items():
+        for name in [code, *names, *(data["en2zh"].get(n, "") for n in names)]:
+            if name:
+                index[name.casefold()] = code
+    return index, codes
+
+
+def _country(name: str) -> tuple[str, tuple[str, ...]] | None:
+    index, codes = _country_index()
+    code = index.get(name.strip().casefold())
+    if not code:
+        # Packs may add local aliases, but are not required to find a country.
+        code = (regions.resolve(name) or {}).get("code")
+    if code not in codes:
+        return None
+    return code, tuple(codes[code])
+
+
+def _by_country(country: tuple[str, tuple[str, ...]], level: int | None = None) -> str:
+    code, names = country
+    lv = f'["admin_level"="{level}"]' if level else ""
+    # ISO also identifies territories such as Hong Kong (level 3); do not turn them into countries.
+    selectors = [f'rel["{key}"="{code}"]["boundary"="administrative"]{lv};'
+                 for key in ("ISO3166-1", "ISO3166-1:alpha2")]
+    # Some country relations lack the ISO tag. English names are safe only at country level.
+    for name in names:
+        q = name.replace("\\", "\\\\").replace('"', '\\"')
+        selectors.append(f'rel["name:en"="{q}"]["boundary"="administrative"]["admin_level"="2"];')
+    return "(" + "".join(selectors) + ")"
 
 
 def _plain_name(t: dict, fallback: str) -> str:
@@ -90,11 +128,22 @@ def find_relation(name: str, proxy: str | None, cache: Path, within: str | None 
                   level: int | None = None) -> list[dict]:
     """Find admin relations by name (there can be several with the same name: Chaoyang District in Beijing and in Changchun), with bbox."""
     lv = f'["admin_level"="{level}"]' if level else ""
+    country = _country(name) if not within and level in (None, 2) else None
     if within:
-        ql = f'[out:json][timeout:120];{_by_name(within)};map_to_area->.p;{_by_name(name, lv, "(area.p)")};out tags bb;'
+        scope_country = _country(within)
+        parent = _by_country(scope_country) if scope_country else _by_name(within)
+        ql = f'[out:json][timeout:120];{parent};map_to_area->.p;{_by_name(name, lv, "(area.p)")};out tags bb;'
     else:
-        ql = f'[out:json][timeout:120];{_by_name(name, lv)};out tags bb;'
+        parent = _by_country(country, level) if country else _by_name(name, lv)
+        ql = f'[out:json][timeout:120];{parent};out tags bb;'
     rows = _rel_rows(osm.run(ql, proxy, cache))
+    if country and not rows:
+        sys.exit(f'OSM has no country/territory boundary for "{name}" ({country[0]}). '
+                 'For a same-named local place, add --within <parent name> or use info --level <admin level>.')
+    if country and len(rows) > 1:
+        sys.exit(f'OSM returned several country/territory boundaries for "{name}" ({country[0]}): '
+                 + ", ".join(f'{r["name"]} (relation {r["osm_id"]}, level {r["admin_level"]})' for r in rows)
+                 + ". Check the OSM relations before choosing a parent.")
     rows.sort(key=lambda r: (r["admin_level"], -r["bbox_km2"]))
     return rows
 
