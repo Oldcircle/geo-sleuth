@@ -1,0 +1,55 @@
+{
+ "code": "UZ",
+ "name": "Uzbekistan",
+ "names": [
+  "Uzbekistan",
+  "Oʻzbekiston",
+  "O'zbekiston",
+  "Ўзбекистон",
+  "Узбекистан",
+  "Republic of Uzbekistan",
+  "Oʻzbekiston Respublikasi",
+  "Республика Узбекистан",
+  "UZ"
+ ],
+ "status": "community",
+ "maintainers": [
+  "@wntic"
+ ],
+ "admin_levels": {
+  "3": "admin1",
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "region (viloyat), the city of Tashkent, or the Republic of Karakalpakstan (OSM admin_level 3; added to `board.py children Uzbekistan` through also_children)"
+ },
+ "also_children": [
+  "Qaraqalpaqstan Respublikası"
+ ],
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {
+   "file": "data/plates.json"
+  },
+  "plate-1998": {
+   "file": "data/plates_1998.json"
+  },
+  "area-code": {
+   "file": "data/area_codes.json"
+  }
+ },
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "uz"
+  },
+  "street_view": "gsv.py"
+ },
+ "tips": {
+  "plate/area-code/calling-code": "plate region code (two digits in the box on the left; each region holds a range, 01–09 Tashkent city … 95–99 Karakalpakstan) or landline code (two digits after +998) readable → `clues.py lookup plate|area-code <value> --country uz` + `board.py apply`; a plate with a letter and four digits after the code is the 1998–2008 format: `--kind plate-1998`",
+  "livery": "car and bus make is not a region marker in Uzbekistan: Chevrolet cars from the national plants are everywhere. Read the plate's region code from vehicles instead (`clues.py lookup plate <two digits> --country uz`)"
+ }
+}

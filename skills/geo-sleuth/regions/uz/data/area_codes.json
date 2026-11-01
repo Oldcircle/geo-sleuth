@@ -1,0 +1,105 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "998"
+  },
+  "key_pattern": "^998\\d{2}(?=\\d{7}$)|^998\\d{2}$",
+  "usage": "nine-digit number as written on signs: 71 123 45 67, (66) 233-45-67 or +998 65 221 23 45; or only the two-digit code: 66",
+  "note": "Since 2018–2020 all numbers have nine digits: a two-digit code, then seven digits; there is no trunk prefix. Geographic codes are 61–79; 20, 33, 50, 77, 80, 87–99 are mobile or other non-geographic ranges.",
+  "miss_note": "not a geographic Uzbek code: a mobile number (20, 33, 50, 77, 88, 90–99 …), 78 (non-geographic fixed), 55 (VoIP), an old seven-digit local number written without the code, or a number of another country",
+  "source": [
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Uzbekistan, section 'Area codes'",
+   "https://www.goldenpages.uz/uzcodes/ (codes by settlement and district, 2026; 70 Tashkent Region, 36 Navoiy Region)",
+   "https://www.goldenpages.uz/phone/ (prefix table)"
+  ],
+  "fetched": "2026-11-01",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0; goldenpages.uz facts (codes) only",
+  "count": 15
+ },
+ "entries": {
+  "99836": [
+   {
+    "admin1": "Navoiy Viloyati",
+    "note": "goldenpages.uz lists 36 for most of Navoiy Region (79 only for Gazgan); en.wikipedia lists 79"
+   }
+  ],
+  "99861": [
+   {
+    "admin1": "Qaraqalpaqstan"
+   }
+  ],
+  "99862": [
+   {
+    "admin1": "Xorazm Viloyati"
+   }
+  ],
+  "99865": [
+   {
+    "admin1": "Buxoro"
+   }
+  ],
+  "99866": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "99867": [
+   {
+    "admin1": "Sirdaryo Viloyati"
+   }
+  ],
+  "99869": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "99870": [
+   {
+    "admin1": "Toshkent Viloyati",
+    "note": "goldenpages.uz lists 70 for Tashkent Region landlines; en.wikipedia lists 70 as Uzmobile mobile, so a 70 number may also be a mobile phone (any region)"
+   }
+  ],
+  "99871": [
+   {
+    "admin1": "Toshkent"
+   },
+   {
+    "admin1": "Toshkent Viloyati",
+    "note": "the Tashkent city zone also serves numbers in parts of Tashkent Region; most of the region is listed under 70"
+   }
+  ],
+  "99872": [
+   {
+    "admin1": "Jizzax Viloyati"
+   }
+  ],
+  "99873": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "99874": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "99875": [
+   {
+    "admin1": "Qashqadaryo Viloyati"
+   }
+  ],
+  "99876": [
+   {
+    "admin1": "Surxondaryo"
+   }
+  ],
+  "99879": [
+   {
+    "admin1": "Navoiy Viloyati",
+    "note": "en.wikipedia lists 79 for Navoiy Region; goldenpages.uz lists 36 for most of it"
+   }
+  ]
+ }
+}
