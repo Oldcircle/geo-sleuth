@@ -1,0 +1,961 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^\\d{2,3}$",
+  "usage": "type only the region code: the two or three digits on the right of the plate, above RUS and the flag (А 123 ВС 77 → 77, А 123 ВС 799 → 799)",
+  "note": "The code is where the vehicle was registered, not where the photo was taken. A three-digit code that is not in the table falls back to its first two digits, which are usually another region: the lookup marks such a match with \"only '..' matched\"; treat it as a miss. Some codes have an earlier owner (an autonomous okrug merged into a krai or oblast) or were issued in other regions for a time; those keys list every place.",
+  "miss_note": "not a Russian region code: misread digits, a whole plate (type only the digits on the right), a yellow or black plate of another country, a military plate (black, code = military district), a diplomatic plate (red), or a code issued after this table was fetched",
+  "source": [
+   "https://ru.wikipedia.org/wiki/Коды_субъектов_Российской_Федерации (plate codes per subject, earlier owners of reused codes)",
+   "https://ru.wikipedia.org/wiki/Регистрационные_знаки_транспортных_средств_в_России (region-code table, introduction dates, code 82 issued in other regions, codes 88/188)",
+   "Приказ МВД России от 05.10.2017 № 766, приложение 1 (as cited by both articles)"
+  ],
+  "fetched": "2026-11-01",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 168
+ },
+ "entries": {
+  "01": [
+   {
+    "admin1": "Адыгея"
+   }
+  ],
+  "02": [
+   {
+    "admin1": "Башкортостан"
+   }
+  ],
+  "03": [
+   {
+    "admin1": "Республика Бурятия"
+   }
+  ],
+  "04": [
+   {
+    "admin1": "Республика Алтай"
+   }
+  ],
+  "05": [
+   {
+    "admin1": "Дагестан"
+   }
+  ],
+  "06": [
+   {
+    "admin1": "Ингушетия"
+   }
+  ],
+  "07": [
+   {
+    "admin1": "Кабардино-Балкария"
+   }
+  ],
+  "08": [
+   {
+    "admin1": "Калмыкия"
+   }
+  ],
+  "09": [
+   {
+    "admin1": "Карачаево-Черкесия"
+   }
+  ],
+  "10": [
+   {
+    "admin1": "Карелия"
+   }
+  ],
+  "11": [
+   {
+    "admin1": "Республика Коми"
+   }
+  ],
+  "12": [
+   {
+    "admin1": "Марий Эл"
+   }
+  ],
+  "13": [
+   {
+    "admin1": "Мордовия"
+   }
+  ],
+  "14": [
+   {
+    "admin1": "Республика Саха (Якутия)"
+   }
+  ],
+  "15": [
+   {
+    "admin1": "Северная Осетия — Алания"
+   }
+  ],
+  "16": [
+   {
+    "admin1": "Татарстан"
+   }
+  ],
+  "17": [
+   {
+    "admin1": "Республика Тыва"
+   }
+  ],
+  "18": [
+   {
+    "admin1": "Удмуртия"
+   }
+  ],
+  "19": [
+   {
+    "admin1": "Республика Хакасия"
+   }
+  ],
+  "20": [
+   {
+    "admin1": "Чечня",
+    "note": "original Chechen code, annulled in 2000 and replaced by 95; single source: listed on ru.wikipedia 'Коды субъектов Российской Федерации' but not in the plates article's table"
+   }
+  ],
+  "21": [
+   {
+    "admin1": "Чувашия"
+   }
+  ],
+  "22": [
+   {
+    "admin1": "Алтайский край"
+   }
+  ],
+  "23": [
+   {
+    "admin1": "Краснодарский край"
+   }
+  ],
+  "24": [
+   {
+    "admin1": "Красноярский край"
+   }
+  ],
+  "25": [
+   {
+    "admin1": "Приморский край"
+   }
+  ],
+  "26": [
+   {
+    "admin1": "Ставропольский край"
+   }
+  ],
+  "27": [
+   {
+    "admin1": "Хабаровский край"
+   }
+  ],
+  "28": [
+   {
+    "admin1": "Амурская область"
+   }
+  ],
+  "29": [
+   {
+    "admin1": "Архангельская область"
+   }
+  ],
+  "30": [
+   {
+    "admin1": "Астраханская область"
+   }
+  ],
+  "31": [
+   {
+    "admin1": "Белгородская область"
+   }
+  ],
+  "32": [
+   {
+    "admin1": "Брянская область"
+   }
+  ],
+  "33": [
+   {
+    "admin1": "Владимирская область"
+   }
+  ],
+  "34": [
+   {
+    "admin1": "Волгоградская область"
+   }
+  ],
+  "35": [
+   {
+    "admin1": "Вологодская область"
+   }
+  ],
+  "36": [
+   {
+    "admin1": "Воронежская область"
+   }
+  ],
+  "37": [
+   {
+    "admin1": "Ивановская область"
+   }
+  ],
+  "38": [
+   {
+    "admin1": "Иркутская область"
+   }
+  ],
+  "39": [
+   {
+    "admin1": "Калининградская область"
+   }
+  ],
+  "40": [
+   {
+    "admin1": "Калужская область"
+   }
+  ],
+  "41": [
+   {
+    "admin1": "Камчатский край"
+   }
+  ],
+  "42": [
+   {
+    "admin1": "Кемеровская область"
+   }
+  ],
+  "43": [
+   {
+    "admin1": "Кировская область"
+   }
+  ],
+  "44": [
+   {
+    "admin1": "Костромская область"
+   }
+  ],
+  "45": [
+   {
+    "admin1": "Курганская область"
+   }
+  ],
+  "46": [
+   {
+    "admin1": "Курская область"
+   }
+  ],
+  "47": [
+   {
+    "admin1": "Ленинградская область"
+   }
+  ],
+  "48": [
+   {
+    "admin1": "Липецкая область"
+   }
+  ],
+  "49": [
+   {
+    "admin1": "Магаданская область"
+   }
+  ],
+  "50": [
+   {
+    "admin1": "Московская область"
+   }
+  ],
+  "51": [
+   {
+    "admin1": "Мурманская область"
+   }
+  ],
+  "52": [
+   {
+    "admin1": "Нижегородская область"
+   }
+  ],
+  "53": [
+   {
+    "admin1": "Новгородская область"
+   }
+  ],
+  "54": [
+   {
+    "admin1": "Новосибирская область"
+   }
+  ],
+  "55": [
+   {
+    "admin1": "Омская область"
+   }
+  ],
+  "56": [
+   {
+    "admin1": "Оренбургская область"
+   }
+  ],
+  "57": [
+   {
+    "admin1": "Орловская область"
+   }
+  ],
+  "58": [
+   {
+    "admin1": "Пензенская область"
+   }
+  ],
+  "59": [
+   {
+    "admin1": "Пермский край"
+   }
+  ],
+  "60": [
+   {
+    "admin1": "Псковская область"
+   }
+  ],
+  "61": [
+   {
+    "admin1": "Ростовская область"
+   }
+  ],
+  "62": [
+   {
+    "admin1": "Рязанская область"
+   }
+  ],
+  "63": [
+   {
+    "admin1": "Самарская область"
+   }
+  ],
+  "64": [
+   {
+    "admin1": "Саратовская область"
+   }
+  ],
+  "65": [
+   {
+    "admin1": "Сахалинская область"
+   }
+  ],
+  "66": [
+   {
+    "admin1": "Свердловская область"
+   }
+  ],
+  "67": [
+   {
+    "admin1": "Смоленская область"
+   }
+  ],
+  "68": [
+   {
+    "admin1": "Тамбовская область"
+   }
+  ],
+  "69": [
+   {
+    "admin1": "Тверская область"
+   }
+  ],
+  "70": [
+   {
+    "admin1": "Томская область"
+   }
+  ],
+  "71": [
+   {
+    "admin1": "Тульская область"
+   }
+  ],
+  "72": [
+   {
+    "admin1": "Тюменская область"
+   }
+  ],
+  "73": [
+   {
+    "admin1": "Ульяновская область"
+   }
+  ],
+  "74": [
+   {
+    "admin1": "Челябинская область"
+   }
+  ],
+  "75": [
+   {
+    "admin1": "Забайкальский край"
+   }
+  ],
+  "76": [
+   {
+    "admin1": "Ярославская область"
+   }
+  ],
+  "77": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "78": [
+   {
+    "admin1": "Санкт-Петербург"
+   }
+  ],
+  "79": [
+   {
+    "admin1": "Еврейская автономная область"
+   }
+  ],
+  "80": [
+   {
+    "admin1": "Донецька область",
+    "note": "codes issued by Russian authorities in the Russian-occupied part of Donetsk Oblast, Ukraine, since 2022"
+   },
+   {
+    "admin1": "Забайкальский край",
+    "note": "old plates of the Agin-Buryat Autonomous Okrug, merged into Zabaykalsky Krai in 2008"
+   }
+  ],
+  "81": [
+   {
+    "admin1": "Луганська область",
+    "note": "codes issued by Russian authorities in the Russian-occupied part of Luhansk Oblast, Ukraine, since 2022"
+   },
+   {
+    "admin1": "Пермский край",
+    "note": "old plates of the Komi-Permyak Autonomous Okrug, merged into Perm Krai in 2005"
+   }
+  ],
+  "82": [
+   {
+    "admin1": "Республика Крым",
+    "note": "Republic of Crimea (annexed by Russia in 2014; ISO 3166-2 UA-43), issued since June 2014"
+   },
+   {
+    "admin1": "Камчатский край",
+    "note": "old plates of the Koryak Autonomous Okrug (1,548 issued, 1994–2007), now part of Kamchatka Krai"
+   },
+   {
+    "admin1": "Белгородская область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Кемеровская область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Курская область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Липецкая область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Новосибирская область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Оренбургская область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Ростовская область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Самарская область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Ульяновская область",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Пермский край",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Ханты-Мансийский автономный округ — Югра",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Санкт-Петербург",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   },
+   {
+    "admin1": "Чувашия",
+    "note": "series with code 82 issued here in 2016–2017 because of a shortage of local numbers"
+   }
+  ],
+  "83": [
+   {
+    "admin1": "Ненецкий автономный округ"
+   }
+  ],
+  "84": [
+   {
+    "admin1": "Херсонська область",
+    "note": "codes issued by Russian authorities in the Russian-occupied part of Kherson Oblast, Ukraine, since 2022"
+   },
+   {
+    "admin1": "Красноярский край",
+    "note": "old plates of the Taymyr Autonomous Okrug, merged into Krasnoyarsk Krai in 2007"
+   }
+  ],
+  "85": [
+   {
+    "admin1": "Запорізька область",
+    "note": "codes issued by Russian authorities in the Russian-occupied part of Zaporizhzhia Oblast, Ukraine, since 2022"
+   },
+   {
+    "admin1": "Иркутская область",
+    "note": "old plates of the Ust-Orda Buryat Autonomous Okrug, merged into Irkutsk Oblast in 2008"
+   }
+  ],
+  "86": [
+   {
+    "admin1": "Ханты-Мансийский автономный округ — Югра"
+   }
+  ],
+  "87": [
+   {
+    "admin1": "Чукотский автономный округ"
+   }
+  ],
+  "88": [
+   {
+    "admin1": "Красноярский край",
+    "note": "old plates of the Evenk Autonomous Okrug, merged into Krasnoyarsk Krai in 2007; reserved since 2022 and not issued"
+   }
+  ],
+  "89": [
+   {
+    "admin1": "Ямало-Ненецкий автономный округ"
+   }
+  ],
+  "90": [
+   {
+    "admin1": "Московская область"
+   }
+  ],
+  "91": [
+   {
+    "admin1": "Калининградская область",
+    "note": "only on metal transit plates"
+   }
+  ],
+  "92": [
+   {
+    "admin1": "Севастополь",
+    "note": "Sevastopol (annexed by Russia in 2014; ISO 3166-2 UA-40), issued since June 2014"
+   }
+  ],
+  "93": [
+   {
+    "admin1": "Краснодарский край"
+   }
+  ],
+  "94": [
+   {
+    "admin1": "Қызылорда облысы",
+    "note": "Baikonur, a city in Kazakhstan leased by Russia; plates issued by the Russian Interior Ministry"
+   }
+  ],
+  "95": [
+   {
+    "admin1": "Чечня"
+   }
+  ],
+  "96": [
+   {
+    "admin1": "Свердловская область"
+   }
+  ],
+  "97": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "98": [
+   {
+    "admin1": "Санкт-Петербург"
+   }
+  ],
+  "99": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "101": [
+   {
+    "admin1": "Адыгея",
+    "note": "single source: listed on ru.wikipedia 'Коды субъектов Российской Федерации' but not in the plates article's table"
+   }
+  ],
+  "102": [
+   {
+    "admin1": "Башкортостан"
+   }
+  ],
+  "103": [
+   {
+    "admin1": "Республика Бурятия",
+    "note": "single source: listed on ru.wikipedia 'Коды субъектов Российской Федерации' but not in the plates article's table"
+   }
+  ],
+  "105": [
+   {
+    "admin1": "Дагестан"
+   }
+  ],
+  "109": [
+   {
+    "admin1": "Карачаево-Черкесия",
+    "note": "single source: listed on ru.wikipedia 'Коды субъектов Российской Федерации' but not in the plates article's table"
+   }
+  ],
+  "111": [
+   {
+    "admin1": "Республика Коми",
+    "note": "single source: listed on ru.wikipedia 'Коды субъектов Российской Федерации' but not in the plates article's table"
+   }
+  ],
+  "113": [
+   {
+    "admin1": "Мордовия"
+   }
+  ],
+  "115": [
+   {
+    "admin1": "Северная Осетия — Алания",
+    "note": "single source: listed on ru.wikipedia 'Коды субъектов Российской Федерации' but not in the plates article's table"
+   }
+  ],
+  "116": [
+   {
+    "admin1": "Татарстан"
+   }
+  ],
+  "118": [
+   {
+    "admin1": "Удмуртия",
+    "note": "single source: listed on ru.wikipedia 'Коды субъектов Российской Федерации' but not in the plates article's table"
+   }
+  ],
+  "121": [
+   {
+    "admin1": "Чувашия"
+   }
+  ],
+  "122": [
+   {
+    "admin1": "Алтайский край"
+   }
+  ],
+  "123": [
+   {
+    "admin1": "Краснодарский край"
+   }
+  ],
+  "124": [
+   {
+    "admin1": "Красноярский край"
+   }
+  ],
+  "125": [
+   {
+    "admin1": "Приморский край"
+   }
+  ],
+  "126": [
+   {
+    "admin1": "Ставропольский край"
+   }
+  ],
+  "131": [
+   {
+    "admin1": "Белгородская область"
+   }
+  ],
+  "133": [
+   {
+    "admin1": "Владимирская область"
+   }
+  ],
+  "134": [
+   {
+    "admin1": "Волгоградская область"
+   }
+  ],
+  "136": [
+   {
+    "admin1": "Воронежская область"
+   }
+  ],
+  "138": [
+   {
+    "admin1": "Иркутская область"
+   }
+  ],
+  "142": [
+   {
+    "admin1": "Кемеровская область"
+   }
+  ],
+  "147": [
+   {
+    "admin1": "Ленинградская область"
+   }
+  ],
+  "150": [
+   {
+    "admin1": "Московская область"
+   }
+  ],
+  "152": [
+   {
+    "admin1": "Нижегородская область"
+   }
+  ],
+  "154": [
+   {
+    "admin1": "Новосибирская область"
+   }
+  ],
+  "155": [
+   {
+    "admin1": "Омская область"
+   }
+  ],
+  "156": [
+   {
+    "admin1": "Оренбургская область"
+   }
+  ],
+  "158": [
+   {
+    "admin1": "Пензенская область",
+    "note": "single source: listed on ru.wikipedia 'Коды субъектов Российской Федерации' but not in the plates article's table"
+   }
+  ],
+  "159": [
+   {
+    "admin1": "Пермский край"
+   }
+  ],
+  "161": [
+   {
+    "admin1": "Ростовская область"
+   }
+  ],
+  "163": [
+   {
+    "admin1": "Самарская область"
+   }
+  ],
+  "164": [
+   {
+    "admin1": "Саратовская область"
+   }
+  ],
+  "166": [
+   {
+    "admin1": "Свердловская область"
+   }
+  ],
+  "172": [
+   {
+    "admin1": "Тюменская область"
+   }
+  ],
+  "173": [
+   {
+    "admin1": "Ульяновская область"
+   }
+  ],
+  "174": [
+   {
+    "admin1": "Челябинская область"
+   }
+  ],
+  "177": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "178": [
+   {
+    "admin1": "Санкт-Петербург"
+   }
+  ],
+  "180": [
+   {
+    "admin1": "Донецька область",
+    "note": "codes issued by Russian authorities in the Russian-occupied part of Donetsk Oblast, Ukraine, since 2022"
+   }
+  ],
+  "181": [
+   {
+    "admin1": "Луганська область",
+    "note": "codes issued by Russian authorities in the Russian-occupied part of Luhansk Oblast, Ukraine, since 2022"
+   }
+  ],
+  "184": [
+   {
+    "admin1": "Херсонська область",
+    "note": "codes issued by Russian authorities in the Russian-occupied part of Kherson Oblast, Ukraine, since 2022"
+   }
+  ],
+  "185": [
+   {
+    "admin1": "Запорізька область",
+    "note": "codes issued by Russian authorities in the Russian-occupied part of Zaporizhzhia Oblast, Ukraine, since 2022"
+   }
+  ],
+  "186": [
+   {
+    "admin1": "Ханты-Мансийский автономный округ — Югра"
+   }
+  ],
+  "188": [
+   {
+    "admin1": "Харківська область",
+    "note": "issued in August 2022 in the Russian-occupied part of Kharkiv Oblast, Ukraine, then stopped"
+   }
+  ],
+  "190": [
+   {
+    "admin1": "Московская область"
+   }
+  ],
+  "193": [
+   {
+    "admin1": "Краснодарский край"
+   }
+  ],
+  "196": [
+   {
+    "admin1": "Свердловская область"
+   }
+  ],
+  "197": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "198": [
+   {
+    "admin1": "Санкт-Петербург"
+   }
+  ],
+  "199": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "224": [
+   {
+    "admin1": "Красноярский край"
+   }
+  ],
+  "250": [
+   {
+    "admin1": "Московская область"
+   }
+  ],
+  "252": [
+   {
+    "admin1": "Нижегородская область"
+   }
+  ],
+  "323": [
+   {
+    "admin1": "Краснодарский край"
+   }
+  ],
+  "550": [
+   {
+    "admin1": "Московская область"
+   }
+  ],
+  "702": [
+   {
+    "admin1": "Башкортостан"
+   }
+  ],
+  "716": [
+   {
+    "admin1": "Татарстан"
+   }
+  ],
+  "750": [
+   {
+    "admin1": "Московская область"
+   }
+  ],
+  "761": [
+   {
+    "admin1": "Ростовская область"
+   }
+  ],
+  "763": [
+   {
+    "admin1": "Самарская область"
+   }
+  ],
+  "774": [
+   {
+    "admin1": "Челябинская область"
+   }
+  ],
+  "777": [
+   {
+    "admin1": "Москва"
+   },
+   {
+    "admin1": "Республика Крым",
+    "note": "issued in Crimea from March to July 2014, before code 82"
+   }
+  ],
+  "778": [
+   {
+    "admin1": "Санкт-Петербург"
+   }
+  ],
+  "790": [
+   {
+    "admin1": "Московская область"
+   }
+  ],
+  "797": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "799": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "977": [
+   {
+    "admin1": "Москва"
+   }
+  ],
+  "997": [
+   {
+    "admin1": "Москва"
+   }
+  ]
+ }
+}
