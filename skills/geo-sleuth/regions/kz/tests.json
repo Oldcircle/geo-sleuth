@@ -1,0 +1,23 @@
+[
+ {"kind": "plate", "value": "02", "expect": [{"admin1": "Алматы"}]},
+ {"kind": "plate", "value": "17", "expect": [{"admin1": "Шымкент"}]},
+ {"kind": "plate", "value": "20", "expect": [{"admin1": "Ұлытау облысы"}]},
+ {"kind": "plate", "value": "Z 123 ABC", "expect": [{"admin1": "Астана"}]},
+ {"kind": "plate", "value": "A644DC", "expect": [{"admin1": "Алматы"}]},
+ {"kind": "plate", "value": "O 123 ABC", "expect": [{"admin1": "Ақмола облысы"}, {"admin1": "Солтүстік Қазақстан облысы"}]},
+ {"kind": "plate", "value": "W-555-KA", "expect": [{"admin1": "Ақмола облысы"}, {"admin1": "Қостанай облысы"}]},
+ {"kind": "plate", "value": "21", "expect": []},
+ {"kind": "plate", "value": "123 ABC 02", "expect": []},
+ {"kind": "area-code", "value": "8 (7172) 12-34-56", "expect": [{"admin1": "Астана"}]},
+ {"kind": "area-code", "value": "(727) 250 12 34", "expect": [{"admin1": "Алматы"}]},
+ {"kind": "area-code", "value": "8 72772 1 23 45", "expect": [{"admin1": "Алматы облысы"}]},
+ {"kind": "area-code", "value": "727", "expect": [{"admin1": "Алматы"}, {"admin1": "Алматы облысы"}]},
+ {"kind": "area-code", "value": "7252 53 12 34", "expect": [{"admin1": "Шымкент"}]},
+ {"kind": "area-code", "value": "72533 5 12 34", "expect": [{"admin1": "Түркістан облысы"}, {"admin1": "Шымкент"}]},
+ {"kind": "area-code", "value": "7102 72 00 00", "expect": [{"admin1": "Ұлытау облысы"}]},
+ {"kind": "area-code", "value": "7103 6 12 34", "expect": [{"admin1": "Ұлытау облысы"}, {"admin1": "Қарағанды облысы"}]},
+ {"kind": "area-code", "value": "7222 52 00 00", "expect": [{"admin1": "Абай облысы"}]},
+ {"kind": "area-code", "value": "8 728 39 2 12 34", "expect": [{"admin1": "Жетісу облысы"}]},
+ {"kind": "area-code", "value": "8 701 123 45 67", "expect": []},
+ {"kind": "area-code", "value": "8 777 123 45 67", "expect": []}
+]

@@ -1,0 +1,267 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "8"
+  },
+  "usage": "landline number in national form: 8 (7172) 12-34-56, (727) 250 12 34, 72772 1 23 45; drop a leading +7",
+  "note": "Ten-digit numbers: a three-digit zone (710–729, one per region) plus a city or district code. The regional centre's code ends in 2 (7172 Astana, 7252 Shymkent); Almaty city is 727 followed by 2 or 3. Zones that predate the 2022 regions (710, 722) list both regions.",
+  "miss_note": "not a Kazakh landline code: 70x/747/77x are mobile (any region), 75x/76x non-geographic, 800 toll-free; a number written with +7 (drop the 7); or a Russian number, which shares country code +7 (3xx, 4xx, 8xx, 9xx zones)",
+  "source": [
+   "https://ru.wikipedia.org/wiki/Телефонный_план_нумерации_Казахстана (zones by region after 2022, city and district codes)",
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Kazakhstan (zone table before 2022, mobile and non-geographic ranges)"
+  ],
+  "fetched": "2026-11-01",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 42
+ },
+ "entries": {
+  "8710": [
+   {
+    "admin1": "Ұлытау облысы"
+   },
+   {
+    "admin1": "Қарағанды облысы",
+    "note": "zone 710 was Karaganda Region's before Ulytau Region was split off in 2022"
+   }
+  ],
+  "87102": [
+   {
+    "admin1": "Ұлытау облысы",
+    "note": "Zhezkazgan"
+   }
+  ],
+  "8711": [
+   {
+    "admin1": "Батыс Қазақстан облысы"
+   }
+  ],
+  "87112": [
+   {
+    "admin1": "Батыс Қазақстан облысы",
+    "note": "Oral (Uralsk)"
+   }
+  ],
+  "8712": [
+   {
+    "admin1": "Атырау облысы"
+   }
+  ],
+  "87122": [
+   {
+    "admin1": "Атырау облысы",
+    "note": "Atyrau"
+   }
+  ],
+  "8713": [
+   {
+    "admin1": "Ақтөбе облысы"
+   }
+  ],
+  "87132": [
+   {
+    "admin1": "Ақтөбе облысы",
+    "note": "Aktobe"
+   }
+  ],
+  "8714": [
+   {
+    "admin1": "Қостанай облысы"
+   }
+  ],
+  "87142": [
+   {
+    "admin1": "Қостанай облысы",
+    "note": "Kostanay"
+   }
+  ],
+  "8715": [
+   {
+    "admin1": "Солтүстік Қазақстан облысы"
+   }
+  ],
+  "87152": [
+   {
+    "admin1": "Солтүстік Қазақстан облысы",
+    "note": "Petropavl"
+   }
+  ],
+  "8716": [
+   {
+    "admin1": "Ақмола облысы"
+   }
+  ],
+  "87162": [
+   {
+    "admin1": "Ақмола облысы",
+    "note": "Kokshetau"
+   }
+  ],
+  "8717": [
+   {
+    "admin1": "Астана"
+   }
+  ],
+  "8718": [
+   {
+    "admin1": "Павлодар облысы"
+   }
+  ],
+  "87182": [
+   {
+    "admin1": "Павлодар облысы",
+    "note": "Pavlodar"
+   }
+  ],
+  "8721": [
+   {
+    "admin1": "Қарағанды облысы"
+   }
+  ],
+  "87212": [
+   {
+    "admin1": "Қарағанды облысы",
+    "note": "Karaganda"
+   }
+  ],
+  "8722": [
+   {
+    "admin1": "Абай облысы"
+   },
+   {
+    "admin1": "Шығыс Қазақстан облысы",
+    "note": "zone 722 was East Kazakhstan Region's before Abai Region was split off in 2022"
+   }
+  ],
+  "87222": [
+   {
+    "admin1": "Абай облысы",
+    "note": "Semey"
+   }
+  ],
+  "8723": [
+   {
+    "admin1": "Шығыс Қазақстан облысы",
+    "note": "districts that moved to Abai Region in 2022 may still dial 723; the sources don't list them"
+   }
+  ],
+  "87232": [
+   {
+    "admin1": "Шығыс Қазақстан облысы",
+    "note": "Oskemen (Ust-Kamenogorsk)"
+   }
+  ],
+  "8724": [
+   {
+    "admin1": "Қызылорда облысы"
+   }
+  ],
+  "87242": [
+   {
+    "admin1": "Қызылорда облысы",
+    "note": "Kyzylorda"
+   }
+  ],
+  "873622": [
+   {
+    "admin1": "Қызылорда облысы",
+    "note": "Baikonur, a city leased to Russia; dialled 336 22 from Russia"
+   }
+  ],
+  "8725": [
+   {
+    "admin1": "Түркістан облысы"
+   },
+   {
+    "admin1": "Шымкент"
+   }
+  ],
+  "87252": [
+   {
+    "admin1": "Шымкент"
+   }
+  ],
+  "8726": [
+   {
+    "admin1": "Жамбыл облысы"
+   }
+  ],
+  "87262": [
+   {
+    "admin1": "Жамбыл облысы",
+    "note": "Taraz"
+   }
+  ],
+  "8727": [
+   {
+    "admin1": "Алматы"
+   },
+   {
+    "admin1": "Алматы облысы"
+   }
+  ],
+  "87272": [
+   {
+    "admin1": "Алматы"
+   }
+  ],
+  "87273": [
+   {
+    "admin1": "Алматы"
+   }
+  ],
+  "872740": [
+   {
+    "admin1": "Алматы облысы",
+    "note": "villages in Uygur, Raiymbek and Zhambyl districts"
+   }
+  ],
+  "872752": [
+   {
+    "admin1": "Алматы облысы",
+    "note": "Ili district"
+   }
+  ],
+  "872757": [
+   {
+    "admin1": "Алматы облысы",
+    "note": "Ili district"
+   }
+  ],
+  "87277": [
+   {
+    "admin1": "Алматы облысы",
+    "note": "72770–72779: Zhambyl, Karasay, Talgar, Enbekshikazakh, Raiymbek, Uygur, Balkhash districts and Konaev (72772)"
+   }
+  ],
+  "8728": [
+   {
+    "admin1": "Жетісу облысы"
+   }
+  ],
+  "87282": [
+   {
+    "admin1": "Жетісу облысы",
+    "note": "Taldykorgan"
+   }
+  ],
+  "8729": [
+   {
+    "admin1": "Маңғыстау облысы"
+   }
+  ],
+  "87292": [
+   {
+    "admin1": "Маңғыстау облысы",
+    "note": "Aktau"
+   }
+  ],
+  "872934": [
+   {
+    "admin1": "Маңғыстау облысы",
+    "note": "Zhanaozen"
+   }
+  ]
+ }
+}
