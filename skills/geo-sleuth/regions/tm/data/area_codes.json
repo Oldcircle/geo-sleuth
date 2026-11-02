@@ -1,0 +1,331 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "993"
+  },
+  "key_pattern": "^(?=\\d{11}$)993(?:12(?:57|336)?|1392|1354|2444|\\d{3})|^993(?:12(?:57|336)?|1392|1354|2444|\\d{3})$",
+  "usage": "eight-digit number: 12 34-56-78 in Ashgabat, (322) 5-12-34 or +993 422 6 12 34 elsewhere; or only the code: 322. Inside the country a long-distance number starts with the trunk 8 (8 322 …): drop that 8",
+  "note": "Eight-digit national numbers. Ashgabat has the two-digit code 12, other places three- or four-digit codes, in the alphabetical order of the provinces: 1xx Ahal, 2xx Balkan, 3xx Daşoguz, 4xx Lebap, 5xx Mary. Arkadag numbers are 12 57 xx xx.",
+  "miss_note": "not a geographic Turkmen landline: a number written with the trunk 8 (drop it and look it up again), a mobile number (61–65, 71, 72; 66–69 were the closed MTS network), 6020 (Ashgabat CDMA), a code missing from the list, or a number of another country",
+  "source": [
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Turkmenistan, section 'Area codes'",
+   "https://ru.wikipedia.org/wiki/Телефонный_план_нумерации_Туркмении, section 'Географические коды'"
+  ],
+  "fetched": "2026-11-02",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 61
+ },
+ "entries": {
+  "99312": [
+   {
+    "admin1": "Aşgabat",
+    "note": "Ashgabat city; Arkadag (12 57 …) and Gypjak (12 33 6 …) numbers also start with 12 and are in Ahal"
+   }
+  ],
+  "99312336": [
+   {
+    "admin1": "Ahal",
+    "note": "Gypjak: Ashgabat code 12, numbers 33-6x-xx (ru.wikipedia), besides its own code 1392"
+   }
+  ],
+  "9931257": [
+   {
+    "admin1": "Ahal",
+    "note": "Arkadag: Ashgabat code 12, numbers 57-xx-xx (en.wikipedia); Arkadag is the capital of Ahal Province"
+   }
+  ],
+  "993131": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993132": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993133": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993134": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993135": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "9931354": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993136": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993137": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993138": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "9931392": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993222": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993240": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993241": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993242": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993243": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "9932444": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993245": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993246": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993247": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993248": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993322": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993340": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993343": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993344": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993345": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993346": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993347": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993348": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993349": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993360": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993422": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993431": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993432": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993433": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993438": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993440": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993441": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993442": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993443": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993444": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993445": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993446": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993447": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993448": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993449": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993461": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993465": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993522": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993557": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993558": [
+   {
+    "admin1": "Mary",
+    "note": "en.wikipedia: Mollanepes; ru.wikipedia: Vekilbazar; both in Mary Province"
+   }
+  ],
+  "993559": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993560": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993561": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993564": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993565": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993566": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993568": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993569": [
+   {
+    "admin1": "Mary"
+   }
+  ]
+ }
+}

@@ -1,0 +1,23 @@
+[
+ {"kind": "plate", "value": "AG", "expect": [{"admin1": "Aşgabat"}]},
+ {"kind": "plate", "value": "ag", "expect": [{"admin1": "Aşgabat"}]},
+ {"kind": "plate", "value": "AK", "expect": [{"admin1": "Ahal"}]},
+ {"kind": "plate", "value": "BN", "expect": [{"admin1": "Balkan"}]},
+ {"kind": "plate", "value": "DZ", "expect": [{"admin1": "Daşoguz"}]},
+ {"kind": "plate", "value": "LB", "expect": [{"admin1": "Lebap"}]},
+ {"kind": "plate", "value": "MR", "expect": [{"admin1": "Mary"}]},
+ {"kind": "plate", "value": "XX", "expect": []},
+ {"kind": "plate", "value": "AB 1234 AG", "expect": []},
+ {"kind": "area-code", "value": "12 34-56-78", "expect": [{"admin1": "Aşgabat"}]},
+ {"kind": "area-code", "value": "+993 12 57 12 34", "expect": [{"admin1": "Ahal"}]},
+ {"kind": "area-code", "value": "(322) 5-12-34", "expect": [{"admin1": "Daşoguz"}]},
+ {"kind": "area-code", "value": "+993 422 6 12 34", "expect": [{"admin1": "Lebap"}]},
+ {"kind": "area-code", "value": "243 2 12 34", "expect": [{"admin1": "Balkan"}]},
+ {"kind": "area-code", "value": "2444 12 34", "expect": [{"admin1": "Balkan"}]},
+ {"kind": "area-code", "value": "1354 12 34", "expect": [{"admin1": "Ahal"}]},
+ {"kind": "area-code", "value": "522", "expect": [{"admin1": "Mary"}]},
+ {"kind": "area-code", "value": "999 1 23 45", "expect": []},
+ {"kind": "area-code", "value": "8 322 5 12 34", "expect": []},
+ {"kind": "area-code", "value": "+993 65 12 34 56", "expect": []},
+ {"kind": "area-code", "value": "+7 727 250 12 34", "expect": []}
+]
