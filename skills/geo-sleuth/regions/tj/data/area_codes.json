@@ -1,0 +1,325 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "992"
+  },
+  "key_pattern": "^(?=\\d{12}$)992(?:372|3\\d{3})|^992(?:372|3\\d{3})$",
+  "usage": "nine-digit number: 372 21 23 45 or +992 3422 6 1234; or only the code: 3422. Type the nine digits without any dialling prefix written before them",
+  "note": "Nine-digit national numbers. Dushanbe has the three-digit code 372, other places four-digit codes: 31xx Districts of Republican Subordination, 32xx and 33xx Khatlon (Bokhtar and Kulob zones), 34xx Sughd (3422 Khujand), 35xx Gorno-Badakhshan (3522 Khorog). Nurek (3138) and Yavan (3141) are in the 31 zone but in Khatlon.",
+  "miss_note": "not a geographic Tajik landline: a mobile number (not starting with 3, e.g. 55, 90–93, 98 …), a number with a dialling prefix before the nine digits (drop it and look it up again), a code missing from the list (Shurabad and Nosiri Khusrav have none of their own), or a number of another country",
+  "source": [
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Tajikistan, section 'Area codes in Tajikistan' (from the ITU list)",
+   "https://ru.wikipedia.org/wiki/Административное_деление_Таджикистана (Nurek and Yavan district in Khatlon since 1992)"
+  ],
+  "fetched": "2026-11-02",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 60
+ },
+ "entries": {
+  "9923130": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923131": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923132": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923133": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923134": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923135": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923136": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923137": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923138": [
+   {
+    "admin1": "Вилояти Хатлон",
+    "note": "Nurek: listed under the Dushanbe-area heading in en.wikipedia, but the city has been part of Khatlon since 1992 (ru.wikipedia 'Административное деление Таджикистана')"
+   }
+  ],
+  "9923139": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923141": [
+   {
+    "admin1": "Вилояти Хатлон",
+    "note": "Yavan: listed under the Dushanbe-area heading in en.wikipedia, but Yavan district has been part of Khatlon since 1992 (ru.wikipedia 'Административное деление Таджикистана')"
+   }
+  ],
+  "9923153": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923154": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923155": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923156": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "9923222": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923240": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923242": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923243": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923245": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923246": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923247": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923248": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923249": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923250": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923251": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923252": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923311": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923312": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923314": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923315": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923316": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923317": [
+   {
+    "admin1": "Вилояти Хатлон",
+    "note": "Khovaling: the full code is 331700"
+   }
+  ],
+  "9923318": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923322": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "9923422": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923441": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923442": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923443": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923445": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923451": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923452": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923453": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923454": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923455": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923456": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923462": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923464": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923465": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923467": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923475": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923479": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "9923522": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "9923551": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "9923552": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "9923553": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "9923554": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "9923555": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "9923556": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "992372": [
+   {
+    "admin1": "Душанбе"
+   }
+  ]
+ }
+}

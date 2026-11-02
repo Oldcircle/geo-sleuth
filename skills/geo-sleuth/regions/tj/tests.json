@@ -1,0 +1,23 @@
+[
+ {"kind": "plate", "value": "01", "expect": [{"admin1": "Душанбе"}]},
+ {"kind": "plate", "value": "05", "expect": [{"admin1": "Душанбе"}]},
+ {"kind": "plate", "value": "02", "expect": [{"admin1": "Вилояти Суғд"}]},
+ {"kind": "plate", "value": "20", "expect": [{"admin1": "Вилояти Суғд"}]},
+ {"kind": "plate", "value": "03", "expect": [{"admin1": "Вилояти Хатлон"}]},
+ {"kind": "plate", "value": "04", "expect": [{"admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"}]},
+ {"kind": "plate", "value": "08", "expect": [{"admin1": "Ноҳияҳои тобеи ҷумҳурӣ"}]},
+ {"kind": "plate", "value": "09", "expect": []},
+ {"kind": "plate", "value": "1234 AB 01", "expect": []},
+ {"kind": "plate-1996", "value": "01", "expect": [{"admin1": "Душанбе"}, {"admin1": "Ноҳияҳои тобеи ҷумҳурӣ"}]},
+ {"kind": "plate-1996", "value": "02", "expect": [{"admin1": "Вилояти Суғд"}]},
+ {"kind": "plate-1996", "value": "05", "expect": []},
+ {"kind": "area-code", "value": "372 21 23 45", "expect": [{"admin1": "Душанбе"}]},
+ {"kind": "area-code", "value": "+992 3422 6 1234", "expect": [{"admin1": "Вилояти Суғд"}]},
+ {"kind": "area-code", "value": "3522", "expect": [{"admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"}]},
+ {"kind": "area-code", "value": "(3322) 2-12-34", "expect": [{"admin1": "Вилояти Хатлон"}]},
+ {"kind": "area-code", "value": "3130 2 1234", "expect": [{"admin1": "Ноҳияҳои тобеи ҷумҳурӣ"}]},
+ {"kind": "area-code", "value": "3138 2 1234", "expect": [{"admin1": "Вилояти Хатлон"}]},
+ {"kind": "area-code", "value": "3999 2 1234", "expect": []},
+ {"kind": "area-code", "value": "+992 93 123 4567", "expect": []},
+ {"kind": "area-code", "value": "+7 727 250 12 34", "expect": []}
+]
