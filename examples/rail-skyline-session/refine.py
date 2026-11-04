@@ -2,11 +2,11 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "numpy"]
 # ///
-"""局部精搜：给定中心，100 m 网格机位，z13 DEM 天际线 + 桥线距离一起打分。
+"""Local fine search: given a center, camera positions on a 100 m grid, scored by z13 DEM skyline + bridge-line distance together.
 
-这是第 13 集案例的专用脚本，照片参数写死（焦距、地平线行、山脊点、期望桥距 430/660/1150 m）。
-只作复现记录，不保证在别的照片上能跑。
-用法: refine.py lat,lon radius_m out.json
+This is a case-specific script for episode 13 with the photo parameters hard-coded (focal length, horizon row, ridge points, expected bridge distances 430/660/1150 m).
+Kept only as a reproduction record; not guaranteed to run on another photo.
+Usage: refine.py lat,lon radius_m out.json
 """
 import json, math, sys
 from pathlib import Path

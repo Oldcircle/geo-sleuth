@@ -1,0 +1,430 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^\\d{2}(?=([A-Z]{1,3}\\d{2,5}|\\d{2})?$)",
+  "usage": "a whole civil plate (34 ABC 123), just the two digits (34), or a provincial road number (34-03)",
+  "note": "The code is where the vehicle was registered, not where the photo was taken. 01–67 follow the alphabetical order of 1962 province names; 68–81 went to provinces created later.",
+  "miss_note": "not 01–81: misread digits, a foreign plate, or not a civil plate",
+  "source": [
+   "https://tr.wikipedia.org/wiki/Türkiye_taşıt_plaka_kodu",
+   "https://tr.wikipedia.org/wiki/Türkiye'nin_illeri"
+  ],
+  "fetched": "2026-10-13",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 81
+ },
+ "entries": {
+  "01": [
+   {
+    "admin1": "Adana"
+   }
+  ],
+  "02": [
+   {
+    "admin1": "Adıyaman"
+   }
+  ],
+  "03": [
+   {
+    "admin1": "Afyonkarahisar"
+   }
+  ],
+  "04": [
+   {
+    "admin1": "Ağrı"
+   }
+  ],
+  "05": [
+   {
+    "admin1": "Amasya"
+   }
+  ],
+  "06": [
+   {
+    "admin1": "Ankara"
+   }
+  ],
+  "07": [
+   {
+    "admin1": "Antalya"
+   }
+  ],
+  "08": [
+   {
+    "admin1": "Artvin"
+   }
+  ],
+  "09": [
+   {
+    "admin1": "Aydın"
+   }
+  ],
+  "10": [
+   {
+    "admin1": "Balıkesir"
+   }
+  ],
+  "11": [
+   {
+    "admin1": "Bilecik"
+   }
+  ],
+  "12": [
+   {
+    "admin1": "Bingöl"
+   }
+  ],
+  "13": [
+   {
+    "admin1": "Bitlis"
+   }
+  ],
+  "14": [
+   {
+    "admin1": "Bolu"
+   }
+  ],
+  "15": [
+   {
+    "admin1": "Burdur"
+   }
+  ],
+  "16": [
+   {
+    "admin1": "Bursa"
+   }
+  ],
+  "17": [
+   {
+    "admin1": "Çanakkale"
+   }
+  ],
+  "18": [
+   {
+    "admin1": "Çankırı"
+   }
+  ],
+  "19": [
+   {
+    "admin1": "Çorum"
+   }
+  ],
+  "20": [
+   {
+    "admin1": "Denizli"
+   }
+  ],
+  "21": [
+   {
+    "admin1": "Diyarbakır"
+   }
+  ],
+  "22": [
+   {
+    "admin1": "Edirne"
+   }
+  ],
+  "23": [
+   {
+    "admin1": "Elâzığ"
+   }
+  ],
+  "24": [
+   {
+    "admin1": "Erzincan"
+   }
+  ],
+  "25": [
+   {
+    "admin1": "Erzurum"
+   }
+  ],
+  "26": [
+   {
+    "admin1": "Eskişehir"
+   }
+  ],
+  "27": [
+   {
+    "admin1": "Gaziantep"
+   }
+  ],
+  "28": [
+   {
+    "admin1": "Giresun"
+   }
+  ],
+  "29": [
+   {
+    "admin1": "Gümüşhane"
+   }
+  ],
+  "30": [
+   {
+    "admin1": "Hakkâri"
+   }
+  ],
+  "31": [
+   {
+    "admin1": "Hatay"
+   }
+  ],
+  "32": [
+   {
+    "admin1": "Isparta"
+   }
+  ],
+  "33": [
+   {
+    "admin1": "Mersin",
+    "note": "registered as İçel until the province was renamed Mersin in 2002"
+   }
+  ],
+  "34": [
+   {
+    "admin1": "İstanbul"
+   }
+  ],
+  "35": [
+   {
+    "admin1": "İzmir"
+   }
+  ],
+  "36": [
+   {
+    "admin1": "Kars"
+   }
+  ],
+  "37": [
+   {
+    "admin1": "Kastamonu"
+   }
+  ],
+  "38": [
+   {
+    "admin1": "Kayseri"
+   }
+  ],
+  "39": [
+   {
+    "admin1": "Kırklareli"
+   }
+  ],
+  "40": [
+   {
+    "admin1": "Kırşehir"
+   }
+  ],
+  "41": [
+   {
+    "admin1": "Kocaeli"
+   }
+  ],
+  "42": [
+   {
+    "admin1": "Konya"
+   }
+  ],
+  "43": [
+   {
+    "admin1": "Kütahya"
+   }
+  ],
+  "44": [
+   {
+    "admin1": "Malatya"
+   }
+  ],
+  "45": [
+   {
+    "admin1": "Manisa"
+   }
+  ],
+  "46": [
+   {
+    "admin1": "Kahramanmaraş",
+    "note": "the code dates from 1962, when the province was Maraş"
+   }
+  ],
+  "47": [
+   {
+    "admin1": "Mardin"
+   }
+  ],
+  "48": [
+   {
+    "admin1": "Muğla"
+   }
+  ],
+  "49": [
+   {
+    "admin1": "Muş"
+   }
+  ],
+  "50": [
+   {
+    "admin1": "Nevşehir"
+   }
+  ],
+  "51": [
+   {
+    "admin1": "Niğde"
+   }
+  ],
+  "52": [
+   {
+    "admin1": "Ordu"
+   }
+  ],
+  "53": [
+   {
+    "admin1": "Rize"
+   }
+  ],
+  "54": [
+   {
+    "admin1": "Sakarya"
+   }
+  ],
+  "55": [
+   {
+    "admin1": "Samsun"
+   }
+  ],
+  "56": [
+   {
+    "admin1": "Siirt"
+   }
+  ],
+  "57": [
+   {
+    "admin1": "Sinop"
+   }
+  ],
+  "58": [
+   {
+    "admin1": "Sivas"
+   }
+  ],
+  "59": [
+   {
+    "admin1": "Tekirdağ"
+   }
+  ],
+  "60": [
+   {
+    "admin1": "Tokat"
+   }
+  ],
+  "61": [
+   {
+    "admin1": "Trabzon"
+   }
+  ],
+  "62": [
+   {
+    "admin1": "Tunceli"
+   }
+  ],
+  "63": [
+   {
+    "admin1": "Şanlıurfa",
+    "note": "the code dates from 1962, when the province was Urfa"
+   }
+  ],
+  "64": [
+   {
+    "admin1": "Uşak"
+   }
+  ],
+  "65": [
+   {
+    "admin1": "Van"
+   }
+  ],
+  "66": [
+   {
+    "admin1": "Yozgat"
+   }
+  ],
+  "67": [
+   {
+    "admin1": "Zonguldak"
+   }
+  ],
+  "68": [
+   {
+    "admin1": "Aksaray"
+   }
+  ],
+  "69": [
+   {
+    "admin1": "Bayburt"
+   }
+  ],
+  "70": [
+   {
+    "admin1": "Karaman"
+   }
+  ],
+  "71": [
+   {
+    "admin1": "Kırıkkale"
+   }
+  ],
+  "72": [
+   {
+    "admin1": "Batman"
+   }
+  ],
+  "73": [
+   {
+    "admin1": "Şırnak"
+   }
+  ],
+  "74": [
+   {
+    "admin1": "Bartın"
+   }
+  ],
+  "75": [
+   {
+    "admin1": "Ardahan"
+   }
+  ],
+  "76": [
+   {
+    "admin1": "Iğdır"
+   }
+  ],
+  "77": [
+   {
+    "admin1": "Yalova"
+   }
+  ],
+  "78": [
+   {
+    "admin1": "Karabük"
+   }
+  ],
+  "79": [
+   {
+    "admin1": "Kilis"
+   }
+  ],
+  "80": [
+   {
+    "admin1": "Osmaniye"
+   }
+  ],
+  "81": [
+   {
+    "admin1": "Düzce"
+   }
+  ]
+ }
+}

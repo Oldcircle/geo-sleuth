@@ -1,0 +1,293 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "0"
+  },
+  "key_pattern": "^0\\d{2}(?=\\d{7}$)",
+  "usage": "full landline number in national form (10 digits): 011-2345678, (081) 222 3456; drop a leading +94. A bare code is not accepted, so other countries' codes don't match",
+  "note": "29 geographic codes named after the exchange town; a code's area does not follow district borders, so each key lists every district it reaches. Cross-border coverage checked against OpenStreetMap: about 1,600 Sri Lankan landline numbers (rechecked 2026-10-27) from phone/contact:phone tags were placed in the 25 district polygons and counted by code; codes seen only on hotels, bank branches and chain head offices (e.g. 011 island-wide) were not counted, codes on local schools, councils, hospitals and shops were. A single local institution (council, school, hospital, post office, education office) is enough for a district; codes seen there only on hotels or companies (066 around Habarana and Sigiriya, 031 and 037 on companies) are left out. Four mappings (047 Ratnapura, 036 Kegalle, 027 Ampara, 081 Nuwara Eliya) come from government directories named in the source list.",
+  "miss_note": "not a Sri Lankan geographic code: 07x mobile, or a code missing from the TRCSL list (e.g. 046, 060)",
+  "source": [
+   "https://www.itu.int/oth/T02020000C3 (TRCSL numbering plan filed with the ITU, communication of 12.III.2008, update 17.VIII.2009)",
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Sri_Lanka",
+   "https://www.openstreetmap.org (phone=*/contact:phone=* placed in boundary=administrative admin_level=5 polygons)",
+   "https://rti.gov.lk/do-list/ (Government of Sri Lanka RTI designated-officer directory; local authority numbers: Embilipitiya UC, Ruwanwella PS, Dehiattakandiya PS)",
+   "https://www.statistics.gov.lk/Resource/en/Education/School_Census/2015.pdf (Ministry of Education school census 2015; Hanguranketha education office under Nuwara Eliya District)",
+   "https://slpost.gov.lk/si/information/main-offices-directorate/ (Department of Posts post-office directory; Hanguranketha post offices on 081)"
+  ],
+  "fetched": "2026-10-27",
+  "license": "Derived from ITU/TRCSL numbering plan, Wikipedia (CC BY-SA 4.0) and OpenStreetMap (ODbL); government directory numbers used as facts, not copied",
+  "count": 29
+ },
+ "entries": {
+  "011": [
+   {
+    "admin1": "Western Province",
+    "admin2": "Colombo District"
+   },
+   {
+    "admin1": "Western Province",
+    "admin2": "Gampaha District",
+    "note": "Ja-Ela and Katunayake exchanges (named as an exception in TRCSL's 2003 Colombo renumbering; 011 on local shops and the airport in OSM)"
+   }
+  ],
+  "021": [
+   {
+    "admin1": "Northern Province",
+    "admin2": "Jaffna District"
+   },
+   {
+    "admin1": "Northern Province",
+    "admin2": "Kilinochchi District",
+    "note": "seen on local schools and the Open University study centre in OSM"
+   },
+   {
+    "admin1": "Northern Province",
+    "admin2": "Mullaitivu District",
+    "note": "seen on local schools in OSM"
+   }
+  ],
+  "023": [
+   {
+    "admin1": "Northern Province",
+    "admin2": "Mannar District"
+   }
+  ],
+  "024": [
+   {
+    "admin1": "Northern Province",
+    "admin2": "Vavuniya District"
+   },
+   {
+    "admin1": "Northern Province",
+    "admin2": "Mullaitivu District",
+    "note": "seen on local schools in OSM"
+   }
+  ],
+  "025": [
+   {
+    "admin1": "North Central Province",
+    "admin2": "Anuradhapura District"
+   },
+   {
+    "admin1": "Northern Province",
+    "admin2": "Vavuniya District",
+    "note": "seen on local schools in OSM"
+   },
+   {
+    "admin1": "Northern Province",
+    "admin2": "Mullaitivu District",
+    "note": "seen on a local school in OSM (Mu/Ekathugaswewa Vidyalaya 025 325 4810)"
+   }
+  ],
+  "026": [
+   {
+    "admin1": "Eastern Province",
+    "admin2": "Trincomalee District"
+   }
+  ],
+  "027": [
+   {
+    "admin1": "North Central Province",
+    "admin2": "Polonnaruwa District"
+   },
+   {
+    "admin1": "Eastern Province",
+    "admin2": "Ampara District",
+    "note": "Dehiattakandiya (Pradeshiya Sabha 027 225 0329 in the RTI designated-officer directory)"
+   }
+  ],
+  "031": [
+   {
+    "admin1": "Western Province",
+    "admin2": "Gampaha District",
+    "note": "Negombo exchange"
+   },
+   {
+    "admin1": "North Western Province",
+    "admin2": "Puttalam District",
+    "note": "southern edge: Dankotuwa, Wennappuwa, Waikkala"
+   }
+  ],
+  "032": [
+   {
+    "admin1": "North Western Province",
+    "admin2": "Puttalam District",
+    "note": "Chilaw exchange"
+   },
+   {
+    "admin1": "North Western Province",
+    "admin2": "Kurunǣgala",
+    "note": "Bingiriya (schools and college of education in OSM)"
+   }
+  ],
+  "033": [
+   {
+    "admin1": "Western Province",
+    "admin2": "Gampaha District"
+   }
+  ],
+  "034": [
+   {
+    "admin1": "Western Province",
+    "admin2": "Kalutara District"
+   },
+   {
+    "admin1": "Southern Province",
+    "admin2": "Galle District",
+    "note": "Bentota"
+   }
+  ],
+  "035": [
+   {
+    "admin1": "Sabaragamuwa Province",
+    "admin2": "Kegalle District"
+   }
+  ],
+  "036": [
+   {
+    "admin1": "Western Province",
+    "admin2": "Colombo District",
+    "note": "Avissawella exchange"
+   },
+   {
+    "admin1": "Sabaragamuwa Province",
+    "admin2": "Ratnapura District",
+    "note": "Eheliyagoda"
+   },
+   {
+    "admin1": "Sabaragamuwa Province",
+    "admin2": "Kegalle District",
+    "note": "Ruwanwella (Pradeshiya Sabha 036 226 5275 in the RTI designated-officer directory)"
+   }
+  ],
+  "037": [
+   {
+    "admin1": "North Western Province",
+    "admin2": "Kurunǣgala"
+   }
+  ],
+  "038": [
+   {
+    "admin1": "Western Province",
+    "admin2": "Kalutara District",
+    "note": "Panadura exchange"
+   }
+  ],
+  "041": [
+   {
+    "admin1": "Southern Province",
+    "admin2": "Matara District"
+   }
+  ],
+  "045": [
+   {
+    "admin1": "Sabaragamuwa Province",
+    "admin2": "Ratnapura District"
+   }
+  ],
+  "047": [
+   {
+    "admin1": "Southern Province",
+    "admin2": "Hambantota District"
+   },
+   {
+    "admin1": "Uva Province",
+    "admin2": "Monaragala District",
+    "note": "Kataragama"
+   },
+   {
+    "admin1": "Sabaragamuwa Province",
+    "admin2": "Ratnapura District",
+    "note": "Embilipitiya (Urban Council 047 226 1674 in the RTI designated-officer directory; District General Hospital Embilipitiya 047 223 0261 in OSM)"
+   }
+  ],
+  "051": [
+   {
+    "admin1": "Central Province",
+    "admin2": "Nuwara Eliya District",
+    "note": "Hatton exchange"
+   }
+  ],
+  "052": [
+   {
+    "admin1": "Central Province",
+    "admin2": "Nuwara Eliya District"
+   }
+  ],
+  "054": [
+   {
+    "admin1": "Central Province",
+    "admin2": "Kandy District",
+    "note": "Nawalapitiya exchange"
+   }
+  ],
+  "055": [
+   {
+    "admin1": "Uva Province",
+    "admin2": "Badulla District"
+   },
+   {
+    "admin1": "Uva Province",
+    "admin2": "Monaragala District",
+    "note": "Monaragala town (Pradeshiya Sabha and its preschool in OSM)"
+   }
+  ],
+  "057": [
+   {
+    "admin1": "Uva Province",
+    "admin2": "Badulla District",
+    "note": "Bandarawela exchange"
+   }
+  ],
+  "063": [
+   {
+    "admin1": "Eastern Province",
+    "admin2": "Ampara District"
+   }
+  ],
+  "065": [
+   {
+    "admin1": "Eastern Province",
+    "admin2": "Batticaloa District"
+   }
+  ],
+  "066": [
+   {
+    "admin1": "Central Province",
+    "admin2": "Matale District"
+   }
+  ],
+  "067": [
+   {
+    "admin1": "Eastern Province",
+    "admin2": "Ampara District",
+    "note": "Kalmunai exchange"
+   }
+  ],
+  "081": [
+   {
+    "admin1": "Central Province",
+    "admin2": "Kandy District"
+   },
+   {
+    "admin1": "Central Province",
+    "admin2": "Nuwara Eliya District",
+    "note": "Hanguranketha (education office 081 236 9039, listed under Nuwara Eliya in the 2015 school census; Hanguranketha's post offices also use 081 in the Department of Posts directory)"
+   }
+  ],
+  "091": [
+   {
+    "admin1": "Southern Province",
+    "admin2": "Galle District"
+   },
+   {
+    "admin1": "Southern Province",
+    "admin2": "Matara District",
+    "note": "western edge (Denuwala Sub Post Office 091 228 3315 in OSM)"
+   }
+  ]
+ }
+}

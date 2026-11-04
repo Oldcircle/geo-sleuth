@@ -7,6 +7,7 @@
 <p align="center">
   <a href="README.md"><img alt="English" src="https://img.shields.io/badge/English-dbeafe?style=flat-square"></a>
   <a href="README.zh-CN.md"><img alt="Simplified Chinese" src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-1f6feb?style=flat-square"></a>
+  <a href="README.ja.md"><img alt="Japanese" src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-dbeafe?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -58,7 +59,31 @@ npx skills add Oldcircle/geo-sleuth
 - **一个 skill，所有 agent 通用。** 这是一个标准的 Agent Skill——`SKILL.md` 加上普通的 Python 脚本——所以同一个文件夹在 Claude Code、Codex、Cursor、Gemini CLI、OpenCode 和 GitHub Copilot 里都能运行。
 - **答案自带误差半径。** 坐标 ± 半径、镜头朝向、一张证据图和分档的置信度。
 
-## 案例：一张照片，无字可读
+## 案例
+
+这几张照片都没有 GPS 信息。每个案例写了 skill 从照片里读到什么、怎么一步步缩小范围、结果离确认的机位有多远。
+
+这些是某个模型某一次运行的记录。skill 告诉 agent 怎么做，每一步查什么、怎么筛、看前几名由模型自己决定，换模型或换决策不保证走到同一个结果。每个案例下面的「复现条件与检查点」列出了输入、提示、关键参数和各阶段应该覆盖到什么，可以用来逐段对照自己的运行在哪一步分开。
+
+<table>
+<tr>
+<td width="33%" align="center"><a href="#1-稻田与高架"><img src="docs/case/thumb.jpg" alt="稻田边的烤炉，后面是高架和山"></a></td>
+<td width="33%" align="center"><a href="#2-沙漠天际线差了一度"><img src="docs/cases/desert/thumb.jpg" alt="沙丘脊和一排深色裸山"></a></td>
+<td width="33%" align="center"><a href="#3-温哥华街头的一棵樱花树"><img src="docs/cases/cherry/thumb.jpg" alt="人行道上方盛开的樱花树"></a></td>
+</tr>
+<tr>
+<td><b>1 · 稻田与高架</b><br><sub>铁路桥 × 天际线 × 数桥墩。</sub></td>
+<td><b>2 · 沙漠天际线</b><br><sub>高压线 × 天际线 × 手机歪了 1°。</sub></td>
+<td><b>3 · 樱花街</b><br><sub>行道树开放数据 × 影子 × 街景。</sub></td>
+</tr>
+<tr>
+<td align="center"><b>±2 m</b><br><sub>广东清远</sub></td>
+<td align="center"><b>100 m 以内</b><br><sub>青海大柴旦</sub></td>
+<td align="center"><b>3 m</b><br><sub>加拿大温哥华</sub></td>
+</tr>
+</table>
+
+### 1. 稻田与高架
 
 一张手机照片，EXIF 信息已被抹除：收割完的稻田边一个白色烤炉，远处一条长长的高架，右边一座陡峭的山。画面里没有一个字。给装了这个 skill 的 agent 发一条消息，它就给出了机位和镜头朝向。
 
@@ -87,6 +112,96 @@ npx skills add Oldcircle/geo-sleuth
 <img src="docs/case/05-pier-rays.jpg" width="720" alt="Bearings to 17 piers intersecting the railway line"><br>
 <sub>数桥墩：17 根桥墩的方位线与铁路线相交；只有一个机位能让间距均匀。</sub><br><br>
 <sub>整次运行耗时约 72 分钟，其中大约一半时间在等计算。</sub>
+</details>
+
+<details>
+<summary>复现条件与检查点</summary>
+<br>
+
+- **这是什么记录**：上表是这套方法第一次解出这张照片的过程（Claude Opus 5.0），不是盲测复跑；其中的步骤后来写进了 skill。
+- **输入**：手机照片 1280×1707，EXIF 已抹除。README 里的图是展示用的版本，不适合当输入。
+- **候选生成**：区域内 OSM 的全部铁路桥 27,335 段，只排除标了 `electrified=no` 的（当时的 `rail_mtn_scan.py` 这样做，现在 `terrain.py scan` 默认也一样），没有按 `highspeed` 筛。接触网只能说明是电气化铁路；正确的线路是广清城际，它在 OSM 里的 55 段桥都没有 `highspeed=yes`。
+- **检查点**：通过地平线检验的 171 处里应包含答案附近的广清城际桥段；天际线拟合 14,372 个机位，前 20 名相差不到 0.1°，靠"桥左近右远"筛到 22；叠图看前三名；最后用 17 根桥墩的方位线定点。
+- **案例脚本**：`examples/rail-skyline-session/` 是当时按这张照片调好参数的脚本。OSM 会把一条线拆成很多段同名的 way，`joint.py` 会把候选中心附近的同名线路逐条试一遍，结果不受查询返回顺序影响。
+
+</details>
+
+### 2. 沙漠天际线差了一度
+
+前景是一道沙丘，后面一排深色裸山，山脚有几座电塔。画面里没有字、路和房子，以图搜图只搜到一些泛泛的西北沙漠照片。
+
+<div align="center"><img src="docs/cases/desert/00-photo.jpg" width="820" alt="题图：沙丘脊、深色裸山、山脚的电塔"></div>
+
+**照片 → 1,537 处 → 卡在 10 px 上下 → 解出 1° 歪斜 → 1 处 → 一道沙脊**
+
+| 步骤 | 它做了什么 | 剩余 |
+|---|---|---|
+| **读图** | 电塔是画面里唯一的人造物，所以机位离某条高压线不过几公里。沙、戈壁和裸岩指向中国西北。 | 4 省 |
+| **高压线 × 地形** | `osm.py geom` 拉出新疆、甘肃、宁夏、青海的全部高压线，`terrain.py scan` 沿线用高程数据算，留下山能占满视野的地方。 | **1,537 处** |
+| **天际线拟合** | `terrain.py ridge` 描出照片里的山脊，`terrain.py fit` 和每处看到的山脊逐一比对。青海前 25 处都在 9.6–11.7 px 之间，真值排第 9。 | **卡住** |
+| **歪斜** | 手机歪 1°，2048 px 宽的画面边缘山脊偏 1024 × tan 1° ≈ 18 px，平均约 10 px，正好是候选之间的差距。在真值处，误差沿画面横向落在一条直线上，斜率是 tan θ，θ ≈ 1°。于是 `fit` 改成和地平线偏移一起解横滚。 | |
+| **重新拟合** | 解了横滚之后，真值从 11.1 px 降到 6.2 px，第二名是 9.4 px。 | **1 处** |
+| **卫星图** | 视线方向 1 km 内有三座新月形沙丘和一片帐篷营地，东边 1–2 km 是 750/330/110 kV 线束，所以电塔只出现在照片左半边。机位在营地西边那座沙丘的脊上，朝 205°。 | **一道沙脊** |
+
+<div align="center">
+<img src="docs/cases/desert/01-scan.jpg" width="820" alt="青海、甘肃、宁夏的高压线，橙点是候选处，红星是机位"><br>
+<sub>OSM 高压线（金色）、山能占满视野的候选处（橙色）和机位（红星）。新疆的候选处没有画。</sub><br><br>
+<img src="docs/cases/desert/02-one-degree.jpg" width="820" alt="真值处照片山脊与算出的山脊，解横滚前后，以及误差沿画面的分布"><br>
+<sub>真值处解横滚前后。上：误差从画面一侧到另一侧逐渐变大，斜率给出角度。下：解了横滚，这个趋势没有了。</sub><br><br>
+<img src="docs/cases/desert/03-ranking.jpg" width="820" alt="假设手机水平时青海 408 处的天际线误差，以及解横滚后前 12 处的误差"><br>
+<sub>每处的天际线误差。假设手机水平时，真值混在一堆候选里；解了横滚，只有它低于 9 px。</sub><br><br>
+<img src="docs/cases/desert/04-evidence.jpg" width="600" alt="证据图：沙脊上的机位、视野、沙丘、营地和高压线束"><br>
+<sub>证据图。OSM 高压线（金色）和卫星图上的电塔对得上。</sub>
+</div>
+
+**盲测复跑。** 后来我们把照片交给一个新开的 agent，用现在的 skill，只给一句提示：在中国。它扫了青海 5,334 条高压线，拟合 792 处，选出的一处误差 0.224°，第二名 0.357°。最后落在同一道沙脊上，**距确认的机位 87 m**，用时 32 分钟。为这张照片加的横滚拟合现在已经是 `terrain.py fit` 的一部分；为什么用这个案例做核心改动的范本，见[参与贡献](#参与贡献)。
+
+<details>
+<summary>复现条件与检查点</summary>
+<br>
+
+- **两次运行**：上表是最初解出这张照片、并因此加入横滚拟合的过程（Claude Opus 5.0）；"盲测复跑"是后来用 Claude Opus 5.5 新开一个 agent 跑的。
+- **盲测的输入和提示**：原图 2048×1152；提示只有一句"在中国"。README 里的图是展示用的版本。
+- **盲测检查点**：青海高压线 5,334 条；`terrain.py scan` 用默认的 `--cluster-km 3.5`，14,843 个命中聚成 792 簇；792 簇全部送进 `terrain.py fit`（分 6 批），山脊拟合之前没有按卫星图排名截断；最好的一处 0.224°，第二 0.357°；再用卫星图在视线方向上找沙丘和营地。共 87 次工具调用，32 分钟。
+- **聚类与细化的衔接**：`fit` 只围着每簇的代表点布机位。把 `--cluster-km` 调大后，簇里离代表点远的命中可能根本没被拟合；现在 `scan` 会记下每簇的范围（`extent_m`），簇比 `fit --radius` 宽时 `fit` 会报 WARNING。
+- **示例**：`examples/desert-roll-fix/` 用固定的 12 处复现横滚拟合前后（真值从第 8 名、12.0 px 到第 1 名、6.2 px）。
+
+</details>
+
+### 3. 温哥华街头的一棵樱花树
+
+人行道上方一棵盛开的樱花。车牌和街道设施说明是温哥华，难的是找到哪条街：温哥华有将近一万段街。
+
+**照片 → 温哥华 → 1,095 棵大樱花 → 97 段街 → 72 段测横坡 → 西 60 街 → 3 m**
+
+| 步骤 | 它做了什么 | 剩余 |
+|---|---|---|
+| **读图** | BC 省白底蓝字车牌、草坪隔离带里的墨绿色路灯杆、Vancouver Special 式住宅。 | **温哥华** |
+| **行道树数据** | 温哥华公开了每一棵行道树的树种、胸径和门牌。候选从数据里来，没有去挑有名的樱花街：先取胸径 ≥ 40 cm 的观赏樱，再取至少有三棵的街段。 | **1,095 棵，97 段** |
+| **影子和坡** | 车影落向左前方、朝着镜头，太阳在前方偏右。镜头这一侧的院子高出人行道、砌着石墙，这一侧是坡上。agent 用高程数据测了 72 段街的横坡，再对数据里大树长在街的哪一侧。 | **几段** |
+| **一棵棵对** | 西 60 街 100 号段，北侧是一排大樱花；南侧往前 30–60 m 都是 7.6 cm 的小树，下一棵大的在约 75 m 外。照片里也是这样：右侧近处没有高树，远处是粉色树冠。 | **1 段** |
+| **街景** | 2009 年和 2024 年两期街景都能看到砌石挡土墙和石阶、绿色路灯杆和白房子。带屋顶露台的那栋房子在 2024 年那期和照片里都有。机位在北侧人行道，朝东。 | **3 m** |
+
+<div align="center">
+<img src="docs/cases/cherry/01-street-trees.jpg" width="464" alt="温哥华的行道树、大樱花、候选街段和答案"> <img src="docs/cases/cherry/02-reading.jpg" width="388" alt="照片里的线索：路灯、车牌、车影、高出的院子、屋顶露台"><br>
+<sub>左：市政数据里有坐标的 184,517 棵行道树、1,095 棵大樱花和 97 段候选街。右：照片透露了什么。</sub><br><br>
+<img src="docs/cases/cherry/03-street-view.jpg" width="820" alt="照片与同一段街 2024 年、2009 年的街景"><br>
+<sub>照片是在人行道上拍的，街景车走在路中间，所以角度不同。</sub><br><br>
+<img src="docs/cases/cherry/04-evidence.jpg" width="600" alt="证据图：西 60 街 100 号段，机位在北侧人行道朝东，行道树来自市政数据"><br>
+<sub>证据图。粉圈是市政数据里的大樱花，绿圈是小树。</sub>
+</div>
+
+**盲测复跑。** 上表就是盲测的过程：新开一个 agent，用现在的 skill，只给照片，不给提示。53 分钟后给出的机位**距确认位置 3 m**。
+
+<details>
+<summary>复现条件与检查点</summary>
+<br>
+
+- **这是什么记录**：上表就是盲测复跑（Claude Opus 5.5，新开一个 agent，只给照片，不给提示），共 154 次工具调用，53 分钟。
+- **输入**：原图 1440×1920。README 里的图先裁切再缩小，像素约为原图的 1/16，不适合当输入。
+- **检查点**：市政数据里有坐标的行道树 184,517 棵 → 胸径 ≥ 40 cm 的观赏樱 1,095 棵 → 至少有三棵的街段 97 段 → 能测横坡的 72 段 → 按大树在街的哪一侧、坡向留下几段。
+- **街景核验**：`match.py` 整图排序不理想（盛花期，照片在人行道上拍而街景车走在路中间），于是用 `--query-box 0,900,1440,1600` 只比树所在的区域，再取 2009 / 2024 两期街景核对石墙、台阶、路灯杆这些不变的地物。真值处 SIFT 只有 0–5 个内点，没有据此排除。`match.py` 输出里 `inliers` 为空（`refined: false`）表示没做细排，不是 0 个匹配。
+
 </details>
 
 ## 安装
@@ -147,7 +262,7 @@ flowchart LR
 
 ## 工具箱
 
-二十个脚本，一个脚本干一件事。完整表格（含数据来源）在 `skills/geo-sleuth/references/data-sources.md`。
+二十多个脚本，一个脚本干一件事。完整表格（含数据来源）在 `skills/geo-sleuth/references/data-sources.md`。
 
 | 能做什么 | 脚本 |
 |---|---|
@@ -156,7 +271,8 @@ flowchart LR
 | 百度和 Yandex 以图搜图，相似图片拼成带编号的图片墙；关键词搜图 | `revimg.py` |
 | 一条命令完成第 0–3 步：元数据、边缘裁图、变体、OCR、以图搜图 → 生成 `intake.md` | `intake.py` |
 | 放大裁图、边缘和角落裁图、切块、提取桥墩等等间距结构的像素列 | `imgprep.py` |
-| 查表：车牌前缀、固话区号、国际电话区号、靠左/靠右行驶、海外属地、行政区划 | `clues.py` + `data/` |
+| 查表：全球的国际电话区号、靠左/靠右行驶、海外属地；地区包里的车牌前缀、固话区号、行政区划 | `clues.py` + `data/` + `regions/` |
+| 地区包：列出、打印某国的卡片和线索索引、检查格式 | `regions.py` |
 | 候选盘：候选、线索、似然比、排除、排名、扫描顺序、出结论前检查 | `board.py` |
 | 地名录：列出下级行政区及其边界框、建成区范围 | `gazetteer.py` |
 | 地名、小区名或店名 → 坐标候选，同名点全部列出 | `poi.py` |
@@ -171,7 +287,7 @@ flowchart LR
 | 方位角、距离、视线相交、对齐线、画框/遮挡检查、由等间距结构反解机位 | `geo.py` |
 | 证据图：卫星图 + 机位扇形 + 对比网格 | `evidence.py` |
 
-案例里的三步（区域扫描、天际线批量打分、由桥墩间距反解机位）都已内置在 skill 里，对应子命令：`terrain.py scan / ridge / fit`、`imgprep.py piers`、`geo.py spacing`。按那张照片调好参数的案例脚本放在 `examples/rail-skyline-session/`，供参考。
+案例 1 的几步（区域扫描、天际线批量打分、由桥墩间距反解机位）都已内置在 skill 里，对应子命令：`terrain.py scan / ridge / fit`、`imgprep.py piers`、`geo.py spacing`；按那张照片调好参数的案例脚本放在 `examples/rail-skyline-session/`。案例 2 的歪斜由 `terrain.py fit` 自己解（`--roll-max`，默认 1°），`examples/desert-roll-fix/` 可以复现修改前后。
 
 ## 基准测试
 
@@ -182,15 +298,55 @@ flowchart LR
 | `match.py` | 8 个案例：把百度全景历史批次渲染成照片，150 米内的全景作为候选（深圳） | 真值排名为 1/2/4/1/1 和 5/1/6，全部进入前 6，一半排第 1 |
 | `sat_scan.py` | 4×8 公里，z17 级 364 格，40 条 OSM 标注的跑道作为真值，多尺度（深圳） | recall@20 为 17/40，@30 为 22/40，@100 为 32/40，中位排名 23 |
 | `terrain.py scan / fit` + `geo.py spacing` | 在上面案例照片上做限定范围复跑 | 真值所在的候选簇排第 1，最终位置离真值约 2 m |
+| `terrain.py fit --roll-max` | 8 道合成天际线题（随机朝向、焦距、±1° 横滚） | 位置误差中位 324 → 238 m（不歪的题 324 → 89 m，歪的 1,695 → 265 m） |
+| `terrain.py fit --roll-max` | 沙漠案例的 12 个最佳候选处 | 真值从第 8 名、12.0 px → 第 1 名、6.2 px（第 2 名 9.9 px） |
 | `clues.py` | 6 张表，抽查 9 个值 | 9/9 正确 |
+
+端到端：新开一个 agent，只给照片（和表里的提示）盲测复跑：
+
+| 案例 | 提示 | 结果 | 用时 |
+|---|---|---|---|
+| [沙漠天际线](#2-沙漠天际线差了一度) | 「在中国」 | 距确认的机位 87 m | 32 分钟 |
+| [樱花街](#3-温哥华街头的一棵樱花树) | 无 | 距确认的机位 3 m | 53 分钟 |
+
+这两张照片以前都解过，从中学到的东西已经写进 skill，所以这是回归检查，不代表没见过的照片上的准确率。
 
 这套方法来自拆解网络定位博主的 14 个视频、22 道题和一批实战记录，再把其中管用的做法写成规则和脚本。v2 把所有能写成代码的规则都放进 `board.py`，让规则真正被执行，而不只是被读一遍。
 
 ## 环境要求
 
-Python 3.10+、[`uv`](https://docs.astral.sh/uv/)，以及一个能运行 shell 命令的 agent。依赖写在每个脚本头部，`uv run` 首次运行时会自动安装。
+需要 Python 3.10+、[`uv`](https://docs.astral.sh/uv/)、`curl`，以及能运行 shell 命令的 agent。每个脚本声明自己的依赖，用 `uv run` 首次运行时安装；安装时保留完整 skill 文件夹，包括 `data/` 和 `scripts/` 中的辅助模块。
 
-可选：以图搜图用的 Google Chrome（也可以用 `uvx playwright install chromium` 代替），以及用 `export GEO_PROXY=socks5h://127.0.0.1:<port>` 让所有联网脚本都走代理。
+以图搜图需要 **Google Chrome 或 Playwright Chromium**，先尝试 Chrome，启动失败则回退到 Chromium。两者都没有时运行 `uvx playwright install chromium`。Linux 缺少系统库时可用 `uvx playwright install --with-deps chromium`；Playwright 升级后若提示缺少浏览器可执行文件，重新运行安装命令。
+
+`match.py` 和 `sat_scan.py` 会优先使用当前 torch 可用的 CUDA，其次是 MPS，最后是 CPU，并打印所选设备（如 `model ... ready (cuda, ...)`）。设置环境变量 `GEO_DEVICE=cpu|cuda|mps` 可指定设备。Windows 上默认 `uv run` 安装的是仅支持 CPU 的 torch；使用 NVIDIA GPU 时，添加驱动支持的 CUDA 构建（`nvidia-smi` 显示驱动支持的最高 CUDA 版本，`cu126` 代表 CUDA 12.6）：
+
+```bash
+uv run --find-links https://download.pytorch.org/whl/cu126/torch/ skills/geo-sleuth/scripts/match.py rank --query photo.jpg --images cands/ --out ranked.json
+```
+
+这个选项只添加 torch 构建，其他包仍从 PyPI 安装。首次运行需下载约 2.4 GB。
+
+在仓库根目录自检（PowerShell 也可运行）：
+
+```bash
+uv run skills/geo-sleuth/scripts/doctor.py
+uv run skills/geo-sleuth/scripts/doctor.py --network
+```
+
+已安装 skill 时换成其实际的 `scripts/doctor.py` 路径，或让 agent 运行。自检会检查 Python、uv、curl、查表数据、当前目录写权限，以及浏览器能否实际启动。`--network` 额外探测各服务，不上传照片；`--json` 输出诊断数据。退出码 1 表示有失败项，警告表示部分可选功能受影响。首次运行 uv 可能需要安装 Playwright；自检不加载 OCR 或 ML 模型。网站可达不等于识图上传、模型下载和街景查询一定成功。
+
+先用自己的照片检查本地处理流程：
+
+```bash
+uv run skills/geo-sleuth/scripts/intake.py photo.jpg --out-dir intake --no-rev
+```
+
+打开 `intake/intake.md`，检查裁图和 OCR 结果；去掉 `--no-rev` 才会在线以图搜图。macOS 优先 Apple Vision，其他系统或回退场景使用 RapidOCR。`match.py`、`sat_scan.py` 首次运行会安装 ML 依赖并下载模型，需预留时间和磁盘空间；首次安装依赖仍需联网。
+
+排错：浏览器启动失败就安装 Chrome / Chromium；HTTP 403/429 或验证码先查看截图、稍后重试；连接超时先跑 `doctor.py --network`。模型加载失败要看磁盘空间、下载错误和 Hugging Face 连通性。`intake.md` 会区分跳过、失败和已完成的步骤；搜索失败不能当作“没有匹配图片”。
+
+语言：维护中的指令、CLI 帮助、报错、报告标题和默认证据标注均为英文。照片 OCR、地名、第三方响应和截图保留原文，agent 负责解释，并用用户的语言写最终报告。中文指令的最后一版冻结在 tag [`zh-final`](https://github.com/Oldcircle/geo-sleuth/tree/zh-final)，不再更新；要装那一版：`npx skills add https://github.com/Oldcircle/geo-sleuth/tree/zh-final/skills/geo-sleuth`。
 
 ## 路线图
 
@@ -201,7 +357,16 @@ Python 3.10+、[`uv`](https://docs.astral.sh/uv/)，以及一个能运行 shell 
 
 ## 参与贡献
 
-欢迎提 issue 和 pull request，参见 [CONTRIBUTING.md](CONTRIBUTING.md)。最有用的贡献是：给 `references/clues/` 添加一条可迁移的线索（附来源）、提供一个带许可证的新数据源，或者用你自己的照片跑一次、记录 skill 哪里错了、为什么错。
+欢迎提 issue 和 pull request，参见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+| 你有的是 | 放在哪 | 门槛 |
+|---|---|---|
+| 能区分国家的线索 | `references/clues/global.md` | 有来源、有反例 |
+| 只对一个国家有用的线索、表或服务 | 地区包 `regions/<cc>/`（[契约](skills/geo-sleuth/regions/README.md)） | 只放数据和文档；`regions.py lint` 输出 `ok` |
+| 对核心脚本的改动 | 单独一个 PR | 一张改前解不出、改后解出的照片，外加别处没有退步 |
+| 一次跑错的记录 | issue | 第一个走偏的步骤 |
+
+[沙漠案例](#2-沙漠天际线差了一度)是核心改动的范本：skill 在一张真实照片上卡住（前 25 处挤在 9.6–11.7 px）；改动是通用的，不是给这张照片调参（在 `terrain.py fit` 里解相机横滚，上限 1°，`--roll-max 0` 给出旧结果）；同一张照片随后解出（真值跳到 6.2 px）；在不是为它设计的题上也站得住（8 道合成天际线、一道更早的实拍题）。`examples/desert-roll-fix/` 用两条命令复现修改前后。
 
 ## Star 历史
 

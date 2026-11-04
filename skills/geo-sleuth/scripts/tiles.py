@@ -3,26 +3,26 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow"]
 # ///
-"""下载卫星切片拼成一张大图，并在图上标点。
+"""Download satellite tiles, stitch them into one large image (mosaic), and mark points on it.
 
-拼好的图旁边会写一个同名 .json（缩放级别、左上角切片号、中心点），
-evidence.py 和 mark 子命令靠它把经纬度换成图上像素。
+A .json with the same name is written next to the mosaic (zoom level, top-left tile index, center point);
+evidence.py and the mark subcommand use it to convert lat/lon to image pixels.
 
-默认用 Google 卫星图（WGS84，和 GPS 同一坐标系，国内不用纠偏）。
-国内网络访问 Google 需要代理：--proxy socks5h://127.0.0.1:10808（示例） 或设环境变量 GEO_PROXY。
+Google satellite imagery is the default (WGS84, the same coordinate system as GPS, no offset correction needed in China).
 
-示例：
+Examples:
   tiles.py fetch 22.6050,114.0540 --zoom 18 --radius 4 --out area.jpg
   tiles.py mark area.jpg --points panos.json --out area_panos.jpg --label
   tiles.py mark area.jpg --points cands.json --geojson power.geojson --geojson rail.geojson \
-           --sector 22.6045,114.0520,265,40,3000 --out area_lines.jpg       # 叠线状要素 + 机位视野扇形
-  tiles.py sheet --points cands.json --zoom 18 --out cands_sheet.jpg     # 候选点逐个居中出缩略图，带编号
-  tiles.py px2ll area.jpg --px 812,440 --px 300,95                      # 拼图像素 → 经纬度（裁剪图加 --crop x0,y0 --scale s）
-  tiles.py sheet --grid <s,w,n,e> --zoom 17 --size 320 --cols 5 --out town.jpg   # 整片城区铺网格逐格看（找操场、厂房）
+           --sector 22.6045,114.0520,265,40,3000 --out area_lines.jpg       # overlay line features + camera-position view sector
+  tiles.py sheet --points cands.json --zoom 18 --out cands_sheet.jpg     # one centered thumbnail per candidate point, numbered
+  tiles.py px2ll area.jpg --px 812,440 --px 300,95                      # mosaic pixels → lat/lon (for a cropped image add --crop x0,y0 --scale s)
+  tiles.py sheet --grid <s,w,n,e> --zoom 17 --size 320 --cols 5 --out town.jpg   # tile a whole urban area with a grid and look cell by cell (find running tracks, factory buildings)
 """
 from __future__ import annotations
 
 import argparse
+from _net import curl_args, PROXY_HELP
 import json
 import os
 import re
@@ -45,9 +45,8 @@ SOURCES = {
 def _get(url: str, path: Path, proxy: str | None) -> bool:
     if path.exists() and path.stat().st_size > 1000:
         return True
-    cmd = ["curl", "-s", "-m", "60", "-o", str(path), url]
-    if proxy:
-        cmd[1:1] = ["-x", proxy]
+    cmd = ["curl", "-q", "-s", "-m", "60", "-o", str(path), url]
+    cmd += curl_args(proxy)
     subprocess.run(cmd, check=False)
     return path.exists() and path.stat().st_size > 1000
 
@@ -86,7 +85,7 @@ def fetch(center: tuple[float, float], zoom: int, radius: int, out: Path, source
 
 
 class Mosaic:
-    """经纬度 ↔ 拼图像素。"""
+    """lat/lon ↔ mosaic pixels."""
 
     def __init__(self, image: Path):
         self.meta = json.loads(Path(image).with_suffix(".json").read_text(encoding="utf-8"))
@@ -108,7 +107,7 @@ LINE_COLORS = ["orange", "deepskyblue", "magenta", "lime", "white", "red"]
 
 
 def _draw_geojson(d: ImageDraw.ImageDraw, m: "Mosaic", gj: dict, color: str) -> int:
-    """GeoJSON 的线、面、点画到拼图上（线宽 3，面只画轮廓）。返回画了几个要素。"""
+    """Draw GeoJSON lines, polygons and points on the mosaic (line width 3, polygons as outlines only). Returns how many features were drawn."""
     n = 0
     for ft in gj.get("features", []):
         g = ft.get("geometry") or {}
@@ -131,7 +130,7 @@ def _draw_geojson(d: ImageDraw.ImageDraw, m: "Mosaic", gj: dict, color: str) -> 
 
 
 def _draw_sector(d: ImageDraw.ImageDraw, m: "Mosaic", spec: str) -> None:
-    """lat,lon,朝向,水平视角,半径m → 机位视野扇形。"""
+    """lat,lon,heading,horizontal FOV,radius m → camera-position view sector."""
     lat, lon, hd, fov, rng = map(float, spec.split(","))
     pts = [m.to_px(lat, lon)]
     steps = max(4, int(fov // 3))
@@ -147,13 +146,13 @@ def _draw_sector(d: ImageDraw.ImageDraw, m: "Mosaic", spec: str) -> None:
 
 def mark(image: Path, points: dict, out: Path, label: bool, geojsons: list[Path] | None = None,
          sectors: list[str] | None = None) -> None:
-    """points: {name: [lat, lon]}（wgs）。名字按第一个空格前的前缀分色；--label 时写名字的前 12 个字。"""
+    """points: {name: [lat, lon]} (wgs). Colored by the name prefix before the first space; with --label, writes the first 12 characters of the name."""
     m = Mosaic(image)
     img = Image.open(image).convert("RGB")
     d = ImageDraw.Draw(img)
     for i, gp in enumerate(geojsons or []):
         n = _draw_geojson(d, m, json.loads(Path(gp).read_text(encoding="utf-8")), LINE_COLORS[i % len(LINE_COLORS)])
-        print(f"{gp}: {n} 个要素，颜色 {LINE_COLORS[i % len(LINE_COLORS)]}")
+        print(f"{gp}: {n} features, color {LINE_COLORS[i % len(LINE_COLORS)]}")
     for sp in sectors or []:
         _draw_sector(d, m, sp)
     groups: dict[str, str] = {}
@@ -169,7 +168,7 @@ def mark(image: Path, points: dict, out: Path, label: bool, geojsons: list[Path]
 
 
 def grid_points(bbox: str, zoom: int, size: int, step: float | None) -> dict:
-    """s,w,n,e 铺成网格点；默认格距 = 每格覆盖宽度的九成。"""
+    """Tile s,w,n,e into grid points; default spacing = 90% of the width each cell covers."""
     import math
 
     s, w, n, e = (float(v) for v in bbox.split(","))
@@ -187,7 +186,7 @@ def grid_points(bbox: str, zoom: int, size: int, step: float | None) -> dict:
 
 
 def sheet(points: dict, zoom: int, size: int, cols: int, out: Path, source: str, proxy: str | None, cache: Path) -> list[Path]:
-    """每个候选点居中出一张 size×size 的卫星缩略图，带编号和名字，拼成一页（多了自动分页）。"""
+    """One size×size satellite thumbnail centered on each candidate point, with number and name, laid out on one page (more pages automatically when there are too many)."""
     cache.mkdir(parents=True, exist_ok=True)
     items = list(points.items())
     per = cols * cols
@@ -224,7 +223,7 @@ def sheet(points: dict, zoom: int, size: int, cols: int, out: Path, source: str,
 
 
 def _neg_coords(argv: list[str]) -> list[str]:
-    """argparse 把 -1.45,-48.5 这种负坐标当成选项名；前面补个空格就当普通值（float 会忽略空格）。南半球、西半球的题都要用。"""
+    """argparse treats negative coordinates like -1.45,-48.5 as option names; prefixing a space makes them plain values (float ignores the space). Needed for every puzzle in the southern or western hemisphere."""
     return [" " + a if re.match(r"^-\d[\d.]*(,-?[\d.]+)+$", a) else a for a in argv]
 
 
@@ -233,12 +232,12 @@ def main() -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     f = sub.add_parser("fetch")
-    f.add_argument("center", help="lat,lon（wgs）")
-    f.add_argument("--zoom", type=int, default=18, help="17≈1.1m/px 看片区，19≈0.28m/px 看单栋楼")
-    f.add_argument("--radius", type=int, default=4, help="中心切片向外扩几圈，4 → 9x9 切片")
+    f.add_argument("center", help="lat,lon (wgs)")
+    f.add_argument("--zoom", type=int, default=18, help="17≈1.1m/px for an area, 19≈0.28m/px for a single building")
+    f.add_argument("--radius", type=int, default=4, help="rings of tiles around the center tile, 4 → 9x9 tiles")
     f.add_argument("--out", type=Path, required=True)
     f.add_argument("--source", choices=list(SOURCES), default="google")
-    f.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+    f.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
     f.add_argument("--cache", type=Path, default=Path(".geo-cache/tiles"))
 
     mk = sub.add_parser("mark")
@@ -246,28 +245,28 @@ def main() -> None:
     mk.add_argument("--points", type=Path, help="JSON: {name: [lat, lon]}")
     mk.add_argument("--out", type=Path, required=True)
     mk.add_argument("--label", action="store_true")
-    mk.add_argument("--geojson", type=Path, action="append", help="叠加 GeoJSON（osm.py geom 的输出），可重复，每个文件一种颜色")
-    mk.add_argument("--sector", action="append", help="机位视野扇形 lat,lon,朝向,水平视角,半径m，可重复")
+    mk.add_argument("--geojson", type=Path, action="append", help="overlay GeoJSON (output of osm.py geom), repeatable, one color per file")
+    mk.add_argument("--sector", action="append", help="camera-position view sector lat,lon,heading,horizontal FOV,radius m, repeatable")
 
-    sh = sub.add_parser("sheet", help="候选点逐个居中出卫星缩略图，拼成带编号的对比页")
+    sh = sub.add_parser("sheet", help="centered satellite thumbnail for each candidate point, laid out as a numbered comparison page")
     shg = sh.add_mutually_exclusive_group(required=True)
     shg.add_argument("--points", type=Path, help="JSON {name: [lat, lon]}")
-    shg.add_argument("--grid", help="s,w,n,e：把一片区域按网格铺满，逐格出图（格名 r行c列：r00 最北、c00 最西；中心坐标写进 <out>.cells.json）")
-    sh.add_argument("--step", type=float, help="--grid 的格距（米），默认按每格覆盖范围留一成重叠")
+    shg.add_argument("--grid", help="s,w,n,e: cover an area with a grid and render cell by cell (cell name r<row>c<col>: r00 northernmost, c00 westernmost; center coordinates written to <out>.cells.json)")
+    sh.add_argument("--step", type=float, help="--grid cell spacing (meters); default leaves 10%% overlap of the area each cell covers")
     sh.add_argument("--zoom", type=int, default=18)
-    sh.add_argument("--size", type=int, default=320, help="每格像素")
-    sh.add_argument("--cols", type=int, default=4, help="每页 cols×cols 格")
+    sh.add_argument("--size", type=int, default=320, help="pixels per cell")
+    sh.add_argument("--cols", type=int, default=4, help="cols×cols cells per page")
     sh.add_argument("--out", type=Path, required=True)
     sh.add_argument("--source", choices=list(SOURCES), default="google")
-    sh.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+    sh.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
     sh.add_argument("--cache", type=Path, default=Path(".geo-cache/tiles"))
 
-    pl = sub.add_parser("px2ll", help="拼图（或它的裁剪/缩放图）上的像素 → 经纬度")
-    pl.add_argument("image", type=Path, help="tiles.py fetch 出的拼图（旁边要有同名 .json）")
-    pl.add_argument("--px", action="append", required=True, help="x,y，可重复；量的是裁剪/缩放后的图时配 --crop/--scale")
-    pl.add_argument("--crop", default="0,0", help="你量像素的那张图在原拼图里的左上角 x0,y0")
-    pl.add_argument("--scale", type=float, default=1.0, help="那张图相对原拼图的缩放倍数（缩小一半写 0.5）")
-    pl.add_argument("--out", type=Path, help="写出 {p1: [lat, lon], ...}")
+    pl = sub.add_parser("px2ll", help="pixels on a mosaic (or a cropped/scaled copy of it) → lat/lon")
+    pl.add_argument("image", type=Path, help="mosaic from tiles.py fetch (needs the same-name .json next to it)")
+    pl.add_argument("--px", action="append", required=True, help="x,y, repeatable; if you measured on a cropped/scaled image, pair with --crop/--scale")
+    pl.add_argument("--crop", default="0,0", help="top-left x0,y0, in the original mosaic, of the image you measured pixels on")
+    pl.add_argument("--scale", type=float, default=1.0, help="scale of that image relative to the original mosaic (0.5 for half size)")
+    pl.add_argument("--out", type=Path, help="write {p1: [lat, lon], ...}")
 
     args = ap.parse_args(_neg_coords(sys.argv[1:]))
     if args.cmd == "px2ll":
@@ -287,7 +286,7 @@ def main() -> None:
         pts = json.loads(args.points.read_text(encoding="utf-8")) if args.points else grid_points(args.grid, args.zoom, args.size, args.step)
         if args.grid:
             args.out.with_suffix(".cells.json").write_text(json.dumps(pts, indent=1), encoding="utf-8")
-            print(f"网格 {len(pts)} 格（格名 r行c列，行从北往南、列从西往东；每格中心坐标 -> {args.out.with_suffix('.cells.json')}）")
+            print(f"grid: {len(pts)} cells (cell name r<row>c<col>, rows north to south, columns west to east; cell center coordinates -> {args.out.with_suffix('.cells.json')})")
         for p in sheet(pts, args.zoom, args.size, args.cols, args.out, args.source, args.proxy, args.cache):
             print(p)
         return
@@ -297,14 +296,14 @@ def main() -> None:
         print(json.dumps(meta))
     elif args.cmd == "mark":
         if not (args.points or args.geojson or args.sector):
-            ap.error("mark 至少要 --points、--geojson、--sector 之一")
+            ap.error("mark needs at least one of --points, --geojson, --sector")
         mark(args.image, json.loads(args.points.read_text(encoding="utf-8")) if args.points else {}, args.out, args.label,
              args.geojson, args.sector)
         print(args.out)
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese-locale Windows writes GBK by default: m², ñ make it crash, and the Chinese the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

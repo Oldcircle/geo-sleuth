@@ -1,0 +1,432 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "0"
+  },
+  "usage": "landline area code in national form: 0212, (0232) 444 55 66, 322 123 45 67; drop a leading +90",
+  "miss_note": "not a Turkish province landline code: 05xx mobile, 0850/0800/0444 nationwide numbers, or 0392 (Northern Cyprus, dialled through +90)",
+  "source": [
+   "https://tr.wikipedia.org/wiki/Türkiye'nin_illeri",
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Turkey"
+  ],
+  "fetched": "2026-10-13",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 82
+ },
+ "entries": {
+  "0212": [
+   {
+    "admin1": "İstanbul",
+    "note": "European side of İstanbul (Thrace)"
+   }
+  ],
+  "0216": [
+   {
+    "admin1": "İstanbul",
+    "note": "Asian (Anatolian) side of İstanbul"
+   }
+  ],
+  "0222": [
+   {
+    "admin1": "Eskişehir"
+   }
+  ],
+  "0224": [
+   {
+    "admin1": "Bursa"
+   }
+  ],
+  "0226": [
+   {
+    "admin1": "Yalova"
+   }
+  ],
+  "0228": [
+   {
+    "admin1": "Bilecik"
+   }
+  ],
+  "0232": [
+   {
+    "admin1": "İzmir"
+   }
+  ],
+  "0236": [
+   {
+    "admin1": "Manisa"
+   }
+  ],
+  "0242": [
+   {
+    "admin1": "Antalya"
+   }
+  ],
+  "0246": [
+   {
+    "admin1": "Isparta"
+   }
+  ],
+  "0248": [
+   {
+    "admin1": "Burdur"
+   }
+  ],
+  "0252": [
+   {
+    "admin1": "Muğla"
+   }
+  ],
+  "0256": [
+   {
+    "admin1": "Aydın"
+   }
+  ],
+  "0258": [
+   {
+    "admin1": "Denizli"
+   }
+  ],
+  "0262": [
+   {
+    "admin1": "Kocaeli"
+   }
+  ],
+  "0264": [
+   {
+    "admin1": "Sakarya"
+   }
+  ],
+  "0266": [
+   {
+    "admin1": "Balıkesir"
+   }
+  ],
+  "0272": [
+   {
+    "admin1": "Afyonkarahisar"
+   }
+  ],
+  "0274": [
+   {
+    "admin1": "Kütahya"
+   }
+  ],
+  "0276": [
+   {
+    "admin1": "Uşak"
+   }
+  ],
+  "0282": [
+   {
+    "admin1": "Tekirdağ"
+   }
+  ],
+  "0284": [
+   {
+    "admin1": "Edirne"
+   }
+  ],
+  "0286": [
+   {
+    "admin1": "Çanakkale"
+   }
+  ],
+  "0288": [
+   {
+    "admin1": "Kırklareli"
+   }
+  ],
+  "0312": [
+   {
+    "admin1": "Ankara"
+   }
+  ],
+  "0318": [
+   {
+    "admin1": "Kırıkkale"
+   }
+  ],
+  "0322": [
+   {
+    "admin1": "Adana"
+   }
+  ],
+  "0324": [
+   {
+    "admin1": "Mersin"
+   }
+  ],
+  "0326": [
+   {
+    "admin1": "Hatay"
+   }
+  ],
+  "0328": [
+   {
+    "admin1": "Osmaniye"
+   }
+  ],
+  "0332": [
+   {
+    "admin1": "Konya"
+   }
+  ],
+  "0338": [
+   {
+    "admin1": "Karaman"
+   }
+  ],
+  "0342": [
+   {
+    "admin1": "Gaziantep"
+   }
+  ],
+  "0344": [
+   {
+    "admin1": "Kahramanmaraş"
+   }
+  ],
+  "0346": [
+   {
+    "admin1": "Sivas"
+   }
+  ],
+  "0348": [
+   {
+    "admin1": "Kilis"
+   }
+  ],
+  "0352": [
+   {
+    "admin1": "Kayseri"
+   }
+  ],
+  "0354": [
+   {
+    "admin1": "Yozgat"
+   }
+  ],
+  "0356": [
+   {
+    "admin1": "Tokat"
+   }
+  ],
+  "0358": [
+   {
+    "admin1": "Amasya"
+   }
+  ],
+  "0362": [
+   {
+    "admin1": "Samsun"
+   }
+  ],
+  "0364": [
+   {
+    "admin1": "Çorum"
+   }
+  ],
+  "0366": [
+   {
+    "admin1": "Kastamonu"
+   }
+  ],
+  "0368": [
+   {
+    "admin1": "Sinop"
+   }
+  ],
+  "0370": [
+   {
+    "admin1": "Karabük"
+   }
+  ],
+  "0372": [
+   {
+    "admin1": "Zonguldak"
+   }
+  ],
+  "0374": [
+   {
+    "admin1": "Bolu"
+   }
+  ],
+  "0376": [
+   {
+    "admin1": "Çankırı"
+   }
+  ],
+  "0378": [
+   {
+    "admin1": "Bartın"
+   }
+  ],
+  "0380": [
+   {
+    "admin1": "Düzce"
+   }
+  ],
+  "0382": [
+   {
+    "admin1": "Aksaray"
+   }
+  ],
+  "0384": [
+   {
+    "admin1": "Nevşehir"
+   }
+  ],
+  "0386": [
+   {
+    "admin1": "Kırşehir"
+   }
+  ],
+  "0388": [
+   {
+    "admin1": "Niğde"
+   }
+  ],
+  "0412": [
+   {
+    "admin1": "Diyarbakır"
+   }
+  ],
+  "0414": [
+   {
+    "admin1": "Şanlıurfa"
+   }
+  ],
+  "0416": [
+   {
+    "admin1": "Adıyaman"
+   }
+  ],
+  "0422": [
+   {
+    "admin1": "Malatya"
+   }
+  ],
+  "0424": [
+   {
+    "admin1": "Elâzığ"
+   }
+  ],
+  "0426": [
+   {
+    "admin1": "Bingöl"
+   }
+  ],
+  "0428": [
+   {
+    "admin1": "Tunceli"
+   }
+  ],
+  "0432": [
+   {
+    "admin1": "Van"
+   }
+  ],
+  "0434": [
+   {
+    "admin1": "Bitlis"
+   }
+  ],
+  "0436": [
+   {
+    "admin1": "Muş"
+   }
+  ],
+  "0438": [
+   {
+    "admin1": "Hakkâri"
+   }
+  ],
+  "0442": [
+   {
+    "admin1": "Erzurum"
+   }
+  ],
+  "0446": [
+   {
+    "admin1": "Erzincan"
+   }
+  ],
+  "0452": [
+   {
+    "admin1": "Ordu"
+   }
+  ],
+  "0454": [
+   {
+    "admin1": "Giresun"
+   }
+  ],
+  "0456": [
+   {
+    "admin1": "Gümüşhane"
+   }
+  ],
+  "0458": [
+   {
+    "admin1": "Bayburt"
+   }
+  ],
+  "0462": [
+   {
+    "admin1": "Trabzon"
+   }
+  ],
+  "0464": [
+   {
+    "admin1": "Rize"
+   }
+  ],
+  "0466": [
+   {
+    "admin1": "Artvin"
+   }
+  ],
+  "0472": [
+   {
+    "admin1": "Ağrı"
+   }
+  ],
+  "0474": [
+   {
+    "admin1": "Kars"
+   }
+  ],
+  "0476": [
+   {
+    "admin1": "Iğdır"
+   }
+  ],
+  "0478": [
+   {
+    "admin1": "Ardahan"
+   }
+  ],
+  "0482": [
+   {
+    "admin1": "Mardin"
+   }
+  ],
+  "0484": [
+   {
+    "admin1": "Siirt"
+   }
+  ],
+  "0486": [
+   {
+    "admin1": "Şırnak"
+   }
+  ],
+  "0488": [
+   {
+    "admin1": "Batman"
+   }
+  ]
+ }
+}

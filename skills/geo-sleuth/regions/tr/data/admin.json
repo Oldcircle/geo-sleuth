@@ -1,0 +1,499 @@
+{
+ "_meta": {
+  "source": [
+   "https://tr.wikipedia.org/wiki/Türkiye'nin_illeri",
+   "https://www.openstreetmap.org (boundary=administrative, admin_level=4 names)"
+  ],
+  "fetched": "2026-10-13",
+  "license": "CC BY-SA 4.0 (Wikipedia) / ODbL (OpenStreetMap names)",
+  "count": 81
+ },
+ "items": [
+  {
+   "name": "Adana",
+   "code": "01",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Adıyaman",
+   "code": "02",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Afyonkarahisar",
+   "code": "03",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Ağrı",
+   "code": "04",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Amasya",
+   "code": "05",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Ankara",
+   "code": "06",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Antalya",
+   "code": "07",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Artvin",
+   "code": "08",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Aydın",
+   "code": "09",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Balıkesir",
+   "code": "10",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Bilecik",
+   "code": "11",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Bingöl",
+   "code": "12",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Bitlis",
+   "code": "13",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Bolu",
+   "code": "14",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Burdur",
+   "code": "15",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Bursa",
+   "code": "16",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Çanakkale",
+   "code": "17",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Çankırı",
+   "code": "18",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Çorum",
+   "code": "19",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Denizli",
+   "code": "20",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Diyarbakır",
+   "code": "21",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Edirne",
+   "code": "22",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Elâzığ",
+   "code": "23",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Erzincan",
+   "code": "24",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Erzurum",
+   "code": "25",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Eskişehir",
+   "code": "26",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Gaziantep",
+   "code": "27",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Giresun",
+   "code": "28",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Gümüşhane",
+   "code": "29",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Hakkâri",
+   "code": "30",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Hatay",
+   "code": "31",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Isparta",
+   "code": "32",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Mersin",
+   "code": "33",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "İstanbul",
+   "code": "34",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "İzmir",
+   "code": "35",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kars",
+   "code": "36",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kastamonu",
+   "code": "37",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kayseri",
+   "code": "38",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kırklareli",
+   "code": "39",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kırşehir",
+   "code": "40",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kocaeli",
+   "code": "41",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Konya",
+   "code": "42",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kütahya",
+   "code": "43",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Malatya",
+   "code": "44",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Manisa",
+   "code": "45",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kahramanmaraş",
+   "code": "46",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Mardin",
+   "code": "47",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Muğla",
+   "code": "48",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Muş",
+   "code": "49",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Nevşehir",
+   "code": "50",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Niğde",
+   "code": "51",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Ordu",
+   "code": "52",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Rize",
+   "code": "53",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Sakarya",
+   "code": "54",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Samsun",
+   "code": "55",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Siirt",
+   "code": "56",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Sinop",
+   "code": "57",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Sivas",
+   "code": "58",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Tekirdağ",
+   "code": "59",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Tokat",
+   "code": "60",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Trabzon",
+   "code": "61",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Tunceli",
+   "code": "62",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Şanlıurfa",
+   "code": "63",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Uşak",
+   "code": "64",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Van",
+   "code": "65",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Yozgat",
+   "code": "66",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Zonguldak",
+   "code": "67",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Aksaray",
+   "code": "68",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Bayburt",
+   "code": "69",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Karaman",
+   "code": "70",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kırıkkale",
+   "code": "71",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Batman",
+   "code": "72",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Şırnak",
+   "code": "73",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Bartın",
+   "code": "74",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Ardahan",
+   "code": "75",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Iğdır",
+   "code": "76",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Yalova",
+   "code": "77",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Karabük",
+   "code": "78",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Kilis",
+   "code": "79",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Osmaniye",
+   "code": "80",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Düzce",
+   "code": "81",
+   "level": 4,
+   "parent": ""
+  }
+ ]
+}

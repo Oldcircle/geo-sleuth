@@ -1,0 +1,66 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^(WP|CP|SP|NP|EP|NW|NC|UP|SG)(?=[A-Z]{2,3}\\d{4}$)",
+  "usage": "a whole plate with its province code: WP CAB-1234, SG KA-5678",
+  "note": "The code is where the vehicle was registered, not where the photo was taken. Older plates and plates issued after the code was dropped have none, and miss.",
+  "miss_note": "no province code (older or new-format plate), a misread code, or a foreign plate",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Sri_Lanka"
+  ],
+  "fetched": "2026-10-18",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 9
+ },
+ "entries": {
+  "WP": [
+   {
+    "admin1": "Western Province"
+   }
+  ],
+  "CP": [
+   {
+    "admin1": "Central Province"
+   }
+  ],
+  "SP": [
+   {
+    "admin1": "Southern Province"
+   }
+  ],
+  "NP": [
+   {
+    "admin1": "Northern Province"
+   }
+  ],
+  "EP": [
+   {
+    "admin1": "Eastern Province"
+   }
+  ],
+  "NW": [
+   {
+    "admin1": "North Western Province"
+   }
+  ],
+  "NC": [
+   {
+    "admin1": "North Central Province"
+   }
+  ],
+  "UP": [
+   {
+    "admin1": "Uva Province"
+   }
+  ],
+  "SG": [
+   {
+    "admin1": "Sabaragamuwa Province"
+   }
+  ]
+ }
+}

@@ -1,0 +1,39 @@
+{
+ "code": "LK",
+ "name": "Sri Lanka",
+ "names": [
+  "Sri Lanka",
+  "ශ්‍රී ලංකාව",
+  "இலங்கை",
+  "Ceylon",
+  "LK"
+ ],
+ "status": "community",
+ "maintainers": [
+  "@Yasas-Sri"
+ ],
+ "admin_levels": {
+  "4": "admin1",
+  "5": "admin2"
+ },
+ "level_names": {
+  "admin1": "province",
+  "admin2": "district"
+ },
+ "name_suffixes": [
+  " District",
+  " Province"
+ ],
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "area-code": {
+   "file": "data/area_codes.json"
+  },
+  "plate": {
+   "file": "data/plates.json"
+  }
+ },
+ "docs": [
+  "clues.md"
+ ]
+}

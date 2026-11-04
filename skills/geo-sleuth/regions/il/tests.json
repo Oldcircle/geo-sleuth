@@ -1,0 +1,77 @@
+[
+ {
+  "kind": "area-code",
+  "value": "02-6234567",
+  "expect": [
+   {
+    "admin1": "מחוז ירושלים"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "08-6602250",
+  "expect": [
+   {
+    "admin1": "מחוז הדרום"
+   },
+   {
+    "admin1": "מחוז המרכז"
+   },
+   {
+    "admin1": "מחוז ירושלים"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "03-9051234",
+  "expect": [
+   {
+    "admin1": "מחוז תל אביב"
+   },
+   {
+    "admin1": "מחוז המרכז"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "(04) 812-3456",
+  "expect": [
+   {
+    "admin1": "מחוז חיפה"
+   },
+   {
+    "admin1": "מחוז הצפון"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "09-7654321",
+  "expect": [
+   {
+    "admin1": "מחוז המרכז"
+   },
+   {
+    "admin1": "מחוז תל אביב"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "052-1234567",
+  "expect": []
+ },
+ {
+  "kind": "area-code",
+  "value": "077-1234567",
+  "expect": []
+ },
+ {
+  "kind": "area-code",
+  "value": "0817-1234567",
+  "expect": []
+ }
+]

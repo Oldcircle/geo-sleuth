@@ -1,0 +1,100 @@
+{
+ "_meta": {
+  "kind": "plate-1994",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^[A-Z](?=\\d{4}[A-Z]{1,2}$)|^[A-Z]$",
+  "usage": "1994–2016 private plates (flag in a narrow band at the left, then a region letter, four digits and one or two letters: B 1234 AB): type the whole plate or only the first letter",
+  "note": "The first letter is the region of registration at the time. Company plates of the same years (1234 BA, four digits first) also start their letters with the region letter: look up that letter alone. Issue of this format stopped in July 2025, so these plates are on older cars that have not been re-registered.",
+  "miss_note": "not a 1994–2016 Kyrgyz private plate: a current plate (two-digit code first; use `--kind plate`), a personalised plate, a diplomatic plate, or a plate of another country",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Kyrgyzstan, sections 'Formats' and 'Region identifiers'",
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Кыргызстана, section 'Коды'"
+  ],
+  "fetched": "2026-11-02",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 13
+ },
+ "entries": {
+  "A": [
+   {
+    "admin1": "Баткен облусу"
+   }
+  ],
+  "B": [
+   {
+    "admin1": "Бишкек"
+   }
+  ],
+  "C": [
+   {
+    "admin1": "Чүй облусу"
+   }
+  ],
+  "D": [
+   {
+    "admin1": "Жалал-Абад облусу"
+   }
+  ],
+  "E": [
+   {
+    "admin1": "Бишкек",
+    "note": "en.wikipedia: Bishkek outskirts; ru.wikipedia: Bishkek, about 2004–2008"
+   }
+  ],
+  "F": [
+   {
+    "admin1": "Бишкек",
+    "note": "ru.wikipedia only: Bishkek, non-resident owners"
+   }
+  ],
+  "H": [
+   {
+    "admin1": "Нарын облусу",
+    "note": "the earlier Naryn letter, before N"
+   }
+  ],
+  "I": [
+   {
+    "admin1": "Ысык-Көл облусу"
+   }
+  ],
+  "N": [
+   {
+    "admin1": "Нарын облусу"
+   }
+  ],
+  "O": [
+   {
+    "admin1": "Ош",
+    "note": "en.wikipedia: Osh city"
+   },
+   {
+    "admin1": "Ош облусу",
+    "note": "ru.wikipedia: Osh Region; the two sources swap O and Z"
+   }
+  ],
+  "S": [
+   {
+    "admin1": "Чүй облусу"
+   }
+  ],
+  "T": [
+   {
+    "admin1": "Талас облусу"
+   }
+  ],
+  "Z": [
+   {
+    "admin1": "Ош облусу",
+    "note": "en.wikipedia: Osh Region"
+   },
+   {
+    "admin1": "Ош",
+    "note": "ru.wikipedia: Osh city; the two sources swap O and Z"
+   }
+  ]
+ }
+}

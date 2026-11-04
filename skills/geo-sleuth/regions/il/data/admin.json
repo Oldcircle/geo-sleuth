@@ -1,0 +1,128 @@
+{
+ "_meta": {
+  "source": [
+   "https://en.wikipedia.org/wiki/Districts_of_Israel",
+   "https://www.openstreetmap.org (boundary=administrative, admin_level=4; code = OSM relation id)"
+  ],
+  "fetched": "2026-10-13",
+  "license": "CC BY-SA 4.0 (Wikipedia) / ODbL (OpenStreetMap)",
+  "count": 19,
+  "note": "The six districts (mehozot, level 4) and their subdistricts (nafot, level 5). Jerusalem and Tel Aviv districts each form a single subdistrict with the same boundary, which OSM does not map separately, so they have no level-5 rows; 13 + those 2 = the 15 subdistricts. The Judea and Samaria Area is administered separately and has no districts or subdistricts."
+ },
+ "items": [
+  {
+   "name": "מחוז ירושלים",
+   "code": "1384720",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "מחוז הצפון",
+   "code": "1375620",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "מחוז חיפה",
+   "code": "1400966",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "מחוז המרכז",
+   "code": "1400928",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "מחוז תל אביב",
+   "code": "1400916",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "מחוז הדרום",
+   "code": "1473952",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "נפת יזרעאל",
+   "code": "11586982",
+   "level": 5,
+   "parent": "מחוז הצפון"
+  },
+  {
+   "name": "נפת כנרת",
+   "code": "11586472",
+   "level": 5,
+   "parent": "מחוז הצפון"
+  },
+  {
+   "name": "נפת עכו",
+   "code": "11586940",
+   "level": 5,
+   "parent": "מחוז הצפון"
+  },
+  {
+   "name": "נפת צפת",
+   "code": "11586908",
+   "level": 5,
+   "parent": "מחוז הצפון"
+  },
+  {
+   "name": "נפת רמת הגולן",
+   "code": "11585174",
+   "level": 5,
+   "parent": "מחוז הצפון"
+  },
+  {
+   "name": "נפת חדרה",
+   "code": "11584745",
+   "level": 5,
+   "parent": "מחוז חיפה"
+  },
+  {
+   "name": "נפת חיפה",
+   "code": "11584519",
+   "level": 5,
+   "parent": "מחוז חיפה"
+  },
+  {
+   "name": "נפת השרון",
+   "code": "11587694",
+   "level": 5,
+   "parent": "מחוז המרכז"
+  },
+  {
+   "name": "נפת פתח תקווה",
+   "code": "11587672",
+   "level": 5,
+   "parent": "מחוז המרכז"
+  },
+  {
+   "name": "נפת רחובות",
+   "code": "11587514",
+   "level": 5,
+   "parent": "מחוז המרכז"
+  },
+  {
+   "name": "נפת רמלה",
+   "code": "11587600",
+   "level": 5,
+   "parent": "מחוז המרכז"
+  },
+  {
+   "name": "נפת אשקלון",
+   "code": "11584353",
+   "level": 5,
+   "parent": "מחוז הדרום"
+  },
+  {
+   "name": "נפת באר שבע",
+   "code": "11584306",
+   "level": 5,
+   "parent": "מחוז הדרום"
+  }
+ ]
+}

@@ -1,67 +1,67 @@
-# 航拍分支：机窗照片、无人机俯拍
+# Aerial branch: airplane-window photos, drone top-down shots
 
-地面照片的招牌、车牌、街景在这里全部用不上，靠的是**机身编号 → 航迹**，或**地貌 + 水文 → 河段 → 线变点 → 3D 地形比对**。
-来源：v008（大河峡谷机窗）、v012（舷窗冰湖 + 注册号）、v010-2（峡谷无人机）。
+Ground-photo signs, license plates and street view are all useless here; what works is **aircraft registration → flight track**, or **landforms + hydrology → river section → line-to-point → 3D terrain comparison**.
+Sources: v008 (large-river gorge from an airplane window), v012 (frozen lake through a cabin window + registration), v010-2 (gorge by drone).
 
-## 1. 先找航空器注册号
+## 1. Look for the aircraft registration first
 
-机翼上表面、下表面、发动机短舱、机身尾部的编号（中国民航 `B-` 加 4 位；从舷窗看常是倒的，逐位核对）。
+The registration on the wing's upper and lower surfaces, engine nacelles and rear fuselage (Chinese civil aviation: `B-` plus 4 characters; seen from a cabin window it's often upside down, so check each character).
 
-1. 按注册号在 Flightradar24、FlightAware 查这架飞机的历史航班（免费档约 7 天，更长需要付费档；付费档能下载单班 KML/CSV 航迹）。
-2. **时间窗口从发图时间往前倒序查**：随手拍的照片多半是当天或前几天拍的（v012 正确航班就是发图当天那班，博主却把两个月 114 班全量排查）。EXIF 有拍摄时间就直接用。
-3. 航班清单按照片里直接能看到的条件逐层筛：
-   - 昼夜：起降时刻对照日出日落
-   - 气候：结冰、积雪、植被颜色对应的纬度带
-   - 地形：航线是否经过这类山地/平原
-   - 航向：用太阳算出的飞行方向（见第 3 节）
-4. 剩下的航班导出航迹，只看**舷窗那一侧**、目视距离（巡航高度下几十公里）以内的地物。
+1. Look up this aircraft's flight history by registration on Flightradar24 or FlightAware (the free tier covers about 7 days; longer needs a paid tier; the paid tier can download KML/CSV tracks for single flights).
+2. **Search the time window backward from the posting time**: casual photos were most likely taken the same day or a few days before (in v012 the correct flight was the one on the posting day, yet the creator went through all 114 flights over two months). If EXIF has a capture time, use it directly.
+3. Filter the flight list layer by layer with conditions directly visible in the photo:
+   - Day/night: takeoff and landing times against sunrise and sunset
+   - Climate: the latitude band matching ice, snow cover, vegetation color
+   - Terrain: whether the route passes over this kind of mountains/plains
+   - Heading: the flight direction computed from the sun (see section 3)
+4. Export the tracks of the remaining flights and look only at features on **the window side**, within visual range (tens of kilometers at cruising altitude).
 
-没有注册号时，巡航高度、航向、常见航路（哪些航线从这片上空过）可以做弱佐证。
+Without a registration, cruising altitude, heading and common airways (which routes pass over this area) can serve as weak supporting evidence.
 
-## 2. 判断坐哪一侧、机头朝哪
+## 2. Which side you're sitting on, which way the nose points
 
-- 机翼**后缘**有襟翼滑轨和一排整流罩，前缘光滑。后缘朝画面哪边，机尾就在哪边。
-- 机头朝画面左 = 右侧舷窗；朝画面右 = 左侧舷窗。
-- 地面景物在航迹的哪一侧由此决定。
+- The wing's **trailing edge** has flap tracks and a row of fairings; the leading edge is smooth. Whichever side of the frame the trailing edge faces, the tail is on that side.
+- Nose toward the left of the frame = right-side window; toward the right of the frame = left-side window.
+- This determines which side of the flight track the ground features are on.
 
-## 3. 用太阳推航向（必须按时刻算）
+## 3. Infer heading from the sun (must be computed for the time)
 
-- 山脊阴影落在哪一侧，太阳就在另一侧；受光坡、水面反光也能用。
-- **不要默认"影子朝北"**：北回归线以北只有正午影子才指正北；北纬 37° 夏天上午 10 点影子就偏约 70°，冬季早上影子更接近西北。
-- 有候选航班时，按它经过这片区域的时刻算太阳方位（`sun.py pos --at … --time …`），再和照片里的受光方向比，能在几个候选航班之间分出对错（v012 本来可以不问出题人）。
-- 时刻完全未知时，方向只算弱约束，不能拿来排除候选。
+- Whichever side the ridge shadows fall on, the sun is on the other side; lit slopes and reflections on water also work.
+- **Don't assume "shadows point north"**: north of the Tropic of Cancer, shadows point due north only at noon; at 37° N at 10 a.m. in summer the shadow is already off by about 70°, and on winter mornings shadows are closer to northwest.
+- With candidate flights, compute the sun azimuth at the time each one passes over the area (`sun.py pos --at … --time …`), then compare it with the lighting direction in the photo; this can tell right from wrong among several candidate flights (in v012 it could have been settled without asking the puzzle setter).
+- When the time is completely unknown, direction is only a weak constraint and can't be used to exclude candidates.
 
-## 4. 没有编号：地貌 + 水文
+## 4. No registration: landforms + hydrology
 
-1. 认河（宽度、颜色、两岸地貌）→ 列出同类河段 → 按走向和两岸地形排除 → 线变点（桥、坝、渡口）→ 候选表逐个过。步骤和命令见 `corridors.md` 第 5 节。
-2. 画面里**唯一的人造物**（山梁上一块规整的浅色场地、一排彩色屋顶、隧道口）先描述形状和位置，别命名成"普通村落"丢掉。它往往是锚点：
-   - 裁出来去短视频平台和百度识图搜（v010-2 命中景区官方号）
-   - 定位后用地图 POI + 地方新闻核对名称和尺寸（v008）
-3. 锚点定下后，在照片里找"山脊—地物边缘"这类切线，在卫星图上画同一条线，机位在线上（v010-2）。
+1. Identify the river (width, color, landforms on both banks) → list similar river sections → exclude by orientation and bank terrain → line-to-point (bridges, dams, ferries) → go through the candidate table one by one. Steps and commands are in `corridors.md` section 5.
+2. For the **only man-made object** in the frame (a regular, light-colored patch on a ridge, a row of colored roofs, a tunnel portal), first describe its shape and position; don't label it "ordinary village" and discard it. It's often the anchor:
+   - Crop it and search on short-video platforms and Baidu image search (v010-2 hit the scenic area's official account)
+   - After locating it, check its name and size against map POIs + local news (v008)
+3. Once the anchor is fixed, find a tangent line like "ridge — feature edge" in the photo and draw the same line on satellite imagery; the camera position is on that line (v010-2).
 
-## 5. 3D 地形比对（替代街景）
+## 5. 3D terrain comparison (replaces street view)
 
-纯俯视卫星图上，黄土沟壑、山地长得都差不多；把视角压低到接近照片的俯角，差异才出来。
+On pure top-down satellite imagery, loess gullies and mountains all look alike; lower the view to near the photo's depression angle and the differences show.
 
 ```bash
-# 机窗：给绝对海拔（巡航约 8000–11000 m，下降段几千米）；pitch 负值往下看
-python3 scripts/terrain.py view --at <候选点lat,lon> --alt 9000 --heading 90 --pitch -35 --hfov 60 --range 40000 --zoom 11 --out a.png --photo puzzle.jpg
-# 无人机：离地一两百米
-python3 scripts/terrain.py view --at <候选点lat,lon> --height 150 --heading 300 --pitch -20 --hfov 70 --range 15000 --out d.png --photo puzzle.jpg
+# airplane window: give absolute altitude (cruise about 8000–11000 m, a few thousand meters during descent); negative pitch looks down
+uv run scripts/terrain.py view --at <candidate lat,lon> --alt 9000 --heading 90 --pitch -35 --hfov 60 --range 40000 --zoom 11 --out a.png --photo puzzle.jpg
+# drone: one or two hundred meters above ground
+uv run scripts/terrain.py view --at <candidate lat,lon> --height 150 --heading 300 --pitch -20 --hfov 70 --range 15000 --out d.png --photo puzzle.jpg
 ```
 
-- 比山脊轮廓、沟谷走向、山脊上的道路；水体比轮廓的凸起和湾汊。
-- 高空斜视会把形状沿视线方向压扁并略歪，比对时允许透视变形；需要时把照片旋转拉伸后叠到卫星图上。
-- 高程数据约 30 m 一格：大山体、河谷可靠，小于百米的细节不要硬比。
+- Compare ridgeline outlines, valley orientations and roads on ridges; for water bodies, compare bulges and inlets in the outline.
+- High-altitude oblique views flatten shapes along the sight-line direction and skew them slightly; allow for perspective distortion when comparing; when needed, rotate and stretch the photo and overlay it on satellite imagery.
+- Elevation data is about 30 m per cell: large mountain masses and river valleys are reliable; don't force comparisons of details smaller than a hundred meters.
 
-## 6. "是什么"也要用环境数据核实
+## 6. Verify "what it is" with environmental data too
 
-- 高空看到均匀发白、没有反光的水面，多半是冰或冰上积雪；定位后查当地历史逐日气温确认（v012）。
-- 反例：盐湖、盐田、干涸湖底、浑浊泥沙水、太阳耀斑、薄云。
+- Uniformly white water with no reflection, seen from high altitude, is most likely ice or snow on ice; after locating, confirm with the local historical daily temperatures (v012).
+- Counterexamples: salt lakes, salt pans, dry lakebeds, turbid silty water, sun glint, thin cloud.
 
-## 常见错误
+## Common mistakes
 
-- 航班清单全量排查，不按"离发图时间越近越先查"（v012）。
-- 用"影子朝北"推航向或河流走向，当硬条件排除候选（v008、v012）。
-- 凭印象列山脉清单，漏掉答案所在的山地（v012 没说明为什么不含吕梁山）。
-- 最后几选一靠问出题人，没用太阳方位这类可独立完成的检验（v012）。
+- Going through the entire flight list instead of checking "closest to the posting time first" (v012).
+- Using "shadows point north" to infer heading or river orientation, and excluding candidates with it as a hard condition (v008, v012).
+- Listing mountain ranges from memory and missing the one containing the answer (v012 didn't explain why the Lüliang Mountains were left out).
+- Settling the final pick among a few by asking the puzzle setter, instead of using an independently doable test like sun azimuth (v012).

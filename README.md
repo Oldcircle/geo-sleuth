@@ -7,6 +7,7 @@
 <p align="center">
   <a href="README.md"><img alt="English" src="https://img.shields.io/badge/English-1f6feb?style=flat-square"></a>
   <a href="README.zh-CN.md"><img alt="Simplified Chinese" src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-dbeafe?style=flat-square"></a>
+  <a href="README.ja.md"><img alt="Japanese" src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-dbeafe?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -46,7 +47,7 @@ Pick your agents when prompted. Then hand your agent a photo and say:
 
 > find where this photo was taken
 
-That is the whole interface. The agent reads `SKILL.md`, runs the scripts, and comes back with the camera position, the direction it was facing and a satellite evidence image. Prefer to copy the folder yourself? See [Installation](#installation).
+On first use, ask the agent to run `doctor.py` from the installed skill’s `scripts/` folder and address any failed checks (see [Requirements and setup](#requirements-and-setup)). That is the whole interface. The agent reads `SKILL.md`, runs the scripts, and comes back with the camera position, the direction it was facing and a satellite evidence image. Prefer to copy the folder yourself? See [Installation](#installation).
 
 ## Why geo-sleuth
 
@@ -58,7 +59,31 @@ That is the whole interface. The agent reads `SKILL.md`, runs the scripts, and c
 - **One skill, every agent.** A standard Agent Skill — `SKILL.md` plus plain Python scripts — so the same folder runs in Claude Code, Codex, Cursor, Gemini CLI, OpenCode and GitHub Copilot.
 - **Answers carry an error radius.** Coordinates ± radius, the camera heading, an evidence image and a graded confidence.
 
-## The case: one photo, nothing to read
+## Cases
+
+None of these photos had GPS data. Each case lists what the skill read from the photo, how it narrowed the search, and how far the result landed from the confirmed camera position.
+
+Each case is a record of one run by one model. The skill tells the agent how to work; what to query, how to filter and how many top results to check are the model's own decisions, so a different model or different decisions may not reach the same result. Under each case, *Reproduction conditions and checkpoints* lists the input, the hint, the key parameters and what each stage should still cover, so you can find the step where your own run diverged.
+
+<table>
+<tr>
+<td width="33%" align="center"><a href="#1-a-rice-paddy-and-a-viaduct"><img src="docs/case/thumb.jpg" alt="An oven at the edge of a rice paddy, a viaduct and a mountain behind"></a></td>
+<td width="33%" align="center"><a href="#2-a-desert-skyline-one-degree-off"><img src="docs/cases/desert/thumb.jpg" alt="A sand dune ridge and a range of bare dark mountains"></a></td>
+<td width="33%" align="center"><a href="#3-a-cherry-tree-on-a-vancouver-street"><img src="docs/cases/cherry/thumb.jpg" alt="A flowering cherry tree over a sidewalk"></a></td>
+</tr>
+<tr>
+<td><b>1 · Rice paddy and viaduct</b><br><sub>Railway bridges × skyline × pier count.</sub></td>
+<td><b>2 · Desert skyline</b><br><sub>Power lines × skyline × a phone tilted by 1°.</sub></td>
+<td><b>3 · Cherry street</b><br><sub>Street-tree open data × shadows × street view.</sub></td>
+</tr>
+<tr>
+<td align="center"><b>±2 m</b><br><sub>Qingyuan, Guangdong</sub></td>
+<td align="center"><b>within 100 m</b><br><sub>Da Qaidam, Qinghai</sub></td>
+<td align="center"><b>3 m</b><br><sub>Vancouver, Canada</sub></td>
+</tr>
+</table>
+
+### 1. A rice paddy and a viaduct
 
 A phone photo with the EXIF stripped: a white oven at the edge of a harvested rice paddy, a long viaduct in the distance, a steep mountain on the right. Not a single character in the frame. One message to an agent with this skill installed, and it came back with the camera position and the direction the camera was facing.
 
@@ -87,6 +112,96 @@ A phone photo with the EXIF stripped: a white oven at the edge of a harvested ri
 <img src="docs/case/05-pier-rays.jpg" width="720" alt="Bearings to 17 piers intersecting the railway line"><br>
 <sub>Pier count: bearings to the 17 piers intersect the line; only one camera position makes the spacing even.</sub><br><br>
 <sub>The run took about 72 minutes end to end, roughly half of it waiting on computation.</sub>
+</details>
+
+<details>
+<summary>Reproduction conditions and checkpoints</summary>
+<br>
+
+- **What this record is**: the table is the first time this method solved the photo (Claude Opus 5.0), not a blind re-run; its steps were later written into the skill.
+- **Input**: a 1280×1707 phone photo with EXIF stripped. The images in this README are display versions and are not suitable as input.
+- **Candidates**: all 27,335 OSM railway-bridge segments in the region, excluding only those tagged `electrified=no` (as `rail_mtn_scan.py` did then and `terrain.py scan` does by default now), with no `highspeed` filter. Catenary masts only show that the line is electrified; the correct line, the Guangzhou–Qingyuan intercity, has 55 bridge segments in OSM and none is tagged `highspeed=yes`.
+- **Checkpoints**: the 171 sites that pass the horizon test should include intercity bridge segments near the answer; the skyline fit covers 14,372 camera positions, the top 20 lie within 0.1°, and "bridge near on the left, far on the right" cuts them to 22; the top three are overlaid; the 17 pier bearings fix the point.
+- **Case scripts**: `examples/rail-skyline-session/` holds the scripts tuned to this photo. OSM splits one line into many ways with the same name; `joint.py` tries every same-name way near the candidate center in turn, so the result does not depend on the order the query returns them.
+
+</details>
+
+### 2. A desert skyline, one degree off
+
+A sand dune in the foreground, a range of bare dark mountains behind it, and a few pylons at the foot of the range. There is no text, road or building in the frame, and reverse image search returned only generic desert photos from northwest China.
+
+<div align="center"><img src="docs/cases/desert/00-photo.jpg" width="820" alt="The photo: a sand dune ridge, bare dark mountains, pylons at the foot of the range"></div>
+
+**photo → 1,537 sites → stuck around 10 px → solve a 1° tilt → 1 site → one dune**
+
+| Step | What it did | Left |
+|---|---|---|
+| **Read the photo** | The pylons are the only man-made objects, so the camera is within a few kilometres of a power line. Sand, gravel and bare rock point to northwest China. | 4 provinces |
+| **Power lines × terrain** | `osm.py geom` pulled every power line in Xinjiang, Gansu, Ningxia and Qinghai. `terrain.py scan` worked along them with elevation data and kept the places where mountains fill the view. | **1,537 sites** |
+| **Skyline fit** | `terrain.py ridge` traced the ridge in the photo, and `terrain.py fit` compared it with the ridge seen from each site. In Qinghai the top 25 sites all scored between 9.6 and 11.7 px; the true site was 9th. | **stuck** |
+| **The tilt** | A phone held 1° off level moves the ridge at the edge of a 2048 px frame by 1024 × tan 1° ≈ 18 px, about 10 px on average, which is the size of the gap between the sites. At the true site the error across the frame lies on a line whose slope is tan θ, with θ ≈ 1°. `fit` was changed to solve the roll together with the horizon offset. | |
+| **Fit again** | With the roll solved, the true site went from 11.1 to 6.2 px. The next best site was at 9.4 px. | **1 site** |
+| **Satellite** | Within 1 km along the line of sight there are three crescent dunes and a tent camp. A 750/330/110 kV bundle runs 1–2 km to the east, which is why the pylons appear only on the left of the photo. The camera stood on the crest of the dune west of the camp, facing 205°. | **one dune** |
+
+<div align="center">
+<img src="docs/cases/desert/01-scan.jpg" width="820" alt="Power lines in Qinghai, Gansu and Ningxia, candidate sites in orange, the camera as a red star"><br>
+<sub>Power lines from OSM (gold), sites where mountains fill the view (orange), and the camera (red star). Xinjiang's sites are not drawn.</sub><br><br>
+<img src="docs/cases/desert/02-one-degree.jpg" width="820" alt="Ridge in the photo against the computed ridge at the true site, before and after solving the roll, with the error plotted across the frame"><br>
+<sub>The true site, before and after solving the roll. Top: the error grows from one side of the frame to the other, and its slope gives the angle. Bottom: with the roll solved, the trend is gone.</sub><br><br>
+<img src="docs/cases/desert/03-ranking.jpg" width="820" alt="Skyline error of 408 Qinghai sites assuming a level camera, and of the 12 best sites with the roll solved"><br>
+<sub>Skyline error per site. Assuming a level camera, the true site sits inside the pack; with the roll solved, it is the only one below 9 px.</sub><br><br>
+<img src="docs/cases/desert/04-evidence.jpg" width="600" alt="Evidence image: the camera on the dune crest, field of view, the dunes, the camp and the power-line bundle"><br>
+<sub>Evidence image. The OSM power lines (gold) run over the pylons visible in the satellite image.</sub>
+</div>
+
+**Blind re-run.** Later we gave the photo to a new agent running the current skill, with one hint: it is in China. It scanned the 5,334 power lines in Qinghai, fit 792 sites, and picked one at 0.224° against 0.357° for the next. It ended on the same dune crest, **87 m from the confirmed camera position**, after 32 minutes. The roll fit added for this photo is now part of `terrain.py fit`; [Contributing](#contributing) explains why this case is the reference for changes to the core scripts.
+
+<details>
+<summary>Reproduction conditions and checkpoints</summary>
+<br>
+
+- **Two runs**: the table is the original solve that led to the roll fit (Claude Opus 5.0); the blind re-run came later, with a new agent on Claude Opus 5.5.
+- **Blind run input and hint**: the original 2048×1152 photo; the only hint was "it is in China". The images in this README are display versions.
+- **Blind run checkpoints**: 5,334 power lines in Qinghai; `terrain.py scan` with the default `--cluster-km 3.5` turned 14,843 hits into 792 clusters; all 792 went into `terrain.py fit` (in 6 batches), with no satellite-ranking cut before the skyline fit; the best site scored 0.224° against 0.357° for the next; satellite imagery along the line of sight then found the dunes and the camp. 87 tool calls, 32 minutes.
+- **Clusters to fit**: `fit` lays its camera grid around each cluster's representative point only. With a larger `--cluster-km`, hits far from the representative may never be fit; `scan` now records each cluster's reach (`extent_m`) and `fit` prints a WARNING when a cluster is wider than its `--radius`.
+- **Example**: `examples/desert-roll-fix/` reproduces the fit before and after the roll change on the fixed 12 sites (true site from #8 at 12.0 px to #1 at 6.2 px).
+
+</details>
+
+### 3. A cherry tree on a Vancouver street
+
+A flowering cherry over a sidewalk. The plates and street furniture place it in Vancouver. Finding the street is the hard part, because the city has close to ten thousand blocks.
+
+**photo → Vancouver → 1,095 big cherries → 97 blocks → 72 slope checks → W 60th Ave → 3 m**
+
+| Step | What it did | Left |
+|---|---|---|
+| **Read the photo** | White-and-blue BC plates, a dark-green streetlight in a grass boulevard, Vancouver Special houses. | **Vancouver** |
+| **Street-tree data** | Vancouver publishes every street tree with species, trunk diameter and address. The candidates came from this data rather than from well-known cherry streets: flowering cherries with a trunk of at least 40 cm, then blocks with at least three of them. | **1,095 trees, 97 blocks** |
+| **Shadows and slope** | The cars' shadows fall to the left and toward the camera, so the sun is ahead and to the right. The yards on the camera side sit above the sidewalk behind rock walls, so that side of the street is uphill. The agent measured the cross-slope of 72 blocks from elevation data and checked which side the big trees stand on. | **a few blocks** |
+| **Tree by tree** | On the 100 block of W 60th Ave, the north side is lined with large cherries. On the south side, the trees 30–60 m ahead are 7.6 cm saplings, and the next large one is about 75 m away. The photo shows the same thing: nothing tall on the near right and pink canopy in the distance. | **1 block** |
+| **Street view** | The 2009 and 2024 captures show the rock retaining wall with stone steps, the green streetlight and the white house. The house with a rooftop deck is in the 2024 capture and in the photo. The camera was on the north sidewalk, facing east. | **3 m** |
+
+<div align="center">
+<img src="docs/cases/cherry/01-street-trees.jpg" width="464" alt="Vancouver's street trees, the large flowering cherries, the candidate blocks and the answer"> <img src="docs/cases/cherry/02-reading.jpg" width="388" alt="The photo with the clues it gives: streetlight, plates, car shadows, raised yards, rooftop deck"><br>
+<sub>Left: all 184,517 street trees with coordinates in the city's data, the 1,095 large flowering cherries and the 97 candidate blocks. Right: what the photo gives away.</sub><br><br>
+<img src="docs/cases/cherry/03-street-view.jpg" width="820" alt="The photo next to street view captures from 2024 and 2009 on the same block"><br>
+<sub>The photo was taken from the sidewalk and the street view car drove down the middle of the road, so the angles differ.</sub><br><br>
+<img src="docs/cases/cherry/04-evidence.jpg" width="600" alt="Evidence image: W 60th Ave 100 block, camera on the north sidewalk facing east, street trees from the city data"><br>
+<sub>Evidence image. Pink rings are large cherries from the city's data, green rings are saplings.</sub>
+</div>
+
+**Blind re-run.** The table above comes from a blind run: a new agent running the current skill, given the photo and no hint. It finished in 53 minutes, **3 m from the confirmed camera position**.
+
+<details>
+<summary>Reproduction conditions and checkpoints</summary>
+<br>
+
+- **What this record is**: the table is the blind run itself (Claude Opus 5.5, a new agent, the photo and no hint): 154 tool calls, 53 minutes.
+- **Input**: the original 1440×1920 photo. The images in this README were cropped and then downscaled to about 1/16 of the original pixels, and are not suitable as input.
+- **Checkpoints**: 184,517 street trees with coordinates in the city's data → 1,095 ornamental cherries with trunk diameter ≥ 40 cm → 97 street segments with at least three → 72 segments where the cross slope could be measured → a few left after matching which side the large trees stand on and which way the slope falls.
+- **Street-view check**: the whole-image `match.py` ranking was poor (peak bloom, and the photo was taken from the sidewalk while the street-view car drove down the middle), so the run compared only the tree region with `--query-box 0,900,1440,1600`, then checked 2009 and 2024 street view for stable features: stone walls, steps, lamp posts. The true spot had only 0–5 SIFT inliers and was not rejected on that basis. In `match.py` output, empty `inliers` (`refined: false`) means the candidate was not refined, not that it had 0 matches.
+
 </details>
 
 ## Installation
@@ -147,16 +262,18 @@ Every conclusion has to point at a command that actually ran in the session and 
 
 ## Toolbox
 
-Twenty scripts, one job each. The full table with data sources is in `skills/geo-sleuth/references/data-sources.md`.
+Twenty-odd scripts, one job each. The full table with data sources is in `skills/geo-sleuth/references/data-sources.md`.
 
 | What it does | Script |
 |---|---|
+| Environment checks, browser launch and optional network probes | `doctor.py` |
 | EXIF: GPS, capture time, equivalent focal length, heading | `exif.py` |
 | OCR on the whole image, zoomed crops and tiles (Apple Vision on macOS, RapidOCR elsewhere) | `ocr.py` |
 | Reverse image search on Baidu and Yandex, similar images tiled into a numbered sheet; keyword image search | `revimg.py` |
 | Steps 0–3 in one command: metadata, edge crops, variants, OCR, reverse search → `intake.md` | `intake.py` |
 | Zoom crops, edge and corner crops, tiling, pixel columns of evenly spaced structures such as piers | `imgprep.py` |
-| Lookup tables: plate prefixes, landline area codes, calling codes, driving side, dependent territories, administrative divisions | `clues.py` + `data/` |
+| Lookup tables: calling codes, driving side, dependent territories worldwide; plate prefixes, area codes and admin divisions from region packs | `clues.py` + `data/` + `regions/` |
+| Region packs: list them, print a country's card and clue index, lint a pack | `regions.py` |
 | Candidate board: candidates, clues, likelihood ratios, exclusion, ranking, scan order, pre-report checks | `board.py` |
 | Gazetteer: list sub-divisions with bounding boxes, built-up area extent | `gazetteer.py` |
 | Place, compound or shop name → coordinate candidates, every namesake listed | `poi.py` |
@@ -171,7 +288,7 @@ Twenty scripts, one job each. The full table with data sources is in `skills/geo
 | Bearings, distances, line-of-sight intersections, alignment lines, frame/occlusion checks, camera position from evenly spaced structures | `geo.py` |
 | Evidence image: satellite tile + camera fan + comparison grid | `evidence.py` |
 
-The three steps from the case above (region scan, batch skyline scoring, camera position from pier spacing) are built into the skill as subcommands: `terrain.py scan / ridge / fit`, `imgprep.py piers`, `geo.py spacing`. Case scripts tuned to that photo are kept in `examples/rail-skyline-session/` for reference.
+The steps from case 1 (region scan, batch skyline scoring, camera position from pier spacing) are built into the skill as subcommands: `terrain.py scan / ridge / fit`, `imgprep.py piers`, `geo.py spacing`; case scripts tuned to that photo are kept in `examples/rail-skyline-session/`. The tilt from case 2 is solved by `terrain.py fit` itself (`--roll-max`, default 1°); `examples/desert-roll-fix/` reproduces the before and after.
 
 ## Benchmarks
 
@@ -182,17 +299,71 @@ Per-operator measurements:
 | `match.py` | 8 cases: a historical Baidu panorama batch rendered as the photo, panoramas within 150 m as candidates (Shenzhen) | ground truth ranked 1/2/4/1/1 and 5/1/6, all in the top 6, half at #1 |
 | `sat_scan.py` | 4×8 km, 364 cells at z17, 40 OSM-tagged running tracks as ground truth, multi-scale (Shenzhen) | recall@20 17/40, @30 22/40, @100 32/40, median rank 23 |
 | `terrain.py scan / fit` + `geo.py spacing` | bounded re-run on the case photo above | true cluster ranks #1, final position about 2 m from ground truth |
+| `terrain.py fit --roll-max` | 8 synthetic skyline cases (random heading, focal length, ±1° roll) | median position error 324 → 238 m (untilted cases 324 → 89 m, tilted 1,695 → 265 m) |
+| `terrain.py fit --roll-max` | the 12 best sites from the desert case | true site #8 at 12.0 px → #1 at 6.2 px (runner-up 9.9 px) |
 | `clues.py` | 6 tables, 9 values spot-checked | 9/9 correct |
+
+End to end, blind re-runs with a fresh agent that had only the photo (and the hint shown):
+
+| Case | Hint | Result | Time |
+|---|---|---|---|
+| [Desert skyline](#2-a-desert-skyline-one-degree-off) | "it is in China" | 87 m from the confirmed camera position | 32 min |
+| [Cherry street](#3-a-cherry-tree-on-a-vancouver-street) | none | 3 m from the confirmed camera position | 53 min |
+
+Both photos had been solved before and lessons from them are in the skill, so these are regression checks, not accuracy on unseen photos.
 
 The method comes from breaking down 14 videos by online-geolocation creators, 22 puzzles and a set of real runs, then turning what works into rules and scripts. v2 moves every rule that can be code into `board.py`, so the rules get executed, not just read.
 
-## Requirements
+## Requirements and setup
 
-Python 3.10+, [`uv`](https://docs.astral.sh/uv/) and an agent that can run shell commands. Each script declares its own dependencies and `uv run` installs them on first use.
+You need Python 3.10+, [`uv`](https://docs.astral.sh/uv/), `curl`, and an agent that can run shell commands. Each script declares its own dependencies; use `uv run`, which installs them on first use. Keep the complete skill folder, including `data/` and the helper modules in `scripts/`.
 
-Optional: Google Chrome for reverse image search (`uvx playwright install chromium` works too), and `export GEO_PROXY=socks5h://127.0.0.1:<port>` to route every networked script through a proxy.
+Reverse image search requires **Google Chrome or Playwright Chromium**. The scripts try Chrome first and automatically fall back to Chromium. If neither is installed:
 
-Language: the skill's instructions and script output are written in Chinese. Your agent reads them fine and replies in your language, and it has solved cases outside China too (e.g. a coastal road in Los Angeles).
+```bash
+uvx playwright install chromium
+```
+
+Linux may also need browser system libraries: `uvx playwright install --with-deps chromium`. See the [Playwright browser setup guide](https://playwright.dev/python/docs/browsers). After a Playwright upgrade, rerun the installer if it reports a missing browser executable.
+
+`match.py` and `sat_scan.py` run their models on CUDA when the installed torch supports it, then MPS, then CPU, and print the device they picked (`model ... ready (cuda, ...)`). `GEO_DEVICE=cpu|cuda|mps` forces one. On Windows the default `uv run` install is a CPU-only torch; to use an NVIDIA GPU, add a CUDA build that your driver supports (`nvidia-smi` shows the highest CUDA version; `cu126` is CUDA 12.6):
+
+```bash
+uv run --find-links https://download.pytorch.org/whl/cu126/torch/ skills/geo-sleuth/scripts/match.py rank --query photo.jpg --images cands/ --out ranked.json
+```
+
+The option adds torch builds only, so every other package still comes from PyPI. The first run downloads about 2.4 GB.
+
+From a clone of this repository, run these commands (also work in PowerShell):
+
+```bash
+uv run skills/geo-sleuth/scripts/doctor.py
+uv run skills/geo-sleuth/scripts/doctor.py --network
+```
+
+For an installed skill, use its actual `scripts/doctor.py` path, or ask your agent to run it. The local check tests Python, uv, curl, bundled lookup tables, a writable working directory and an actual browser launch. `--network` also probes the services without uploading photos. `--json` produces machine-readable diagnostics. Exit code 1 means a failed check; warnings identify optional features that may not work. uv may fetch Playwright on the first run; doctor does not load OCR or ML models. Passing an endpoint probe does not guarantee image uploads, model downloads, imagery coverage or freedom from CAPTCHAs.
+
+To check the local processing pipeline on your own image before using online search:
+
+```bash
+uv run skills/geo-sleuth/scripts/intake.py photo.jpg --out-dir intake --no-rev
+```
+
+Open `intake/intake.md`, then inspect the listed crops and OCR output. This checks metadata, image preparation and OCR; it does not perform reverse image search. Omit `--no-rev` for the full intake. On macOS OCR prefers Apple Vision; other systems use RapidOCR, also available as a fallback. `match.py` and `sat_scan.py` install ML packages and download model weights on first use; allow extra time and disk space. uv and model downloads still need network access even when a particular processing step works locally.
+
+### Troubleshooting
+
+| Symptom | Next step |
+|---|---|
+| `uv` or `curl` not found | Install the missing command, reopen the terminal, rerun doctor. |
+| Browser launch fails | Install Chrome or Playwright Chromium; inspect the doctor's error. Use `intake.py --no-rev` for local processing meanwhile. |
+| HTTP 403/429 or CAPTCHA | Inspect the saved screenshot; retry later or use a supported manual browser workflow. |
+| A service times out | Run `doctor.py --network`; check the service and your connection. |
+| A model fails to load | Check disk space, the download error and Hugging Face reachability. First-run downloads can be slow. |
+| Intake has failed or skipped steps | Read `intake.md`; failed search is not evidence that there is no matching image. |
+| A Chinese place name or OCR excerpt appears | Source evidence stays in its original language. Ask the agent to explain it in your language. |
+
+Language: maintained instructions, CLI help, errors, generated report headings and default evidence labels are in **English**. Source text (OCR, place names, search responses and screenshots) is preserved rather than rewritten; the agent explains it and writes the final report in your language. The last version with Chinese instructions is frozen at the [`zh-final`](https://github.com/Oldcircle/geo-sleuth/tree/zh-final) tag and is no longer updated.
 
 ## Roadmap
 
@@ -203,7 +374,16 @@ Language: the skill's instructions and script output are written in Chinese. You
 
 ## Contributing
 
-Issues and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md). The most useful contributions are a transferable clue for `references/clues/` (with a source), a new data source with its licence, or a run on your own photo where the skill went wrong and why.
+Issues and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+| You have | Where it goes | Bar |
+|---|---|---|
+| A clue that separates countries | `references/clues/global.md` | a source and a counterexample |
+| Clues, tables or services for one country | a region pack, `regions/<cc>/` ([contract](skills/geo-sleuth/regions/README.md)) | data and docs only; `regions.py lint` prints `ok` |
+| A change to the core scripts | its own PR | a photo it fails on before and solves after, plus no regression elsewhere |
+| A run that went wrong | an issue | the first step that went off |
+
+The [desert case](#2-a-desert-skyline-one-degree-off) is the model for core changes: the skill was stuck on a real photo (top 25 sites within 9.6–11.7 px), the change was general rather than tuned to that photo (solve camera roll in `terrain.py fit`, capped at 1°, `--roll-max 0` gives the old output), the same photo was then solved (the true site broke away at 6.2 px), and it held up on cases it was not built for (8 synthetic skylines, an earlier real case). `examples/desert-roll-fix/` reruns the before and after with two commands.
 
 ## Star History
 

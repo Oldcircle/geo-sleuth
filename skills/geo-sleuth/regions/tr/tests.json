@@ -1,0 +1,16 @@
+[
+ {"kind": "plate", "value": "34 ABC 123", "expect": [{"admin1": "İstanbul"}]},
+ {"kind": "plate", "value": "06", "expect": [{"admin1": "Ankara"}]},
+ {"kind": "plate", "value": "33 K 1234", "expect": [{"admin1": "Mersin"}]},
+ {"kind": "plate", "value": "23 AB 456", "expect": [{"admin1": "Elâzığ"}]},
+ {"kind": "plate", "value": "81 DA 99", "expect": [{"admin1": "Düzce"}]},
+ {"kind": "plate", "value": "34-03", "expect": [{"admin1": "İstanbul"}]},
+ {"kind": "plate", "value": "82 A 1234", "expect": []},
+ {"kind": "area-code", "value": "0212 555 12 34", "expect": [{"admin1": "İstanbul"}]},
+ {"kind": "area-code", "value": "(0216) 444 00 00", "expect": [{"admin1": "İstanbul"}]},
+ {"kind": "area-code", "value": "232 123 45 67", "expect": [{"admin1": "İzmir"}]},
+ {"kind": "area-code", "value": "0462", "expect": [{"admin1": "Trabzon"}]},
+ {"kind": "area-code", "value": "0392 228 00 00", "expect": []},
+ {"kind": "area-code", "value": "0850 222 00 00", "expect": []},
+ {"kind": "area-code", "value": "0532 111 22 33", "expect": []}
+]

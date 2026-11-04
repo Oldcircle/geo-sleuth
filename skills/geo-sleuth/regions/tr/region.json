@@ -1,0 +1,20 @@
+{
+ "code": "TR",
+ "name": "Turkey",
+ "names": ["Turkey", "Türkiye", "Turkiye", "Republic of Türkiye", "Türkiye Cumhuriyeti", "TR"],
+ "status": "community",
+ "maintainers": ["@mstkyvz"],
+ "admin_levels": {"4": "admin1", "6": "admin2"},
+ "level_names": {"admin1": "il (province)", "admin2": "ilçe (district)"},
+ "name_suffixes": ["İli", "ili", "İlçesi", "ilçesi"],
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {"file": "data/plates.json"},
+  "area-code": {"file": "data/area_codes.json"}
+ },
+ "docs": ["clues.md"],
+ "services": {
+  "poi": {"sources": "osm", "country": "tr"},
+  "street_view": "gsv.py"
+ }
+}

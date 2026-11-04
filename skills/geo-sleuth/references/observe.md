@@ -1,86 +1,86 @@
-# 读图清单
+# Image-reading checklist
 
-第 1 步用。清单写完之前不猜地点。每条编号，写原文或形状，看不清就标"看不清"。
-按"能排除多少地方"从上往下排：一条上面的线索，顶下面二十条。
+Used in step 1. Don't guess a location until the checklist is written. Number every item, write the original text or the shape, and mark anything you can't make out as "illegible".
+Ordered top to bottom by "how much area it can exclude": one clue higher up outweighs twenty below it.
 
-## 0. 先扫一遍整幅
+## 0. First scan the whole frame
 
 ```bash
-python3 scripts/imgprep.py edges photo.jpg --out-dir edges/        # 四边四角各放大一张
-python3 scripts/imgprep.py zoom photo.jpg --box x0,y0,x1,y1 --scale 4 --out z1.png
+uv run scripts/imgprep.py edges photo.jpg --out-dir edges/        # one zoomed crop per edge and per corner
+uv run scripts/imgprep.py zoom photo.jpg --box x0,y0,x1,y1 --scale 4 --out z1.png
 ```
 
-- 四个角、底边、顶边逐张看：线缆、船头、车窗框、机翼、手指、水印、截图 UI。
-- 远处每一块牌子、每一辆车都放大一次。人眼第一眼会被最显眼的地标吸走，小路牌常常更有用。
+- Go through the four corners, the bottom edge, and the top edge one by one: cables, boat bows, car window frames, aircraft wings, fingers, watermarks, screenshot UI.
+- Zoom into every distant sign and every vehicle once. The eye is pulled first to the most prominent landmark; small street signs are often more useful.
 
-## 1. 拍摄条件（决定走哪条分支）
+## 1. Shooting conditions (decide which branch to take)
 
-| 项 | 记什么 | 用在哪 |
+| Item | What to record | Used for |
 |---|---|---|
-| 拍摄平台 | 地面 / 楼上 / 车里 / 船上或趸船 / 缆车 / 火车 / 飞机 / 无人机 | 船头 → 在码头水边；车窗 → 在路上，要写行进方向；机翼 → 航拍分支。**楼上俯拍 vs 高速服务区 vs 高架上车内**要分清：楼上机位稳、能俯视车顶和楼顶、常见窗框或窗台；服务区看成排车位朝向、护坡挡墙、垃圾桶和加油站设施；车内有车窗框、挡风玻璃反光、护栏快速掠过。平台判断错了，后面共现条件就选错 |
-| 拍摄高度 | 平视还是俯视；能俯视几层楼的楼顶 | 按高度筛楼；检验"路上拍的"这类叙述 |
-| 焦段 | EXIF 等效焦距；没有就看畸变和远近压缩 | 视角、距离估算 |
-| 画面处理 | 翻拍（反光、相纸边、透视变形）、截图、裁剪、镜像（反字、驾驶位反常；没有文字时看手势、钟表，搬运视频常被水平翻转）；**视频截图**（竖屏 9:16、平台水印、字幕条）倍率未知 | 搜图前要校正；镜像要翻回来再读；视频截图的视角按区间算（`geometry.md` 第 1 节） |
-| 时间 | 水印、EXIF、影子长度方向、天光、季节 | 天空分支；物候判断 |
+| Shooting platform | ground / upper floor of a building / in a vehicle / on a boat or pontoon / cable car / train / airplane / drone | boat bow → at a dock or the waterside; car window → on a road, record the direction of travel; aircraft wing → aerial branch. **Tell apart top-down from a building vs an expressway service area vs inside a vehicle on an elevated road**: from a building the camera position is steady, you can look down on car roofs and building roofs, and window frames or sills are common; at a service area look at the orientation of rows of parking spaces, slope-protection retaining walls, trash bins, and gas station facilities; inside a vehicle there are window frames, windshield reflections, guardrails rushing past. Get the platform wrong and you pick the wrong co-occurrence conditions later |
+| Camera height | eye level or looking down; how many stories' rooftops you can look down on | filter buildings by height; test claims like "shot from the road" |
+| Focal length | EXIF equivalent focal length; if absent, judge from distortion and near/far compression | field of view, distance estimates |
+| Image processing | rephotographed (reflections, print edges, perspective distortion), screenshot, cropped, mirrored (reversed text, driver's seat on the unexpected side; with no text, look at hand gestures and clocks; reposted videos are often flipped horizontally); **video screenshot** (vertical 9:16, platform watermark, subtitle bar) with unknown zoom | correct before searching; flip mirrored images back before reading; compute the field of view of a video screenshot as a range (`geometry.md` section 1) |
+| Time | watermark, EXIF, shadow length and direction, daylight, season | sky branch; phenology judgments |
 
-## 2. 第一层：文字、电话、语言
+## 2. Layer 1: text, phone numbers, language
 
-- 店招、路名牌、单位名、施工告示、公示牌：抄原文，按原文搜，不搜翻译。
-- **标牌底部的发牌单位**（〇〇交警支队、〇〇城管、〇〇警察署、〇〇土木事務所）：常直接给区县。
-- **告示里提到的目的地和地形词**（"前方到不了海岸""通往某景区"）。
-- **电话号码**：记区号部分和数字分组（先判断区号有几位）。
-- 语种和文字写法：简体/繁体、方言字；外国文字先认文字系统再读字。
-- **官方多语标牌**：同一块官方标牌上两种语言 → 法定多语地区（不是"离讲那种语言的国家近"）。
-- 连锁品牌：记下子品牌、业务线（门店少的子品牌才有定位价值）。
+- Shop signs, street-name signs, organization names, construction notices, public notices: copy the original text and search the original, not a translation.
+- **Issuing authority at the bottom of signs** (〇〇交警支队 traffic police detachment, 〇〇城管 urban management, 〇〇警察署 police station, 〇〇土木事務所 civil engineering office): often gives the district (county) directly.
+- **Destinations and terrain words mentioned in notices** ("no way through to the coast ahead", "to such-and-such scenic area").
+- **Phone numbers**: record the area-code part and the digit grouping (first work out how many digits the area code has).
+- Language and script: simplified/traditional characters, dialect characters; for foreign text, identify the writing system before reading the characters.
+- **Official multilingual signs**: two languages on one official sign → an officially multilingual area (not "near a country that speaks that language").
+- Chain brands: note sub-brands and business lines (only sub-brands with few stores have locating value).
 
-## 3. 第二层：车辆与道路
+## 3. Layer 2: vehicles and roads
 
-- **车牌**：字（省市代码）→ 读不出看底色、色带、图案、边框 → 再不行看长宽比（欧洲窄长、北美约 2:1）。记下车停在哪（停车场里的车牌只算弱）。
-- **行驶方向**：车流靠哪侧、驾驶位在哪边、路边停车车头朝向。
-- **公共交通**：公交运营商缩写、线路号、车尾广告；出租车颜色；公交车顶颜色（俯拍时最清楚）。
-- 道路标线颜色和样式、护栏、路缘涂装（红白相间等）、路灯造型颜色、排水沟、人行道和车道间有无草地带。
-- 门架指路牌：字看不清时数目的地行数、看底色。
+- **Plates**: characters (province/city code) → if unreadable, background color, color bands, graphics, border → failing that, aspect ratio (Europe long and narrow, North America about 2:1). Note where the vehicle is parked (plates in a parking lot count only as weak).
+- **Driving side**: which side traffic keeps to, which side the driver's seat is on, which way cars parked at the roadside face.
+- **Public transport**: bus operator abbreviation, route number, rear ads; taxi color; bus roof color (clearest in top-down shots).
+- Road marking color and style, guardrails, curb paint (alternating red and white, etc.), streetlight design and color, gutters, whether there is a grass strip between sidewalk and roadway.
+- Overhead gantry direction signs: when the text is illegible, count the destination lines and note the background color.
 
-## 4. 第三层：基础设施规格（能拿去查数据）
+## 4. Layer 3: infrastructure specs (can be looked up in data)
 
-- **铁路**：有没有接触网；支柱在一侧（多为单线）还是两侧或有门架（双线）；道口里并排几条轨道；高架桥还是路基；道口标牌上的铁路公司名。
-- **输电线**：杆塔形式（钢管单柱 / 角钢塔）；每相导线几根一束（国内常见：4 根一束 500 kV）；和铁路、河流、道路的相对角度。
-- **特殊交通设施**：跨江索道、公轨两用桥、轻轨穿楼、高铁桥、城市长扶梯、缆车。
-- **边缘线缆分类**：高压线（高塔、绝缘子、分相、跨越段近水平）/ 客运索道（两三根承载索靠近平行 + 牵引索，陡斜下垂）/ 斜拉桥拉索（塔顶扇形）/ 普通电线（细、杂、挂在电杆上）。
-- 太阳能热水器、空调外机密度、防盗网、屋顶水箱。
+- **Railways**: catenary or not; masts on one side (usually single-track) or on both sides or with portal frames (double-track); how many parallel tracks at a level crossing; viaduct or embankment; railway company name on crossing signs.
+- **Power lines**: tower type (single tubular steel pole / angle-steel lattice tower); how many conductors per bundle per phase (common in China: 4 per bundle = 500 kV); angle relative to railways, rivers, roads.
+- **Special transport facilities**: cross-river cableways, road/rail-transit bridges, light rail through a building, high-speed rail bridges, long urban escalators, cable cars.
+- **Classify cables at the frame edges**: high-voltage lines (tall towers, insulators, separate phases, nearly horizontal over crossing spans) / passenger cableways (two or three closely parallel track ropes + a haul rope, steeply slanting and sagging) / cable-stayed bridge stays (fanning from the tower top) / ordinary wires (thin, messy, hung on utility poles).
+- Solar water heaters, density of AC outdoor units, security window grilles, rooftop water tanks.
 
-## 5. 第四层：天空
+## 5. Layer 4: sky
 
-- 影子：方向（相对画面、相对路）、长度与物体高度之比、是否互相平行。
-- 卫星电视锅：朝向、大小（户户通小锅 / 大锅）。
-- 受光面：楼的哪一面亮。
-- 太阳本身、日出日落、逆光剪影。
+- Shadows: direction (relative to the frame, relative to the road), ratio of length to object height, whether they are parallel to each other.
+- Satellite TV dishes: heading, size (small Hu Hu Tong dish / large dish).
+- Lit face: which face of a building is bright.
+- The sun itself, sunrise and sunset, backlit silhouettes.
 
-详见 `sky.md`。没有时刻时，影子方向只能弱约束。
+Details in `sky.md`. Without a time of day, shadow direction is only a weak constraint.
 
-## 6. 第五层：建筑与植被
+## 6. Layer 5: architecture and vegetation
 
-- 屋顶颜色和材料（红陶瓦 / 灰瓦 / 平顶 / 蓝铁皮）、外墙材料（瓷砖颜色、涂料、石材）。
-- 构件形态先核基本形状再用风格词：拱是圆的还是尖的、窗格数、柱子。
-- 天际线：有没有成片写字楼、超高层（弱：判断城市等级）。
-- 植被：常绿还是落叶、开花程度（初开/盛开/落瓣）、棕榈科、竹林、稻田颜色。**必须配拍摄月份才有意义。**
-- 雾、云、雪、结冰：只做弱佐证。
+- Roof color and material (red terracotta / gray tile / flat roof / blue sheet metal), facade material (tile color, paint, stone).
+- For building elements, check the basic shape before using style words: round or pointed arches, number of window panes, columns.
+- Skyline: whether there are office clusters or supertall towers (weak: judges the city's tier).
+- Vegetation: evergreen or deciduous, flowering stage (first bloom / full bloom / petal fall), palms, bamboo groves, rice paddy color. **It must be paired with the month of capture to mean anything.**
+- Fog, cloud, snow, ice: only weak supporting evidence.
 
-## 7. 第六层：地形水系
+## 7. Layer 6: terrain and water
 
-- 平原还是山地；对岸多远起山；楼是否沿坡叠建。
-- 河：宽度（用房屋、车道、梯田当尺）、水色（含沙量）、两岸地貌、有无江心洲、交汇、桥位。
-- 远山轮廓、山顶上的塔、雕像、铁塔（天际线指纹）。
-- 海岸、海湾对岸的山影。
+- Plain or mountains; how far beyond the far bank the mountains rise; whether buildings are stacked up the slopes.
+- Rivers: width (use houses, lanes, terraces as a ruler), water color (sediment load), landforms on both banks, river islands, confluences, bridge positions.
+- Distant mountain outlines; towers, statues, pylons on peaks (skyline fingerprint).
+- Coastlines; mountain silhouettes across a bay.
 
-## 8. 反面线索
+## 8. Negative clues
 
-写下"没有什么"：没有电线杆、没有雪、没有棕榈、没有摩托车、没有汉字招牌、没有写字楼。反面线索和正面线索一样能排除地区。
-**反面线索要看能见度**：雾霾、逆光、黄昏里远处没看到山、没看到江，不等于那里没有；要用就先按距离算它该不该看得见（`terrain.py view`、`geo.py frame`），否则只排序。
+Write down what is absent: no utility poles, no snow, no palms, no motorcycles, no Chinese-character signs, no office towers. Negative clues can exclude regions just like positive ones.
+**Negative clues depend on visibility**: not seeing mountains or a river in the distance in haze, backlight, or dusk doesn't mean they aren't there; to use one, first compute from the distance whether it should be visible (`terrain.py view`, `geo.py frame`); otherwise use it only for ranking.
 
-## 写清单时的规矩
+## Rules for writing the checklist
 
-- 看不清的东西只描述形状、颜色、位置（"山梁上一块边界整齐的浅色区域"），**不急着命名**。命名错了会被当成普通东西丢掉。
-- 数不清就写宽词（"多边形"），不写一个错的精确数。
-- 只有放大到压缩噪点级别才"读出来"的字，是假设。
-- 两条线索矛盾时记下来：可能是镜像、进口车、边境地区、拼图。
+- For anything unclear, describe only its shape, color, and position ("a light-colored patch with clean edges on the ridge"); **don't rush to name it**. A wrong name gets it discarded as something ordinary.
+- If you can't count it, write a broad word ("polygon"), not a wrong exact number.
+- Text that is only "read" after zooming in to the level of compression noise is a hypothesis.
+- When two clues conflict, write it down: it may be mirroring, an imported vehicle, a border area, a composite image.

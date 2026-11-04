@@ -3,52 +3,55 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""候选盘：定位过程中所有候选、线索、证据、排除都记在这里，排名和下一步由脚本算，不靠记忆。
+"""Candidate board: every candidate, clue, piece of evidence and exclusion during geolocation is recorded here; ranking and the next step are computed by the script, not from memory.
 
-规则写成代码，不靠自觉：
-- 没有"删除候选"的操作。排除只有一个入口 `exclude`，必须给算过的文件（geo.py frame、terrain.py 之类的产出），
-  线索本身必须是读出来的字或算出来的结果；推测只能降权（似然比被夹在 1/3–3 之间）。
-- 排除范围必须 ≤ 证据范围：区县/片区/路这类有延展的候选，exclude 要用 --covers 写明证据覆盖到哪一段，
-  覆盖不足一半会被拒；在一个点上看过就整条排除（以点代面）是复发过两次的错。
-- 离散候选不取中点：report 的主答案永远是第一名，其余进备选。
-- 人口、名气不是证据：先验默认均匀（可选按面积），没有按人口的选项。
-- 扫描顺序按"份额 ÷ 页数"排：小城区先扫，大城区放最后并设页数上限。
-- 区分检验分不出高低时，next 给出确定的下一步，而不是停在原地。
+Rules are written as code, not left to self-discipline:
+- There is no "delete candidate" operation. Exclusion has exactly one entry point, `exclude`, and it must be given a computed file (output of geo.py frame, terrain.py and the like);
+  the clue itself must be text that was read or a computed result; an inference can only down-weight (likelihood ratio clamped to 1/3–3).
+- Exclusion scope must be ≤ evidence scope: for candidates with extent (district/area/road), exclude must state with --covers which stretch the evidence covers;
+  coverage under half is rejected. Looking at one point and excluding the whole road (one point standing in for the whole area) is a mistake that recurred twice.
+- Discrete candidates are never averaged to a midpoint: the main answer in report is always first place; the rest go to alternatives.
+- Population and fame are not evidence: the prior is uniform by default (optionally by area); there is no by-population option.
+- Scan order is by "share ÷ pages": scan small districts first, put large districts last with a page cap.
+- When discriminating tests can't separate the candidates, next gives a definite next step instead of stalling.
 
-  init       新建 board.json
-  add        加候选（国家/省/市/区县/片区/点）；--from 批量导入 poi.py / gazetteer.py / osm.py geom 的输出
-  children   用 gazetteer.py 把某个行政区的下级全部加为候选（"类别推断先列全"）
-  clue       登记一条线索：看到的 / 读出的字 / 推测 / 算出来的
-  evidence   一条线索对若干候选的似然比（>1 支持，<1 反对）
-  exclude    排除一个候选（要算过的文件）
-  scan-bbox  给候选设扫描范围（建成区），页数按它算
-  urban      用 gazetteer.py urban 自动填 scan-bbox
-  falsify    扫描/确认前先写证伪条件
-  rank       当前排名（分数、份额、证据、页数、份额/页）
-  next       下一步建议
-  check      出结论前的检查清单
-  report     生成 result.json 的候选/备选/排除/未用线索字段
-  apply      查表线索（车牌、区号、国家码、行驶方向、海外领地）自动加候选和证据（用 clues.py）
-  log        打印账本
+  init       create board.json
+  add        add candidates (country/province/city/district/area/point); --from bulk-imports output of poi.py / gazetteer.py / osm.py geom
+  children   use gazetteer.py to add every subdivision of an admin area as a candidate ("list the whole category first")
+  clue       record a clue: seen / text read / inferred / computed
+  evidence   a clue's likelihood ratio for some candidates (>1 supports, <1 opposes)
+  exclude    exclude a candidate (needs a computed file)
+  scan-bbox  set a candidate's scan extent (built-up area); pages are counted from it
+  urban      fill scan-bbox automatically with gazetteer.py urban
+  falsify    write the falsification condition before scanning/confirming
+  rank       current ranking (score, share, evidence, pages, share/page)
+  next       suggested next step
+  check      checklist before the conclusion
+  report     generate the candidates/alternatives/excluded/unused-clues fields of result.json
+  apply      lookup clues (calling code, driving side, territories; plates, area codes… from region packs) add candidates and evidence automatically (uses clues.py)
+  move       put a candidate under another candidate (a point under its road) so its supporting evidence counts there
+  country    set the country context: apply restricts region-pack lookups to it, next uses its pack's tips
+  log        print the ledger
 
-示例：
+Examples:
   board.py init --photo photo.jpg
-  board.py children <直辖市或省名>                       # 38 个区县全部进候选，先验均匀
-  board.py add --from pois.json --level area --parent <城市>   # 同名多校区、OSM 围墙这类细层候选全部进盘，不手挑
-  board.py clue "公交上黄下绿，车尾绿色下弯" --kind livery --status observed --file bus_zoom.png
-  board.py evidence --clue K1 --for <区县A>:5 --for <区县B>:2 --why "两区公交图逐张比车尾" --file livery_sheet.jpg
-  board.py apply --kind plate --value <车牌前两位>
-  board.py urban <区县A> --within <直辖市或省名>
+  board.py children <municipality or province name>       # all 38 districts become candidates, uniform prior
+  board.py add --from pois.json --level area --parent <city>   # fine-level candidates (same-name campuses, OSM walled compounds) all go on the board; don't hand-pick
+  board.py clue "bus yellow on top, green below; green rear stripe curves down" --kind livery --status observed --file bus_zoom.png
+  board.py evidence --clue K1 --for <district A>:5 --for <district B>:2 --why "compared bus rears one by one across both districts' bus photos" --file livery_sheet.jpg
+  board.py apply --kind plate --value <first two plate characters>
+  board.py urban <district A> --within <municipality or province name>
   board.py rank
   board.py next
-  board.py falsify <区县A> --text "操场长轴不是南北向就放弃"
-  board.py exclude <区县B> --clue K4 --computed frame.json --why "按视角区间算 X 应在框内且 ≥40px，画面里没有"
+  board.py falsify <district A> --text "give up if the sports field's long axis isn't north-south"
+  board.py exclude <district B> --clue K4 --computed frame.json --why "by the view-angle range X should be in frame and ≥40px; it isn't in the image"
   board.py check
   board.py report --merge result.json
 """
 from __future__ import annotations
 
 import argparse
+from _net import PROXY_HELP
 import json
 import math
 import os
@@ -58,25 +61,28 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import regions
+
 HERE = Path(__file__).parent
-# uv run 会把自己的路径写进环境变量 UV：照它调子脚本，uv 不在 PATH 里（比如刚装完没重开终端）也找得到
+# uv run writes its own path into the UV env var: call child scripts with it, so uv is found even when it isn't on PATH (e.g. just installed, terminal not reopened)
 UV = os.environ.get("UV") or "uv"
 LEVELS = ["country", "admin1", "admin2", "city", "district", "area", "road", "point"]
-LEVEL_ZH = {"country": "国家", "admin1": "省/州", "admin2": "地级/郡", "city": "城市", "district": "区县",
-            "area": "片区", "road": "路", "point": "点"}
-# 有延展的候选：排除范围必须 <= 证据范围。在一条路/一个片区的某一个点上看过就整条排除，是复发过两次的错
+LEVEL_LABEL = {"country": "country", "admin1": "province/state", "admin2": "prefecture/county", "city": "city",
+               "district": "district", "area": "area", "road": "road", "point": "point"}
+# Candidates with extent: exclusion scope must be <= evidence scope. Looking at one point on a road/area and excluding the whole of it is a mistake that recurred twice
 EXTENDED_LEVELS = {"district", "area", "road"}
-COVERS_MIN = 0.5  # --covers 至少要覆盖候选范围的这个比例，才允许整体排除
+COVERS_MIN = 0.5  # --covers must cover at least this fraction of the candidate's extent before the whole candidate can be excluded
 STATUS = ["observed", "read", "inferred", "computed"]
-# 似然比上限：推测只能排序，读出的字和算出来的结果才能大幅改分
+# Likelihood ratio caps: inferences can only rank; only text read and computed results can move the score a lot
 LR_CAP = {"inferred": 3.0, "observed": 5.0, "read": 50.0, "computed": 50.0}
+GLOBAL_KINDS = ("calling-code", "driving-side", "territories")   # clues.py tables in data/, not region packs
 CHEAP_OPS = [
-    ("plate/area-code/calling-code", "读得出车牌、区号、国家码 → `clues.py lookup` + `board.py apply`"),
-    ("terrain", "画面平坦 vs 山城 → `terrain.py view` 或 z13 卫星图逐候选看地形，一次调用排一批"),
-    ("livery", "公交/出租车涂装 → `revimg.py --query \"<城市> <颜色> 公交\"` 从结果读线路牌，按区县比车尾腰线"),
-    ("municipal", "护栏、路灯、站台、路缘样式 → `baidu_pano.py sample --bbox <候选建成区> --n 24` 逐候选一张拼图"),
-    ("network", "水系/路网模板 → `tiles.py fetch --zoom 13` 逐候选比河的走向、桥的数量"),
-    ("phenology", "植被 + 月份 → 只当弱证据，不能单独排除"),
+    ("plate/area-code/calling-code", "plate, area code or calling code readable → `clues.py lookup` + `board.py apply`"),
+    ("terrain", "flat vs hill city in the image → `terrain.py view` or z13 satellite imagery per candidate to check terrain; one call rules out a batch"),
+    ("livery", "bus/taxi livery → image search for \"<city> <color> bus\" in the local language; read route signs from the results, compare the rear waistline stripe district by district"),
+    ("municipal", "guardrails, street lights, bus stops, curb styles → street view of each candidate's built-up area (`gsv.py sheet --points`, or the street-view script the region pack names), one contact sheet per candidate"),
+    ("network", "water/road network template → `tiles.py fetch --zoom 13` per candidate, compare river direction and number of bridges"),
+    ("phenology", "vegetation + month → weak evidence only, can't exclude on its own"),
 ]
 
 
@@ -84,9 +90,14 @@ def _norm(s: str) -> str:
     return re.sub(r"[\s（）()]", "", s or "").rstrip("市省区县自治州自治县自治区特别行政区")
 
 
+def _clue_kind(kind: str) -> str:
+    # Accept the long spelling in new clues and in boards written by older versions.
+    return "infra" if kind.strip().lower() in ("infra", "infrastructure") else kind
+
+
 def _load(p: Path) -> dict:
     if not p.exists():
-        sys.exit(f"没有 {p}：先 `board.py init --photo photo.jpg`")
+        sys.exit(f"No {p}: run `board.py init --photo photo.jpg` first")
     return json.loads(p.read_text(encoding="utf-8"))
 
 
@@ -102,18 +113,19 @@ def _find(b: dict, name: str) -> str:
     if len(hits) == 1:
         return hits[0]
     if not hits:
-        sys.exit(f"候选里没有“{name}”：先 add 或 children（现有：{', '.join(list(b['candidates'])[:12])}…）")
-    sys.exit(f"“{name}”对应多个候选：{hits}，写全名")
+        sys.exit(f"No candidate \"{name}\": add it or use children first (existing: {', '.join(list(b['candidates'])[:12])}…)")
+    sys.exit(f"\"{name}\" matches several candidates: {hits}; write the full name")
 
 
 def _log(b: dict, text: str) -> None:
     b.setdefault("log", []).append(f"{datetime.now():%H:%M} {text}")
 
 
-def _run(cmd: list[str]) -> subprocess.CompletedProcess:
-    """跑 gazetteer.py、clues.py。子脚本和这边都用 UTF-8：中文 Windows 默认按 GBK 读写，两边不一致就乱码或崩。"""
-    return subprocess.run(cmd, text=True, encoding="utf-8", errors="replace", capture_output=True,
-                          env={**os.environ, "PYTHONUTF8": "1"})
+def _run(cmd: list[str], live: bool = False) -> subprocess.CompletedProcess:
+    """Run gazetteer.py, clues.py. Child scripts and this one both use UTF-8: Chinese Windows reads and writes GBK by default, and if the two sides differ you get mojibake or crashes.
+    live=True passes the child's stderr straight through: Overpass retries can take many minutes, and captured they look like a hang."""
+    return subprocess.run(cmd, text=True, encoding="utf-8", errors="replace", stdout=subprocess.PIPE,
+                          stderr=None if live else subprocess.PIPE, env={**os.environ, "PYTHONUTF8": "1"})
 
 
 def _bbox_km2(bb: list[float]) -> float:
@@ -130,6 +142,26 @@ def _pages(bb: list[float], zoom: int, cell: int, cols: int) -> int:
     return math.ceil(r * c / (cols * cols))
 
 
+def _inherited(b: dict, name: str, own_clues: set[str]) -> list[dict]:
+    """Support flows up, refutation doesn't: a point that matches supports its road, a point that doesn't match says nothing about the rest of the road.
+    Per clue the strongest supporting evidence among descendants, for clues the candidate has no evidence of its own."""
+    kids: dict[str, list[str]] = {}
+    for n, c in b["candidates"].items():
+        if c.get("parent") and c.get("status") != "excluded":
+            kids.setdefault(c["parent"], []).append(n)
+    seen, todo, best = {name}, list(kids.get(name, [])), {}
+    while todo:
+        n = todo.pop()
+        if n in seen:
+            continue
+        seen.add(n)
+        todo += kids.get(n, [])
+        for e in b["evidence"]:
+            if e["candidate"] == n and e["lr"] > 1 and e["clue"] not in own_clues and e["lr"] > best.get(e["clue"], {}).get("lr", 1):
+                best[e["clue"]] = {**e, "via": n}
+    return list(best.values())
+
+
 def _scores(b: dict, level: str, prior_by: str) -> list[dict]:
     rows = []
     for name, c in b["candidates"].items():
@@ -140,11 +172,12 @@ def _scores(b: dict, level: str, prior_by: str) -> list[dict]:
             prior = max(_bbox_km2(c["bbox"]), 1.0)
         logit = math.log(prior) + math.log(max(c.get("prior", 1.0), 1e-9))
         ev = [e for e in b["evidence"] if e["candidate"] == name]
+        ev += _inherited(b, name, {e["clue"] for e in ev})
         for e in ev:
             logit += math.log(max(e["lr"], 1e-9))
         rows.append({"name": name, "logit": logit, "n_ev": len(ev),
                      "n_verified": sum(1 for e in ev if b["clues"][e["clue"]]["status"] in ("read", "computed")),
-                     "excluded": c.get("status") == "excluded", "c": c})
+                     "excluded": c.get("status") == "excluded", "c": c, "ev": ev})
     open_rows = [r for r in rows if not r["excluded"]]
     if open_rows:
         m = max(r["logit"] for r in open_rows)
@@ -158,7 +191,7 @@ def _scores(b: dict, level: str, prior_by: str) -> list[dict]:
 
 
 def _frontier(b: dict) -> str | None:
-    """最细的、还有 ≥2 个未排除候选的级别；没有就是最细的有候选的级别。"""
+    """The finest level that still has ≥2 non-excluded candidates; if none, the finest level that has candidates."""
     for lv in reversed(LEVELS):
         if sum(1 for c in b["candidates"].values() if c["level"] == lv and c.get("status") != "excluded") >= 2:
             return lv
@@ -171,20 +204,46 @@ def _frontier(b: dict) -> str | None:
 def _cost_of(c: dict, args) -> tuple[int | None, str]:
     bb = c.get("scan_bbox") or c.get("bbox")
     if not bb:
-        return None, "无范围"
+        return None, "no extent"
     pages = _pages(bb, args.zoom, args.cell, args.cols)
-    return pages, ("建成区" if c.get("scan_bbox") else "整区bbox")
+    return pages, ("built-up area" if c.get("scan_bbox") else "whole-district bbox")
 
 
-# ---------------------------------------------------------------- 子命令
+# ---------------------------------------------------------------- subcommands
 
 def cmd_init(args, p: Path) -> None:
     if p.exists() and not args.force:
-        sys.exit(f"{p} 已存在（加 --force 覆盖）")
+        sys.exit(f"{p} already exists (add --force to overwrite)")
     b = {"case": args.case or Path.cwd().name, "photo": args.photo, "created": datetime.now().isoformat(timespec="seconds"),
+         "country": _country_code(args.country) if args.country else None,
          "candidates": {}, "clues": {}, "evidence": [], "falsify": {}, "log": []}
     _save(p, b)
-    print(f"新建 {p}")
+    print(f"Created {p}" + (f" (country {b['country']})" if b["country"] else ""))
+
+
+def _country_code(text: str) -> str:
+    pk = regions.resolve(text)
+    if not pk:
+        print(f"Note: no region pack for '{text}' (installed: {', '.join(sorted(regions.packs())) or 'none'}); "
+              f"lookups that need a pack will answer unsupported, global tools still work.")
+        return text.upper()
+    return pk["code"]
+
+
+def cmd_country(args, p: Path) -> None:
+    b = _load(p)
+    if args.code in ("none", "-", ""):
+        b["country"] = None
+        _log(b, "country cleared")
+        _save(p, b)
+        print("Country context cleared: lookups search every region pack.")
+        return
+    b["country"] = _country_code(args.code)
+    _log(b, f"country {b['country']}")
+    _save(p, b)
+    pk = regions.resolve(b["country"])
+    print(f"Country context {b['country']}: `apply` restricts region-pack lookups to it; `next` uses its tips."
+          + (f" Card: `regions.py show {b['country'].lower()}`." if pk else ""))
 
 
 def _bbox_around(lat: float, lon: float, r: float) -> list[float]:
@@ -193,7 +252,7 @@ def _bbox_around(lat: float, lon: float, r: float) -> list[float]:
 
 
 def _coords(g) -> list[tuple[float, float]]:
-    """GeoJSON 几何里的全部 (lon, lat)。"""
+    """All (lon, lat) in a GeoJSON geometry."""
     if isinstance(g, (list, tuple)) and g and isinstance(g[0], (int, float)):
         return [(float(g[0]), float(g[1]))]
     out = []
@@ -203,9 +262,9 @@ def _coords(g) -> list[tuple[float, float]]:
 
 
 def _read_from(path: Path, radius: float) -> list[tuple[str, dict]]:
-    """--from 文件 → [(名字, {bbox, center})]。认四种：
-    poi.py/tiles.py 的 {名字: [lat, lon]}；gazetteer.py 的 {名字: {bbox, center}}；
-    GeoJSON（osm.py geom，按 properties.name 取名）；[{name, lat, lon} 或 {name, bbox}]。点按 --radius 给范围。"""
+    """--from file → [(name, {bbox, center})]. Accepts four forms:
+    poi.py/tiles.py {name: [lat, lon]}; gazetteer.py {name: {bbox, center}};
+    GeoJSON (osm.py geom, name taken from properties.name); [{name, lat, lon} or {name, bbox}]. Points get an extent from --radius."""
     d = json.loads(path.read_text(encoding="utf-8"))
     rows: list[tuple[str, dict]] = []
 
@@ -242,7 +301,7 @@ def _read_from(path: Path, radius: float) -> list[tuple[str, dict]]:
         for i, v in enumerate(d, 1):
             if isinstance(v, dict):
                 one(str(v.get("name") or f"#{i}"), v)
-    # 同名的（同一所学校的几个校区、OSM 里几块同名围墙）加序号，一个都不丢
+    # Same names (several campuses of one school, several same-name walled areas in OSM) get a sequence number; none are dropped
     seen: dict[str, int] = {}
     out = []
     for name, v in rows:
@@ -254,28 +313,34 @@ def _read_from(path: Path, radius: float) -> list[tuple[str, dict]]:
 def cmd_add(args, p: Path) -> None:
     b = _load(p)
     if args.level not in LEVELS:
-        sys.exit(f"--level 只能是 {LEVELS}")
+        sys.exit(f"--level must be one of {LEVELS}")
     if not args.names and not args.from_:
-        sys.exit("给候选名，或 --from 文件（poi.py --out、gazetteer.py --out、osm.py geom 的 GeoJSON）")
+        sys.exit("Give candidate names, or --from a file (poi.py --out, gazetteer.py --out, GeoJSON from osm.py geom)")
     if args.from_:
         rows = _read_from(Path(args.from_), args.radius)
         if not rows:
-            sys.exit(f"{args.from_} 里没读出带坐标的候选")
-        n = 0
+            sys.exit(f"No candidates with coordinates read from {args.from_}")
+        n, added = 0, []
         for name, v in rows:
-            if name in b["candidates"]:
+            key = _slot(b, name, args.parent, None, args.level)
+            if not key:
                 continue
-            b["candidates"][name] = {"level": args.level, "parent": args.parent, "bbox": v["bbox"], "scan_bbox": None,
+            added.append(key)
+            b["candidates"][key] = {"level": args.level, "parent": args.parent, "bbox": v["bbox"], "scan_bbox": None,
                                      "center": v["center"], "prior": args.prior, "status": "open",
                                      "note": args.note or "", "from": str(args.from_)}
             n += 1
-        _log(b, f"add --from {args.from_} → +{n} 个 {args.level}")
+        _log(b, f"add --from {args.from_} → +{n} {args.level}")
         _save(p, b)
-        print(f"从 {args.from_} 加入 {n} 个 {LEVEL_ZH[args.level]}候选（共读出 {len(rows)} 个，重名的已跳过）。"
-              f"全部进盘、先验均匀：看过的每一个都要登记 evidence（对不上也记 --against），check 会列出没看过的。")
-    for name in args.names:
-        if name in b["candidates"]:
-            print(f"已有 {name}，跳过")
+        hints = [h for k in added for h in [_skip_hint(b, k)] if h]
+        if hints:
+            print(f"NOTE {hints[0]}" + (f" (and {len(hints) - 1} more)" if len(hints) > 1 else ""))
+        print(f"Added {n} {LEVEL_LABEL[args.level]} candidates from {args.from_} ({len(rows)} read; duplicate names skipped). "
+              f"Same names under another parent get the parent in the key. All on the board with a uniform prior: record evidence for every one you look at (record --against too when it doesn't match); check lists the ones not looked at.")
+    for raw in args.names:
+        name = _slot(b, raw, args.parent, None, args.level)
+        if not name:
+            print(f"Already have {raw}" + (f" under {args.parent}" if args.parent else "") + ", skipping")
             continue
         c = {"level": args.level, "parent": args.parent, "bbox": None, "scan_bbox": None, "prior": args.prior,
              "status": "open", "note": args.note or ""}
@@ -283,8 +348,29 @@ def cmd_add(args, p: Path) -> None:
             c["bbox"] = [float(v) for v in args.bbox.split(",")]
         b["candidates"][name] = c
         _log(b, f"add {name} ({args.level})")
+        hint = _skip_hint(b, name)
+        if hint:
+            print(f"NOTE {hint}")
     _save(p, b)
-    print(f"候选 {len(b['candidates'])} 个")
+    print(f"{len(b['candidates'])} candidates")
+
+
+def cmd_move(args, p: Path) -> None:
+    b = _load(p)
+    name = _find(b, args.name)
+    parent = _find(b, args.parent)
+    if parent == name:
+        sys.exit("A candidate can't be its own parent")
+    if LEVELS.index(b["candidates"][parent]["level"]) >= LEVELS.index(b["candidates"][name]["level"]):
+        sys.exit(f"{parent} ({b['candidates'][parent]['level']}) isn't coarser than {name} ({b['candidates'][name]['level']})")
+    old = b["candidates"][name].get("parent")
+    b["candidates"][name]["parent"] = parent
+    _log(b, f"move {name}: {old} → {parent}")
+    _save(p, b)
+    print(f"{name} now under {parent} (was {old}); its supporting evidence now counts for {parent} in the {b['candidates'][parent]['level']} ranking")
+    hint = _skip_hint(b, name)
+    if hint:
+        print(f"NOTE {hint}")
 
 
 def cmd_children(args, p: Path) -> None:
@@ -296,64 +382,85 @@ def cmd_children(args, p: Path) -> None:
         cmd += ["--within", args.within]
     if args.proxy:
         cmd += ["--proxy", args.proxy]
-    r = _run(cmd)
-    for line in r.stderr.splitlines():
-        if "不当下一级" in line or "退回第一个" in line:
-            print(line)
+    r = _run(cmd, live=True)
     out = r.stdout.strip(); print(out if len(out) < 1800 else out[:1800].rsplit('\n', 1)[0] + '\n  …')
     if r.returncode != 0:
-        sys.exit(f"gazetteer 失败：{r.stderr.strip()[-600:]}")
+        sys.exit("gazetteer failed; its messages are above")
     kids = json.loads((p.parent / ".gz_children.json").read_text(encoding="utf-8"))
     as_level, why = _child_level(b, args, out)
+    # Stable ids from a region pack's admin table, so lookups (plates, area codes) land on these same candidates
+    pk, local = regions.admin_children(args.parent, b.get("country"))
+    by_local = {}
+    if pk:
+        chain = regions.admin_chain(pk, regions.admin_find(args.parent, pk["code"])[0][1])
+        for it in local:
+            by_local[_norm(it["name"])] = "/".join([pk["code"], *chain, it["name"]])
     n = 0
-    for name, k in kids.items():
-        if name in b["candidates"]:
+    for raw, k in kids.items():
+        cid = by_local.get(_norm(raw))
+        name = _slot(b, raw, args.parent, cid, as_level)
+        if not name:
             continue
         b["candidates"][name] = {"level": as_level, "parent": args.parent, "bbox": k.get("bbox"), "scan_bbox": None,
-                                 "prior": 1.0, "status": "open", "note": k.get("note", ""), "osm_id": k.get("osm_id")}
+                                 "prior": 1.0, "status": "open", "note": k.get("note", ""), "osm_id": k.get("osm_id"),
+                                 "country": pk["code"] if pk else b.get("country"), "cid": cid}
         n += 1
-    _log(b, f"children {args.parent} → +{n} 个 {as_level}")
+    _log(b, f"children {args.parent} → +{n} {as_level}")
     _save(p, b)
-    print(f"加入 {n} 个候选（级别 {as_level}：{why}；先验均匀）。人口、名气不进分数。")
+    print(f"Added {n} candidates (level {as_level}: {why}; uniform prior). Population and fame don't enter the score.")
 
 
-# 上级在 board 里是哪一级 → 下级记成哪一级
+# Parent's level on the board → level the children are recorded as
 NEXT_LEVEL = {"country": "admin1", "admin1": "admin2", "admin2": "district", "city": "district", "district": "area",
               "area": "road", "road": "point"}
 
 
 def _child_level(b: dict, args, gz_out: str) -> tuple[str, str]:
-    """children 的候选级别：--as-level 给了就用；上级是国家 → admin1；上级已在 board 里 → 它的下一级
-    （省下面隔了一级直接是区县的，如直辖市，记成 district）；都不是 → district。"""
+    """Candidate level for children: use --as-level if given; parent is a country → admin1; parent already on the board → its next level
+    (where a province's next level down is directly districts, as with a municipality, record as district); otherwise → district."""
     if args.as_level:
-        return args.as_level, "--as-level 指定"
-    m = re.search(r"admin_level (\d+)）下级 admin_level (\d+)", gz_out)
+        return args.as_level, "set by --as-level"
+    m = re.search(r"admin_level (\d+)\) children admin_level (\d+)", gz_out)
     p_lv, c_lv = (int(m.group(1)), int(m.group(2))) if m else (None, None)
     if p_lv is not None and p_lv <= 2:
-        # 直接从国家跳到更细的级别（--level 5/6）时别记成省级
+        # When jumping straight from a country to a finer level (--level 5/6), don't record as province level
         lv = "admin1" if c_lv is None or c_lv <= 4 else ("admin2" if c_lv == 5 else "district")
-        return lv, f"上级是国家，下级 admin_level {c_lv}"
+        return lv, f"parent is a country, children admin_level {c_lv}"
     hits = [k for k in b["candidates"] if _norm(k) == _norm(args.parent)]
     if len(hits) == 1:
         lv = b["candidates"][hits[0]]["level"]
         nxt = NEXT_LEVEL.get(lv, "district")
         if lv == "admin1" and p_lv is not None and c_lv is not None and c_lv >= p_lv + 2:
             nxt = "district"
-        return nxt, f"上级 {hits[0]} 在候选盘里是 {lv}"
-    return "district", "默认"
+        return nxt, f"parent {hits[0]} is {lv} on the candidate board"
+    return "district", "default"
 
 
 def cmd_clue(args, p: Path) -> None:
     b = _load(p)
     kid = f"K{len(b['clues']) + 1}"
     if args.status not in STATUS:
-        sys.exit(f"--status 只能是 {STATUS}：observed=画面里直接看到的形状/颜色，read=读出的字/号码，inferred=推测（楼大概8层、路在上坡），computed=脚本算出来的")
-    b["clues"][kid] = {"text": args.text, "kind": args.kind, "status": args.status, "file": args.file or "",
+        sys.exit(f"--status must be one of {STATUS}: observed=shape/color seen directly in the image, read=text/numbers read, inferred=inference (building about 8 floors, road going uphill), computed=computed by a script")
+    resolves = list(dict.fromkeys(getattr(args, "resolves", None) or []))
+    output = args.file or ""
+    if resolves:
+        if args.status != "computed":
+            sys.exit("--resolves requires --status computed: link a result that actually tests the named clues")
+        unknown = [k for k in resolves if k not in b["clues"]]
+        if unknown:
+            sys.exit(f"Unknown clues in --resolves: {', '.join(unknown)}")
+        if not output or not Path(output).is_file():
+            sys.exit("--resolves requires --file pointing to an existing computed output file")
+        output = str(Path(output).resolve())
+    kind = _clue_kind(args.kind)
+    b["clues"][kid] = {"text": args.text, "kind": kind, "status": args.status, "file": output,
                        "source": args.source or "", "used": False}
-    _log(b, f"clue {kid} [{args.kind}/{args.status}] {args.text}")
+    if resolves:
+        b["clues"][kid]["resolves"] = resolves
+    _log(b, f"clue {kid} [{kind}/{args.status}] {args.text}" + (f"; resolves {', '.join(resolves)}" if resolves else ""))
     _save(p, b)
     cap = LR_CAP[args.status]
-    print(f"{kid} 登记。状态 {args.status}：似然比上限 {cap:g}" + ("，只能排序不能排除" if args.status in ("inferred", "observed") else "，可用于 exclude（还需算过的文件）"))
+    print(f"{kid} recorded. Status {args.status}: likelihood ratio cap {cap:g}" + (", can only rank, can't exclude" if args.status in ("inferred", "observed") else ", usable for exclude (still needs a computed file)"))
 
 
 def _parse_lr(items: list[str] | None, default: float | None) -> list[tuple[str, float]]:
@@ -365,68 +472,88 @@ def _parse_lr(items: list[str] | None, default: float | None) -> list[tuple[str,
         elif default is not None:
             out.append((it, default))
         else:
-            sys.exit(f"写成 名字:似然比，例如 {it}:5")
+            sys.exit(f"Write it as name:likelihood_ratio, e.g. {it}:5")
     return out
+
+
+def _put_evidence(b: dict, rec: dict) -> dict | None:
+    """Revise one clue/candidate pair, including duplicate entries in older boards."""
+    key = (rec["clue"], rec["candidate"])
+    old = next((e for e in b["evidence"] if (e["clue"], e["candidate"]) == key), None)
+    if old is not None:
+        previous = dict(old)
+        old.update(rec)
+        b["evidence"] = [e for e in b["evidence"] if e is old or (e["clue"], e["candidate"]) != key]
+        return previous
+    next_id = max((int(e["id"][1:]) for e in b["evidence"]), default=0) + 1
+    b["evidence"].append({"id": f"E{next_id}", **rec})
+    return None
 
 
 def cmd_evidence(args, p: Path) -> None:
     b = _load(p)
     if args.clue not in b["clues"]:
-        sys.exit(f"没有线索 {args.clue}，先 `board.py clue`")
+        sys.exit(f"No clue {args.clue}; run `board.py clue` first")
     cl = b["clues"][args.clue]
     cap = LR_CAP[cl["status"]]
     pairs = _parse_lr(args.for_, 3.0) + [(n, v) for n, v in _parse_lr(args.against, 1 / 3)]
     if not pairs:
-        sys.exit("至少给一个 --for 名字:似然比 或 --against 名字:似然比")
-    clipped = []
+        sys.exit("Give at least one --for name:likelihood_ratio or --against name:likelihood_ratio")
+    clipped, replaced = [], []
     for name, lr in pairs:
         cname = _find(b, name)
         if lr <= 0:
-            sys.exit("似然比 0 等于排除，请走 `board.py exclude`（需要算过的文件）")
+            sys.exit("A likelihood ratio of 0 means exclusion; use `board.py exclude` (needs a computed file)")
         lr2 = min(max(lr, 1 / cap), cap)
         if abs(lr2 - lr) > 1e-9:
             clipped.append(f"{cname}:{lr:g}→{lr2:g}")
-        b["evidence"].append({"id": f"E{len(b['evidence']) + 1}", "clue": args.clue, "candidate": cname, "lr": lr2,
-                              "why": args.why or "", "file": args.file or "", "cmd": args.command_ or ""})
+        rec = {"clue": args.clue, "candidate": cname, "lr": lr2, "why": args.why or "", "file": args.file or "", "cmd": args.command_ or ""}
+        # one clue counts once per candidate: recording it again revises that estimate instead of multiplying it in a second time
+        old = _put_evidence(b, rec)
+        if old:
+            replaced.append(f"{old['id']} {cname}:{old['lr']:g}→{lr2:g}")
     cl["used"] = True
     if args.file and not Path(args.file).exists():
-        print(f"提示：{args.file} 不存在；证据文件必须是本次会话真实产出")
+        print(f"Note: {args.file} doesn't exist; evidence files must be real outputs of this session")
     _log(b, f"evidence {args.clue} → {', '.join(f'{n}:{v:g}' for n, v in pairs)}")
     _save(p, b)
     if clipped:
-        print(f"线索 {args.clue} 是“{cl['status']}”，似然比夹到 1/{cap:g}–{cap:g}：{'; '.join(clipped)}。"
-              f"要更大的权重，先把线索核实成 read/computed（读出字、跑脚本）再登记新线索。")
-    print("已记录。" + ("" if args.why else "建议补 --why 写清依据。"))
+        print(f"Clue {args.clue} is \"{cl['status']}\", likelihood ratio clamped to 1/{cap:g}–{cap:g}: {'; '.join(clipped)}. "
+              f"For more weight, first verify the clue as read/computed (read the text, run a script), then record a new clue.")
+    if replaced:
+        print(f"Clue {args.clue} already had evidence for these candidates; replaced it instead of counting it twice: {'; '.join(replaced)}. "
+              f"An independent observation (another photo detail, another source) is a new clue: `board.py clue` first.")
+    print("Recorded." + ("" if args.why else " Suggest adding --why to state the basis."))
 
 
 def cmd_exclude(args, p: Path) -> None:
     b = _load(p)
     cname = _find(b, args.name)
     if args.clue not in b["clues"]:
-        sys.exit(f"没有线索 {args.clue}")
+        sys.exit(f"No clue {args.clue}")
     cl = b["clues"][args.clue]
     if cl["status"] not in ("read", "computed"):
-        sys.exit(f"线索 {args.clue} 是“{cl['status']}”（推测/观察）：不能排除，只能 `evidence --against {cname}:0.34`。"
-                 f"硬规则 9：排除和确认用同一个标准。")
+        sys.exit(f"Clue {args.clue} is \"{cl['status']}\" (inferred/observed): it can't exclude, only `evidence --against {cname}:0.34`. "
+                 f"Hard rule 9: exclusion and confirmation use the same standard.")
     if not args.computed or not Path(args.computed).exists():
-        sys.exit("排除必须附算过的文件（--computed，例如 geo.py frame 的输出、terrain.py 的比对图），文件要真实存在")
+        sys.exit("Exclusion must attach a computed file (--computed, e.g. geo.py frame output or a terrain.py comparison image), and the file must actually exist")
     c = b["candidates"][cname]
     if c["level"] in EXTENDED_LEVELS:
         if not args.covers:
             sys.exit(
-                f"{cname} 是{LEVEL_ZH[c['level']]}级候选（有延展）：排除要加 --covers 写明证据实际覆盖到哪里"
-                f"（'lat,lon' 或 'lat,lon:lat,lon'）。硬规则 9：排除范围必须 ≤ 证据范围——"
-                f"在一个点上看过就整条排除是以点代面。只验了一段就改用："
+                f"{cname} is a {LEVEL_LABEL[c['level']]}-level candidate (has extent): exclusion needs --covers stating where the evidence actually covers "
+                f"('lat,lon' or 'lat,lon:lat,lon'). Hard rule 9: exclusion scope must be ≤ evidence scope — "
+                f"looking at one point and excluding the whole thing is one point standing in for the whole area. If you only checked one stretch, use instead: "
                 f"board.py evidence --clue {args.clue} --against {cname}:0.34 --file {args.computed}")
         pts = _parse_covers(args.covers)
         if not pts:
-            sys.exit("--covers 要能解析出坐标：'lat,lon'（单点）或 'lat,lon:lat,lon'（区间）")
+            sys.exit("--covers must parse to coordinates: 'lat,lon' (single point) or 'lat,lon:lat,lon' (span)")
         r = _covers_ratio(c, pts)
         if r is not None and r[0] < COVERS_MIN:
             cov_m = _cov_span_m(pts[0], pts[-1]) if len(pts) >= 2 else 0.0
             sys.exit(
-                f"--covers 只覆盖 {cname} 的约 {r[0]:.0%}（证据 {cov_m:.0f} m / 候选范围对角 {r[1]:.0f} m）："
-                f"不足以整条排除。补足其余段的比对图再排除，或先降权："
+                f"--covers covers only about {r[0]:.0%} of {cname} (evidence {cov_m:.0f} m / candidate extent diagonal {r[1]:.0f} m): "
+                f"not enough to exclude the whole thing. Add comparison images for the remaining stretches before excluding, or down-weight first: "
                 f"board.py evidence --clue {args.clue} --against {cname}:0.34 --file {args.computed}")
     c["status"] = "excluded"
     c["excluded_by"] = {"clue": args.clue, "computed": args.computed, "why": args.why or "",
@@ -434,7 +561,7 @@ def cmd_exclude(args, p: Path) -> None:
     cl["used"] = True
     _log(b, f"exclude {cname} by {args.clue} ({args.computed})")
     _save(p, b)
-    print(f"已排除 {cname}。被排除的候选仍在账本里，check 会回头看。")
+    print(f"Excluded {cname}. Excluded candidates stay in the ledger; check looks back at them.")
 
 
 def cmd_scan_bbox(args, p: Path) -> None:
@@ -454,19 +581,19 @@ def cmd_urban(args, p: Path) -> None:
         cmd += ["--within", args.within]
     if args.proxy:
         cmd += ["--proxy", args.proxy]
-    r = _run(cmd)
+    r = _run(cmd, live=True)
     if r.returncode != 0:
-        sys.exit(f"gazetteer urban 失败：{r.stderr.strip()[-600:]}")
+        sys.exit("gazetteer urban failed; its messages are above")
     d = json.loads(r.stdout[r.stdout.index("{"):])
     if d.get("urban_bbox"):
         b["candidates"][cname]["scan_bbox"] = d["urban_bbox"]
         b["candidates"][cname]["urban_source"] = d.get("source")
         _log(b, f"urban {cname} {d['urban_bbox']} ({d.get('source')})")
         _save(p, b)
-        print(f"{cname} 建成区 {d['urban_bbox']}，约 {d.get('urban_bbox_km2')} km²（来源 {d.get('source')}）"
-              + (f"；{d['note']}" if d.get("note") else ""))
+        print(f"{cname} built-up area {d['urban_bbox']}, about {d.get('urban_bbox_km2')} km² (source {d.get('source')})"
+              + (f"; {d['note']}" if d.get("note") else ""))
     else:
-        print(f"{cname}：{d.get('note', '没有建成区数据')}；用 `board.py scan-bbox` 手动给")
+        print(f"{cname}: {d.get('note', 'no built-up area data')}; set it by hand with `board.py scan-bbox`")
 
 
 def cmd_falsify(args, p: Path) -> None:
@@ -475,7 +602,7 @@ def cmd_falsify(args, p: Path) -> None:
     b["falsify"].setdefault(cname, []).append(args.text)
     _log(b, f"falsify {cname}: {args.text}")
     _save(p, b)
-    print("已记录证伪条件。出现就放弃，不找理由圆。")
+    print("Falsification condition recorded. If it shows up, give up; don't look for reasons to explain it away.")
 
 
 def cmd_rank(args, p: Path, quiet: bool = False) -> dict:
@@ -488,69 +615,97 @@ def cmd_rank(args, p: Path, quiet: bool = False) -> dict:
         out[lv] = rows
         if quiet:
             continue
-        print(f"\n[{LEVEL_ZH[lv]}] {len(rows)} 个候选（未排除 {sum(1 for r in rows if not r['excluded'])}）")
-        print(f"  {'候选':<14}{'份额':>7}{'证据':>5}{'核实':>5}{'页数':>6}  {'份额/页':>8}  备注")
+        print(f"\n[{LEVEL_LABEL[lv]}] {len(rows)} candidates ({sum(1 for r in rows if not r['excluded'])} not excluded)")
+        print(f"  {'candidate':<14}{'share':>7}{'evidence':>9}{'verified':>9}{'pages':>6}  {'share/page':>10}  note")
         for r in rows[: args.limit]:
             pages, src = _cost_of(r["c"], args)
             ratio = (r["share"] / pages) if pages else None
-            flag = "已排除" if r["excluded"] else ""
-            print(f"  {r['name']:<14}{r['share']:>7.1%}{r['n_ev']:>5}{r['n_verified']:>5}{(pages if pages is not None else '?'):>6}"
-                  f"  {(f'{ratio:.4f}' if ratio is not None else '?'):>8}  {flag} {src if pages is not None else ''} {r['c'].get('note', '')[:30]}")
+            flag = "excluded" if r["excluded"] else ""
+            print(f"  {r['name']:<14}{r['share']:>7.1%}{r['n_ev']:>9}{r['n_verified']:>9}{(pages if pages is not None else '?'):>6}"
+                  f"  {(f'{ratio:.4f}' if ratio is not None else '?'):>10}  {flag} {src if pages is not None else ''} {r['c'].get('note', '')[:30]}")
         if len(rows) > args.limit:
-            print(f"  … 还有 {len(rows) - args.limit} 个（--limit 调大）")
+            print(f"  … {len(rows) - args.limit} more (raise --limit)")
     if not out and not quiet:
-        print("没有候选：先 `board.py add` 或 `board.py children`")
+        print("No candidates: run `board.py add` or `board.py children` first")
     return out
+
+
+def _corridor_pending(b: dict) -> list[str]:
+    """Infrastructure observations without a computed result explicitly addressing them."""
+    infra = [k for k, c in b["clues"].items() if _clue_kind(c["kind"]) == "infra" and c["status"] in ("observed", "read")]
+    done = {k for c in b["clues"].values()
+            if c["status"] == "computed" and c.get("resolves") and c.get("file") and Path(c["file"]).is_file()
+            for k in c.get("resolves", [])}
+    return [k for k in infra if k not in done]
 
 
 def cmd_next(args, p: Path) -> None:
     b = _load(p)
+    pend = _corridor_pending(b)
+    if pend:
+        print(f"→ First: infrastructure clue {', '.join(pend)} has no linked corridor result yet. `osm.py geom '<filter>' --bbox <region> --out lines.geojson` → "
+              f"`terrain.py scan --lines lines.geojson` (mountains fill the frame: add `--flat-run 0 --min-low-deg 0`) → `terrain.py fit`; "
+              f"two or three kinds of infrastructure: `osm.py near`. Record a result that actually tests the clue with "
+              f"`board.py clue '<result>' --kind corridor --status computed --file <output> --resolves <clue-id>` "
+              f"(repeat --resolves for each clue tested).")
     lv = _frontier(b)
     if not lv:
-        print("没有候选。先做第 2 步查表线索或第 4 步环境粗定位，把候选列全（board.py children）")
+        print("No candidates. First do step 2 (lookup clues) or step 4 (coarse location from the environment) and list the candidates in full (board.py children)")
         return
     rows = [r for r in _scores(b, lv, args.prior_by) if not r["excluded"]]
     top = rows[0]
     second = rows[1] if len(rows) > 1 else None
     unused = [k for k, c in b["clues"].items() if not c["used"]]
-    print(f"当前前沿：{LEVEL_ZH[lv]}，未排除 {len(rows)} 个；第一 {top['name']} {top['share']:.0%}"
-          + (f"，第二 {second['name']} {second['share']:.0%}" if second else ""))
+    print(f"Current frontier: {LEVEL_LABEL[lv]}, {len(rows)} not excluded; first {top['name']} {top['share']:.0%}"
+          + (f", second {second['name']} {second['share']:.0%}" if second else ""))
     if unused:
         pending = ", ".join(f"{k}({b['clues'][k]['kind']})" for k in unused)
-        print(f"还没用上的线索：{pending} → 先 evidence 或 apply")
+        print(f"Clues not used yet: {pending} → evidence or apply first")
     separable = (not second) or (top["share"] >= 0.7 and top["share"] / max(second["share"], 1e-9) >= 3)
     if separable and top["n_verified"] == 0 and second:
-        print(f"{top['name']} 领先但没有任何核实过的证据（read/computed），只是推测堆出来的：先做一项便宜的核实再扫。")
+        print(f"{top['name']} leads but has no verified evidence at all (read/computed); it's built from inferences only: do one cheap verification before scanning.")
     if separable:
         pages, src = _cost_of(top["c"], args)
-        print(f"→ 可以进入缩圈/扫描：{top['name']}（{src}，约 {pages if pages is not None else '?'} 页）。")
-        if src == "整区bbox":
-            print("  先 `board.py urban <名>` 或 `scan-bbox` 把范围缩到建成区，页数会小一个数量级。")
+        print(f"→ Ready to narrow/scan: {top['name']} ({src}, about {pages if pages is not None else '?'} pages).")
+        if src == "whole-district bbox":
+            print("  First `board.py urban <name>` or `scan-bbox` to shrink the extent to the built-up area; pages drop by an order of magnitude.")
         elif pages is None:
-            print(f"  它还没有范围：`board.py urban {top['name']} --within <上级>` 或 `board.py scan-bbox {top['name']} --bbox s,w,n,e`，否则算不出页数。")
+            print(f"  It has no extent yet: `board.py urban {top['name']} --within <parent>` or `board.py scan-bbox {top['name']} --bbox s,w,n,e`, otherwise pages can't be computed.")
         if top["name"] not in b["falsify"]:
-            print(f"  扫之前先写证伪条件：`board.py falsify {top['name']} --text \"…\"`")
-        print("  扫描用机器先排序：`sat_scan.py grid --bbox <scan_bbox> --preset …`、`osm.py buildings`、`poi.py`；只看前 20–30 名。")
+            print(f"  Write the falsification condition before scanning: `board.py falsify {top['name']} --text \"…\"`")
+        print("  Let the machine rank the scan first: `sat_scan.py grid --bbox <scan_bbox> --preset …`, `osm.py buildings`, `poi.py`; look only at the top 20–30.")
         return
-    print("→ 分不开。按便宜到贵做区分检验，每项对全部未排除候选一起做，不是只查第一名：")
+    print("→ Can't separate. Do discriminating tests from cheap to expensive, each on all non-excluded candidates together, not just the leader:")
     kinds_have = {c["kind"] for c in b["clues"].values()}
-    for kind, tip in CHEAP_OPS:
-        mark = "（已有这类线索，登记 evidence）" if any(k in kinds_have for k in kind.split("/")) else ""
+    pk = _region_of(b, rows)
+    tips = (pk or {}).get("tips") or {}
+    if pk:
+        print(f"  (region pack {pk['code']}: `regions.py show {pk['code'].lower()}` lists its lookups, services and clue index)")
+    for kind, tip in [(k, tips.get(k, t)) for k, t in CHEAP_OPS]:
+        mark = "(you already have a clue of this kind; record evidence)" if any(k in kinds_have for k in kind.split("/")) else ""
         print(f"  - {kind}: {tip} {mark}")
-    print("→ 便宜检验都做过仍分不开：不要停。按“份额 ÷ 页数”顺序扫，小的先扫完，大的设页数上限：")
+    print("→ All cheap tests done and still can't separate: don't stop. Scan in \"share ÷ pages\" order, finish the small ones first, set a page cap on the large ones:")
     order = []
     for r in rows:
         pages, src = _cost_of(r["c"], args)
         order.append((r["share"] / pages if pages else 0, r, pages, src))
     order.sort(key=lambda t: -t[0])
     for ratio, r, pages, src in order[:8]:
-        print(f"    {r['name']:<14} 份额 {r['share']:.0%}  页数 {pages if pages is not None else '?'} ({src})  份额/页 {ratio:.4f}")
+        print(f"    {r['name']:<14} share {r['share']:.0%}  pages {pages if pages is not None else '?'} ({src})  share/page {ratio:.4f}")
     if any(pages is None for _, _, pages, _ in order):
-        print("    有候选没有范围：`board.py urban` 或 `scan-bbox` 补上，否则排不了序")
+        print("    Some candidates have no extent: fill it in with `board.py urban` or `scan-bbox`, otherwise they can't be ordered")
+
+
+def _region_of(b: dict, rows: list[dict]) -> dict | None:
+    """The board's country, else the one country all open frontier candidates share."""
+    if b.get("country"):
+        return regions.resolve(b["country"])
+    codes = {r["c"].get("country") for r in rows}
+    return regions.resolve(codes.pop()) if len(codes) == 1 and None not in codes else None
 
 
 def _parse_covers(s: str) -> list[tuple[float, float]]:
-    """--covers：'lat,lon' 或 'lat,lon:lat,lon'（证据实际覆盖到的点/区间）。解析不出坐标返回 []。"""
+    """--covers: 'lat,lon' or 'lat,lon:lat,lon' (the point/span the evidence actually covers). Returns [] if no coordinates parse."""
     pts = []
     for part in str(s).split(":"):
         m = re.findall(r"-?\d+\.\d+|-?\d+", part)
@@ -565,7 +720,7 @@ def _cov_span_m(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 
 def _covers_ratio(c: dict, pts: list[tuple[float, float]]) -> tuple[float, float] | None:
-    """(证据覆盖长度 / 候选范围对角, 对角米数)。候选没有 bbox 时返回 None（算不出，只能提示）。"""
+    """(evidence coverage length / candidate extent diagonal, diagonal in meters). None if the candidate has no bbox (can't compute, only warn)."""
     bb = c.get("bbox") or c.get("scan_bbox")
     if not bb or len(bb) != 4:
         return None
@@ -581,22 +736,68 @@ def _covers_ratio(c: dict, pts: list[tuple[float, float]]) -> tuple[float, float
 
 
 def _unseen(rows: list[dict], lv: str) -> list[str]:
-    """细层（片区/路/点）里一条证据都没有的未排除候选。粗层按份额/页数排着扫，没证据是常态，不算。"""
+    """Non-excluded candidates at fine levels (area/road/point) without a single piece of evidence. Coarse levels are scanned in share/pages order, where no evidence is normal, so they don't count."""
     if lv not in ("area", "road", "point"):
         return []
     return [r["name"] for r in rows if r["n_ev"] == 0 and not r["excluded"]]
 
 
+def _center_of(c: dict) -> tuple[float, float] | None:
+    if c.get("center"):
+        return float(c["center"][0]), float(c["center"][1])
+    bb = c.get("bbox")
+    return ((bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2) if bb else None
+
+
+def _inside(c: dict, lat: float, lon: float, pad_m: float = 30) -> bool | None:
+    """Is (lat, lon) inside the candidate's bbox (padded)? None when the candidate has no bbox."""
+    bb = c.get("bbox")
+    if not bb:
+        return None
+    dy, dx = pad_m / 110574, pad_m / (111320 * math.cos(math.radians(lat)))
+    return bb[0] - dy <= lat <= bb[2] + dy and bb[1] - dx <= lon <= bb[3] + dx
+
+
+def _skipped_level(b: dict, name: str) -> tuple[str, list[str], str | None] | None:
+    """A candidate that skips a level its siblings use: a point added under a city that also has road candidates.
+    Its evidence then never reaches that level's ranking, which goes on ranking the other roads.
+    Returns (skipped level, the siblings at that level, the one whose bbox contains it or None)."""
+    c = b["candidates"][name]
+    li = LEVELS.index(c["level"])
+    for lv in reversed(LEVELS[:li]):
+        sibs = [n for n, s in b["candidates"].items() if s["level"] == lv and s.get("parent") == c.get("parent")
+                and n != c.get("parent") and s.get("status") != "excluded"]
+        if not sibs:
+            continue
+        at = _center_of(c)
+        home = next((n for n in sibs if at and _inside(b["candidates"][n], *at)), None)
+        return lv, sibs, home
+    return None
+
+
+def _skip_hint(b: dict, name: str) -> str | None:
+    gap = _skipped_level(b, name)
+    if not gap:
+        return None
+    lv, sibs, home = gap
+    c = b["candidates"][name]
+    where = (f"it lies inside {home} → `board.py move '{name}' --parent '{home}'`" if home else
+             f"none of them contains it, so that ranking leaves the answer out → `board.py add <its {lv}> --level {lv} --parent '{c.get('parent')}' --bbox s,w,n,e`, "
+             f"then `board.py move '{name}' --parent <it>`")
+    return (f"{name} ({c['level']}) sits directly under {c.get('parent')}, which also has {len(sibs)} {lv} candidates; "
+            f"its evidence never reaches the {lv} ranking: {where}")
+
+
 def cmd_check(args, p: Path) -> None:
     b = _load(p)
     ok = True
-    print("出结论前检查：")
+    print("Pre-conclusion check:")
     for name, c in b["candidates"].items():
         if c.get("status") == "excluded":
             ex = c.get("excluded_by", {})
             if not ex.get("computed") or not Path(ex["computed"]).exists():
                 ok = False
-                print(f"  FAIL 排除 {name} 的文件不存在：{ex.get('computed')}")
+                print(f"  FAIL file for excluding {name} doesn't exist: {ex.get('computed')}")
     for name, c in b["candidates"].items():
         if c.get("status") != "excluded" or c["level"] not in EXTENDED_LEVELS:
             continue
@@ -604,49 +805,66 @@ def cmd_check(args, p: Path) -> None:
         pts = _parse_covers(ex.get("covers", ""))
         if not pts:
             ok = False
-            print(f"  FAIL 排除 {name}（{LEVEL_ZH[c['level']]}级）没有记录 --covers：证据覆盖了多少无从判断，"
-                  f"可能是以点代面 → 重新 exclude 并补 --covers，或改成 evidence --against 降权")
+            print(f"  FAIL excluding {name} ({LEVEL_LABEL[c['level']]} level) has no --covers recorded: no way to judge how much the evidence covered, "
+                  f"possibly one point standing in for the whole area → re-run exclude with --covers, or switch to evidence --against to down-weight")
             continue
         r = _covers_ratio(c, pts)
         if r is None:
-            print(f"  NOTE 排除 {name} 的证据覆盖 {ex['covers']}；候选没有 bbox，覆盖比例算不出 → "
-                  f"结论里写明只验了这一段")
+            print(f"  NOTE evidence for excluding {name} covers {ex['covers']}; the candidate has no bbox, so the coverage ratio can't be computed → "
+                  f"state in the conclusion that only this stretch was checked")
         elif r[0] < COVERS_MIN:
             ok = False
-            print(f"  FAIL 排除 {name} 的证据只覆盖约 {r[0]:.0%}（候选范围对角 {r[1]:.0f} m）：排除范围大于证据范围")
+            print(f"  FAIL evidence for excluding {name} covers only about {r[0]:.0%} (candidate extent diagonal {r[1]:.0f} m): exclusion scope exceeds evidence scope")
+    for name, c in b["candidates"].items():
+        if c.get("status") != "excluded" and any(e["candidate"] == name and e["lr"] > 1 for e in b["evidence"]):
+            hint = _skip_hint(b, name)
+            if hint:
+                ok = False
+                print(f"  FAIL {hint}")
     lv = _frontier(b)
     if lv:
         rows = [r for r in _scores(b, lv, args.prior_by) if not r["excluded"]]
         top = rows[0]
         if top["n_verified"] == 0:
             ok = False
-            print(f"  FAIL 主答案 {top['name']} 没有 read/computed 级证据，只有观察和推测：不能自报到这一级以下")
+            print(f"  FAIL main answer {top['name']} has no read/computed evidence, only observations and inferences: you can't claim this level or finer")
         else:
-            print(f"  ok   主答案 {top['name']}：证据 {top['n_ev']} 条，其中核实 {top['n_verified']} 条")
+            print(f"  ok   main answer {top['name']}: {top['n_ev']} pieces of evidence, {top['n_verified']} verified")
         weak = [r["name"] for r in rows[1:] if r["share"] >= 0.15]
         if weak:
-            print(f"  WARN 还有份额 ≥15% 的备选：{', '.join(weak)} → 写进 alternatives 并给区分检验，不取中点")
+            print(f"  WARN alternatives with share ≥15% remain: {', '.join(weak)} → write them into alternatives with a discriminating test; no midpoint")
         unseen = _unseen(rows, lv)
         if unseen:
-            print(f"  WARN {len(unseen)}/{len(rows)} 个{LEVEL_ZH[lv]}候选一条证据都没有，等于没看过："
-                  f"{'、'.join(unseen[:10])}{' …' if len(unseen) > 10 else ''} → 逐个看，对不上也登记 evidence --against；"
-                  f"没看过的不能算排除，结论里写明")
+            print(f"  WARN {len(unseen)}/{len(rows)} {LEVEL_LABEL[lv]} candidates have no evidence at all, i.e. were never looked at: "
+                  f"{', '.join(unseen[:10])}{' …' if len(unseen) > 10 else ''} → look at each; record evidence --against even when it doesn't match; "
+                  f"unseen ones don't count as excluded; state this in the conclusion")
         down = [(e["candidate"], e["clue"]) for e in b["evidence"]
                 if e["lr"] < 1 and b["clues"][e["clue"]]["status"] in ("inferred", "observed")
                 and b["candidates"][e["candidate"]].get("status") != "excluded"]
         if down:
             names = sorted({n for n, _ in down})
-            print(f"  NOTE 被推测降权但没排除的候选：{', '.join(names[:10])} → 候选全没对上时先回头看这些")
+            print(f"  NOTE candidates down-weighted by inference but not excluded: {', '.join(names[:10])} → when no candidate matches, look back at these first")
     for k, c in b["clues"].items():
         if c["status"] in ("read", "computed") and not c.get("file"):
-            print(f"  WARN {k} 是 {c['status']} 但没有文件：读出的字要有放大图，算的结果要有输出文件")
+            print(f"  WARN {k} is {c['status']} but has no file: text read needs a zoomed image, computed results need an output file")
+    # fine-level answer needs the evidence image the Output section asks for
+    fine = [n for n, c in b["candidates"].items() if c["level"] in ("area", "road", "point") and c.get("status") != "excluded"
+            and any(e["candidate"] == n and e["lr"] > 1 for e in b["evidence"])]
+    if fine:
+        ev = Path(args.evidence) if args.evidence else p.parent / "evidence.jpg"
+        if not ev.exists():
+            ok = False
+            print(f"  FAIL evidence image {ev} doesn't exist: supporting evidence reaches area/road/point level ({', '.join(fine[:3])}) → make it with evidence.py "
+                  f"(camera + heading wedge on satellite, comparison panels), or pass --evidence <path>")
+        else:
+            print(f"  ok   evidence image {ev}")
     unused = [k for k, c in b["clues"].items() if not c["used"]]
     if unused:
-        print(f"  NOTE 没用上的线索：{', '.join(unused)} → 写进 unused_clues")
+        print(f"  NOTE unused clues: {', '.join(unused)} → write them into unused_clues")
     for name in [n for n, c in b["candidates"].items() if c.get("status") != "excluded"]:
         if b["falsify"].get(name):
-            print(f"  ok   {name} 证伪条件：{'；'.join(b['falsify'][name])}")
-    print("结果：" + ("通过" if ok else "有 FAIL，先补"))
+            print(f"  ok   {name} falsification condition: {'; '.join(b['falsify'][name])}")
+    print("Result: " + ("pass" if ok else "has FAIL, fix those first"))
 
 
 def cmd_report(args, p: Path) -> None:
@@ -664,13 +882,15 @@ def cmd_report(args, p: Path) -> None:
         top = rows[0]
         rep["main"] = {"level": lv, "name": top["name"], "share": round(top["share"], 3),
                        "evidence": [{"clue": b["clues"][e["clue"]]["text"], "status": b["clues"][e["clue"]]["status"],
-                                     "lr": e["lr"], "why": e["why"], "file": e["file"]}
-                                    for e in b["evidence"] if e["candidate"] == top["name"]]}
+                                     "lr": e["lr"], "why": e["why"], "file": e["file"], **({"via": e["via"]} if e.get("via") else {})}
+                                    for e in top["ev"]]}
         for r in rows[1:]:
             if r["share"] >= 0.05:
                 rep["alternatives"].append({"name": r["name"], "share": round(r["share"], 3),
-                                            "how_to_separate": "对两者一起做一项便宜检验（地形/涂装/市政设施/水系模板），或各扫建成区前 3 页"})
+                                            "how_to_separate": "run one cheap test on both together (terrain/livery/municipal fixtures/water template), or scan the first 3 pages of each built-up area"})
         rep["unexamined"] = _unseen(rows, lv)
+    rep["level_gaps"] = [h for n, c in b["candidates"].items() if c.get("status") != "excluded"
+                         and any(e["candidate"] == n and e["lr"] > 1 for e in b["evidence"]) for h in [_skip_hint(b, n)] if h]
     for name, c in b["candidates"].items():
         if c.get("status") == "excluded":
             ex = c.get("excluded_by", {})
@@ -683,32 +903,115 @@ def cmd_report(args, p: Path) -> None:
     if args.merge:
         mp = Path(args.merge)
         base = json.loads(mp.read_text(encoding="utf-8")) if mp.exists() else {}
+        if rep["main"] and isinstance(base.get("lat"), (int, float)) and isinstance(base.get("lon"), (int, float)):
+            inside = _inside(b["candidates"][rep["main"]["name"]], base["lat"], base["lon"], pad_m=max(30, float(base.get("radius_m") or 0)))
+            if inside is False:
+                rep["main_mismatch"] = (f"result.json lat/lon is outside the board's main answer {rep['main']['name']} ({rep['main']['level']}): "
+                                        f"the answer's candidate isn't on that level, or the board ranking disagrees with the conclusion")
         base["board"] = rep
         if rep["alternatives"]:
             base.setdefault("alternatives", [])
-            base["alternatives"] = [f"{a['name']}（份额 {a['share']:.0%}）：{a['how_to_separate']}" for a in rep["alternatives"]] + \
-                [x for x in base.get("alternatives", []) if not isinstance(x, str) or "份额" not in x]
-        base["excluded"] = [f"{x['name']}：{x['why']}（{x['computed']}）" for x in rep["excluded"]] or base.get("excluded", [])
+            base["alternatives"] = [f"{a['name']} (share {a['share']:.0%}): {a['how_to_separate']}" for a in rep["alternatives"]] + \
+                [x for x in base.get("alternatives", []) if not isinstance(x, str) or "(share " not in x]
+        base["excluded"] = [f"{x['name']}: {x['why']} ({x['computed']})" for x in rep["excluded"]] or base.get("excluded", [])
         base["unused_clues"] = rep["unused_clues"] or base.get("unused_clues", [])
         mp.write_text(json.dumps(base, ensure_ascii=False, indent=1), encoding="utf-8")
-        print(f"已并入 {mp}（board 字段 + alternatives/excluded/unused_clues）")
+        print(f"Merged into {mp} (board field + alternatives/excluded/unused_clues)")
     print(json.dumps(rep, ensure_ascii=False, indent=1)[:4000])
+    for w in rep["level_gaps"] + ([rep["main_mismatch"]] if rep.get("main_mismatch") else []):
+        print(f"WARN {w}")
     if rep["main"] and rep["alternatives"]:
-        print("\n提醒：主答案 = 第一名，备选另列；不取中点、不画大圆。")
+        print("\nReminder: main answer = first place, alternatives listed separately; no midpoint, no big circle.")
+
+
+SUB_LEVELS = {"admin2", "city", "district"}   # children may record a prefecture as district; these count as one tier for name matching
+
+
+def _same_tier(a: str, b: str) -> bool:
+    """Levels at which two same-named places could be one place (吉林省 and its 吉林市 share a stem, not a level)."""
+    return a == b or (a in SUB_LEVELS and b in SUB_LEVELS)
+
+
+def _slot(b: dict, name: str, parent: str | None, cid: str | None, level: str) -> str | None:
+    """Key for a new candidate, or None when the board already has this place. A same-name place under another parent
+    (Gulou District in Nanjing and in Fuzhou) is a different candidate and gets its parent in the key."""
+    if name in b["candidates"] and not _same_tier(b["candidates"][name]["level"], level):
+        return f"{name} ({level})" if f"{name} ({level})" not in b["candidates"] else None
+    same = [k for k in b["candidates"] if _norm(k.split(" (")[0]) == _norm(name) and _same_tier(b["candidates"][k]["level"], level)]
+    if not same:
+        return name
+    for k in same:
+        c = b["candidates"][k]
+        if cid and c.get("cid"):
+            if c["cid"] == cid:
+                return None
+            continue
+        if not parent or not c.get("parent") or _norm(c["parent"]) == _norm(parent):
+            return None
+    key = f"{name} ({parent})"
+    return None if key in b["candidates"] else key
+
+
+def _same_place(c: dict, name: str, parent: str | None, code: str | None, cid: str | None) -> bool:
+    """Is board candidate c the place a lookup names? Same stable id; or same name with no conflicting id, country or parent."""
+    if cid and c.get("cid"):
+        return c["cid"] == cid
+    if code and c.get("country") and c["country"] != code:
+        return False
+    if parent and c.get("parent") and _norm(c["parent"]) != _norm(parent):
+        return False
+    return True
+
+
+def _ensure(b: dict, level: str, name: str, parent: str | None, code: str | None, cid: str | None, why: str) -> str:
+    """Candidate key for this place, creating it if needed. Same-name places elsewhere get their parent in the key, e.g. 朝阳区 (长春市)."""
+    for k, c in b["candidates"].items():
+        if cid and c.get("cid") == cid:
+            return k
+    for k, c in b["candidates"].items():
+        if _norm(k.split(" (")[0]) == _norm(name) and _same_tier(c["level"], level) and _same_place(c, name, parent, code, cid):
+            if cid and not c.get("cid"):
+                c["cid"] = cid
+            if code and not c.get("country"):
+                c["country"] = code
+            return k
+    key = name
+    if key in b["candidates"]:
+        key = f"{name} ({parent or code})"
+    b["candidates"][key] = {"level": level, "parent": parent, "bbox": None, "scan_bbox": None, "prior": 1.0, "status": "open",
+                            "note": why, "country": code, "cid": cid}
+    return key
+
+
+def _country_key(b: dict, m: dict) -> str | None:
+    """Existing country-level candidate for a region match (by pack code or any of the pack's names), if any."""
+    for k, c in b["candidates"].items():
+        if c["level"] != "country":
+            continue
+        if c.get("country") == m["country_code"]:
+            return k
+        p = regions.resolve(k.split(" (")[0])
+        if p and p["code"] == m["country_code"]:
+            c["country"] = m["country_code"]
+            return k
+    return None
 
 
 def cmd_apply(args, p: Path) -> None:
     b = _load(p)
     cl = HERE / "clues.py"
-    if not cl.exists():
-        sys.exit("clues.py 还没就位：先手工 `board.py clue` + `evidence`")
-    r = _run([UV, "run", str(cl), "lookup", args.kind, args.value, "--json"])
+    country = args.country or b.get("country")
+    # The country context only narrows region-pack lookups. Global kinds read --country as an observation target
+    # (driving-side --country X = "which side does X drive on"), so passing the context there would overwrite the value.
+    is_global = args.kind in GLOBAL_KINDS
+    cmd = [UV, "run", str(cl), "lookup", args.kind, args.value, "--json"] + (["--country", country] if country and not is_global else [])
+    r = _run(cmd)
     if r.returncode != 0:
-        sys.exit(f"clues.py 失败：{r.stderr.strip()[-400:]}")
+        sys.exit(f"clues.py failed: {(r.stderr or r.stdout).strip()[-400:]}")
     try:
         d = json.loads(r.stdout[r.stdout.index("{"):])
     except Exception:  # noqa: BLE001
-        sys.exit(f"clues.py 输出不是 JSON：{r.stdout[:300]}")
+        sys.exit(f"clues.py output isn't JSON: {r.stdout[:300]}")
     matches = d.get("matches") or []
     kid = args.clue
     if not kid:
@@ -716,53 +1019,79 @@ def cmd_apply(args, p: Path) -> None:
         b["clues"][kid] = {"text": f"{args.kind} {args.value}", "kind": args.kind, "status": "read",
                            "file": args.file or "", "source": d.get("source", ""), "used": False}
     if not matches:
-        print(f"查表没有结果：{d.get('note', '')}。线索 {kid} 已登记，未加证据。")
+        what = "Lookup not supported" if d.get("status") == "unsupported" else "Lookup returned nothing"
+        print(f"{what}: {d.get('note', '')}. Clue {kid} recorded, no evidence added.")
         _save(p, b)
         return
-    MUNICIPALITIES = ("北京市", "上海市", "天津市", "重庆市")
-
-    def level_of(key: str, m: dict) -> str:
-        if key == "country":
-            return "country"
-        if key == "admin1":
-            return "admin1"
-        name = m.get("admin2", "")
-        if m.get("admin1") in MUNICIPALITIES or name.endswith(("区", "县", "旗")):
-            return "district"
-        return "city"
-
     lr = args.lr
-    touched = set()
+    touched: dict[tuple[str, str], None] = {}
+    why = f"lookup {args.kind}={args.value}"
+
+    def hit(lv: str, cname: str) -> None:
+        lv = b["candidates"][cname]["level"]   # an existing candidate keeps its level (children may have recorded a prefecture as district)
+        if (lv, cname) in touched:   # one piece of evidence per place, however many table rows name it
+            return
+        touched[(lv, cname)] = None
+        _put_evidence(b, {"clue": kid, "candidate": cname, "lr": lr,
+                          "why": why, "file": args.file or "", "cmd": f"clues.py lookup {args.kind} {args.value}"})
+
     for m in matches:
-        for key in ("country", "admin1", "admin2"):
-            name = m.get(key)
+        code = m.get("country_code")
+        if not code:   # global tables: country level only
+            if m.get("country"):
+                hit("country", _ensure(b, "country", m["country"], None, None, None, f"from lookup {args.kind}"))
+            continue
+        ck = _country_key(b, m)
+        if ck:   # only when countries are already being compared; a single-country board isn't given a country row
+            hit("country", ck)
+        parent = None
+        for lv in ("admin1", "admin2", "city", "district"):
+            name = m.get(lv)
             if not name:
                 continue
-            lv = level_of(key, m)
-            cname = next((k for k in b["candidates"] if _norm(k) == _norm(name)), None)
-            if not cname:
-                b["candidates"][name] = {"level": lv, "parent": m.get("admin1") if key == "admin2" else None, "bbox": None,
-                                        "scan_bbox": None, "prior": 1.0, "status": "open", "note": f"来自查表 {args.kind}"}
-                cname = name
-            b["evidence"].append({"id": f"E{len(b['evidence']) + 1}", "clue": kid, "candidate": cname, "lr": lr,
-                                  "why": f"查表 {args.kind}={args.value}", "file": args.file or "", "cmd": f"clues.py lookup {args.kind} {args.value}"})
-            touched.add((lv, cname))
-    # 同级别其他未排除候选：反对但不排除（查表也可能有例外：外地车、总部电话）
-    for lv, _ in set(touched):
+            hit(lv, _ensure(b, lv, name, parent, code, regions.cid(code, m, upto=lv), f"from lookup {args.kind}"))
+            parent = name
+    # Finest place each match names: candidates inside it (a district of a pointed-to city) aren't "elsewhere"
+    leaves = {_norm(next((m[lv] for lv in ("district", "city", "admin2", "admin1", "country") if m.get(lv)), "")) for m in matches}
+    # Other non-excluded candidates at the same level: against, but not excluded (lookups have exceptions too: out-of-town vehicles,
+    # headquarters phone numbers). Only candidates the lookup could have pointed to: a country whose pack has no such table
+    # (or isn't installed) was never consulted, so "not pointed to" says nothing about it.
+    searched = set(d.get("searched") or [])
+    ctx = (regions.resolve(country) or {}).get("code") if country else None
+
+    def covered(k: str, c: dict) -> bool:
+        if is_global:
+            return True
+        code = c.get("country")
+        if c["level"] == "country":
+            # A country row is its own country: the context mustn't stand in for one we can't identify (India with no pack)
+            code = code or (regions.resolve(k.split(" (")[0]) or {}).get("code")
+            return code in searched
+        if code or ctx:
+            return (code or ctx) in searched
+        # Hand-added candidate of unknown country: covered if a searched pack's admin table knows the name
+        return any(pk["code"] in searched for pk, _ in regions.admin_find(k.split(" (")[0]))
+
+    for lv in {lv for lv, _ in touched}:
         for k, c in b["candidates"].items():
-            if c["level"] == lv and (lv, k) not in touched and c.get("status") != "excluded":
-                b["evidence"].append({"id": f"E{len(b['evidence']) + 1}", "clue": kid, "candidate": k, "lr": 1 / lr,
-                                      "why": f"查表 {args.kind}={args.value} 不指向这里", "file": "", "cmd": ""})
+            if c["level"] == lv and (lv, k) not in touched and c.get("status") != "excluded" and _norm(c.get("parent") or "") not in leaves \
+                    and covered(k, c):
+                _put_evidence(b, {"clue": kid, "candidate": k, "lr": 1 / lr,
+                                  "why": f"lookup {args.kind}={args.value} doesn't point here", "file": "", "cmd": ""})
     b["clues"][kid]["used"] = True
     _log(b, f"apply {args.kind}={args.value} → {[n for _, n in touched]}")
     _save(p, b)
-    print(f"{kid}：{args.kind}={args.value} → {', '.join(n for _, n in sorted(touched))}（似然比 {lr:g}；同级其余 1/{lr:g}，未排除）")
+    countries = sorted({m.get("country_code") for m in matches if m.get("country_code")})
+    print(f"{kid}: {args.kind}={args.value} → {', '.join(n for _, n in sorted(touched))} (likelihood ratio {lr:g}; others at the same level 1/{lr:g}, not excluded)"
+          + (f"\n  Matches in several countries ({', '.join(countries)}): all kept as hypotheses. If the country is known, `board.py country <cc>` and re-apply." if len(countries) > 1 else ""))
+    if d.get("note") and len(countries) <= 1:
+        print(f"  Note: {d['note'][:300]}")
 
 
 def cmd_log(args, p: Path) -> None:
     b = _load(p)
     print("\n".join(b.get("log", [])[-args.n:]))
-    print(f"\n线索 {len(b['clues'])} 条，证据 {len(b['evidence'])} 条，候选 {len(b['candidates'])} 个")
+    print(f"\n{len(b['clues'])} clues, {len(b['evidence'])} pieces of evidence, {len(b['candidates'])} candidates")
 
 
 def main() -> None:
@@ -771,8 +1100,8 @@ def main() -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     def rank_opts(sp):
-        sp.add_argument("--prior-by", choices=["none", "area"], default="none", help="先验：均匀（默认）或按 bbox 面积。没有按人口的选项")
-        sp.add_argument("--zoom", type=int, default=16, help="扫描页数按这个缩放算（找操场 z16 总览，厂房 z16，楼 z17）")
+        sp.add_argument("--prior-by", choices=["none", "area"], default="none", help="prior: uniform (default) or by bbox area. There is no by-population option")
+        sp.add_argument("--zoom", type=int, default=16, help="scan pages are computed at this zoom (sports field overview z16, factories z16, buildings z17)")
         sp.add_argument("--cell", type=int, default=320)
         sp.add_argument("--cols", type=int, default=5)
 
@@ -780,45 +1109,51 @@ def main() -> None:
     i.add_argument("--photo", required=True)
     i.add_argument("--case")
     i.add_argument("--force", action="store_true")
+    i.add_argument("--country", help="country context when it's already known (code or name): region-pack lookups use only that pack")
+
+    co = sub.add_parser("country", help="set the country context (code or name; 'none' clears it)")
+    co.add_argument("code")
 
     a = sub.add_parser("add")
     a.add_argument("names", nargs="*")
-    a.add_argument("--from", dest="from_", help="批量导入：poi.py --out / gazetteer.py --out 的 JSON，或 osm.py geom 的 GeoJSON")
-    a.add_argument("--radius", type=float, default=500, help="--from 里只有点坐标时，候选范围取点周围多少米（默认 500）")
+    a.add_argument("--from", dest="from_", help="bulk import: JSON from poi.py --out / gazetteer.py --out, or GeoJSON from osm.py geom")
+    a.add_argument("--radius", type=float, default=500, help="when --from has only point coordinates, the candidate extent is this many meters around the point (default 500)")
     a.add_argument("--level", required=True, help=f"{'/'.join(LEVELS)}")
     a.add_argument("--parent")
     a.add_argument("--bbox", help="s,w,n,e")
     a.add_argument("--prior", type=float, default=1.0)
     a.add_argument("--note")
 
-    ch = sub.add_parser("children", help="gazetteer.py 列全下级行政区并加为候选")
+    ch = sub.add_parser("children", help="list every subordinate admin area with gazetteer.py and add them as candidates")
     ch.add_argument("parent")
-    ch.add_argument("--level", type=int, help="OSM admin_level（不给就自动）")
+    ch.add_argument("--level", type=int, help="OSM admin_level (automatic if omitted)")
     ch.add_argument("--within")
-    ch.add_argument("--as-level", help=f"记成哪一级候选：{'/'.join(LEVELS)}。不给就自动：上级是国家记 admin1，"
-                                        "上级已在候选盘里记它的下一级，否则 district")
-    ch.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+    ch.add_argument("--as-level", help=f"level to record the candidates as: {'/'.join(LEVELS)}. Automatic if omitted: parent is a country → admin1, "
+                                        "parent already on the candidate board → its next level, otherwise district")
+    ch.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
 
     c = sub.add_parser("clue")
     c.add_argument("text")
-    c.add_argument("--kind", required=True, help="plate/area-code/text/livery/terrain/sun/infra/vegetation/network/municipal/ip/hint/…")
+    c.add_argument("--kind", required=True, help="plate/area-code/text/livery/terrain/sun/infra/vegetation/network/municipal/ip/hint/…; infrastructure is an alias for infra")
     c.add_argument("--status", required=True, help="/".join(STATUS))
-    c.add_argument("--file", help="放大图、脚本输出")
-    c.add_argument("--source", help="在图里哪、谁说的")
+    c.add_argument("--file", help="zoomed image, script output")
+    c.add_argument("--source", help="where in the image, who said it")
+    c.add_argument("--resolves", action="append", metavar="CLUE_ID",
+                   help="earlier clue actually tested by this computed result; repeatable, requires --status computed and an existing --file")
 
     e = sub.add_parser("evidence")
     e.add_argument("--clue", required=True)
-    e.add_argument("--for", dest="for_", action="append", help="名字:似然比（>1），可重复；只写名字默认 3")
-    e.add_argument("--against", action="append", help="名字:似然比（<1），可重复；只写名字默认 1/3")
+    e.add_argument("--for", dest="for_", action="append", help="name:likelihood_ratio (>1), repeatable; name alone defaults to 3")
+    e.add_argument("--against", action="append", help="name:likelihood_ratio (<1), repeatable; name alone defaults to 1/3")
     e.add_argument("--why")
     e.add_argument("--file")
-    e.add_argument("--command", dest="command_", help="产出这份证据的命令")
+    e.add_argument("--command", dest="command_", help="the command that produced this evidence")
 
     x = sub.add_parser("exclude")
     x.add_argument("name")
     x.add_argument("--clue", required=True)
-    x.add_argument("--computed", required=True, help="算过的文件（必须存在）")
-    x.add_argument("--covers", help="证据实际覆盖到哪里：'lat,lon' 或 'lat,lon:lat,lon'；区县/片区/路级候选必填")
+    x.add_argument("--computed", required=True, help="computed file (must exist)")
+    x.add_argument("--covers", help="where the evidence actually covers: 'lat,lon' or 'lat,lon:lat,lon'; required for district/area/road candidates")
     x.add_argument("--why")
 
     sb = sub.add_parser("scan-bbox")
@@ -828,7 +1163,7 @@ def main() -> None:
     u = sub.add_parser("urban")
     u.add_argument("name")
     u.add_argument("--within")
-    u.add_argument("--proxy", default=os.environ.get("GEO_PROXY"))
+    u.add_argument("--proxy", default=os.environ.get("GEO_PROXY"), help=PROXY_HELP)
 
     f = sub.add_parser("falsify")
     f.add_argument("name")
@@ -843,17 +1178,23 @@ def main() -> None:
 
     k = sub.add_parser("check")
     rank_opts(k)
+    k.add_argument("--evidence", help="evidence image path (default: evidence.jpg next to board.json)")
 
     rp = sub.add_parser("report")
     rank_opts(rp)
-    rp.add_argument("--merge", help="并入已有的 result.json")
+    rp.add_argument("--merge", help="merge into an existing result.json")
 
-    ap_ = sub.add_parser("apply", help="查表线索自动加候选和证据（clues.py）")
-    ap_.add_argument("--kind", required=True, help="plate/area-code/calling-code/driving-side/territories")
+    ap_ = sub.add_parser("apply", help="lookup clues add candidates and evidence automatically (clues.py)")
+    ap_.add_argument("--kind", required=True, help="calling-code/driving-side/territories, or a region-pack kind (plate, area-code, …: `regions.py list`)")
+    ap_.add_argument("--country", help="restrict region-pack lookups to this country (default: the board's country, else every pack)")
     ap_.add_argument("--value", required=True)
-    ap_.add_argument("--clue", help="已登记的线索 id；不给就新建一条 read 线索")
-    ap_.add_argument("--file", help="读出这个字的放大图")
+    ap_.add_argument("--clue", help="id of an already recorded clue; if omitted, a new read clue is created")
+    ap_.add_argument("--file", help="zoomed image the text was read from")
     ap_.add_argument("--lr", type=float, default=20.0)
+
+    mv = sub.add_parser("move", help="put a candidate under another candidate (e.g. a point under its road); evidence stays with it")
+    mv.add_argument("name")
+    mv.add_argument("--parent", required=True)
 
     lg = sub.add_parser("log")
     lg.add_argument("-n", type=int, default=40)
@@ -862,12 +1203,13 @@ def main() -> None:
     p = args.board
     fn = {"init": cmd_init, "add": cmd_add, "children": cmd_children, "clue": cmd_clue, "evidence": cmd_evidence,
           "exclude": cmd_exclude, "scan-bbox": cmd_scan_bbox, "urban": cmd_urban, "falsify": cmd_falsify,
-          "rank": cmd_rank, "next": cmd_next, "check": cmd_check, "report": cmd_report, "apply": cmd_apply, "log": cmd_log}
+          "rank": cmd_rank, "next": cmd_next, "check": cmd_check, "report": cmd_report, "apply": cmd_apply, "log": cmd_log,
+          "country": cmd_country, "move": cmd_move}
     fn[args.cmd](args, p)
 
 
 if __name__ == "__main__":
-    # 中文 Windows 默认按 GBK 输出：遇到 m²、ñ 会崩，agent 读到的中文也是乱码
+    # Chinese Windows outputs GBK by default: it crashes on m², ñ, and Chinese text the agent reads comes out garbled
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

@@ -1,0 +1,15 @@
+{
+ "code": "NZ",
+ "name": "New Zealand",
+ "names": ["New Zealand", "Aotearoa", "NZ"],
+ "status": "community",
+ "maintainers": ["@maxazure"],
+ "docs": ["clues.md"],
+ "services": {
+  "poi": {"sources": "osm", "country": "nz"},
+  "street_view": "gsv.py"
+ },
+ "tips": {
+  "livery": "Read the public transport brand and route text: Auckland Link (City/Inner/Outer/TāmakiLink), Metlink, Orbus and MyWay by Metro can narrow the search. Check regions/nz/clues.md for coverage and counterexamples; colour alone is weak."
+ }
+}

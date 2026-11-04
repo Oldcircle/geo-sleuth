@@ -2,16 +2,16 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow", "numpy"]
 # ///
-"""铁路高架桥 × 近旁陡山 共现扫描。
+"""Co-occurrence scan: railway viaduct × steep mountain nearby.
 
-这是第 13 集案例的专用脚本，阈值按那张照片的估计写死（山仰角、平地平线长度、近处起伏），
-只作复现记录，不保证在别的照片上能跑。输入 geojson 来自 osm.py geom 的铁路桥查询。
+This is a case-specific script for episode 13; thresholds are hard-coded from estimates for that photo (mountain elevation angle, flat-horizon length, nearby relief).
+Kept only as a reproduction record; not guaranteed to run on another photo. The input geojson comes from a railway-bridge query via osm.py geom.
 
-对 rail_bridges.geojson 里每条桥沿线每 STEP 米取点，用 Terrarium DEM(z10) 算：
-- 点位地面是否平原（1.2 km 内高程起伏小）
-- 方位 0–355° 每 5° 的地平线仰角（1.5–9 km）
-- 是否存在"连续 ≥30° 平地平线(<1°)" 紧挨 "仰角 ≥7° 的山体"
-输出候选点及特征，按山体仰角与陡峭度排序。
+For each bridge in rail_bridges.geojson, take a point every STEP meters along it and compute with Terrarium DEM (z10):
+- whether the ground at the point is plain (small elevation relief within 1.2 km)
+- horizon elevation angle every 5° for bearings 0–355° (1.5–9 km)
+- whether there is a "continuous ≥30° flat horizon (<1°)" right next to "a mountain at elevation angle ≥7°"
+Output candidate points and their features, sorted by mountain elevation angle and steepness.
 """
 import json, math, sys
 from pathlib import Path
@@ -54,7 +54,7 @@ for f in gj["features"]:
         pts.append((c[len(c) // 2][0], c[len(c) // 2][1], tags))
 print("samples", len(pts), file=sys.stderr)
 
-# 切片缓存
+# tile cache
 tiles = {}
 def tile_of(lat, lon):
     n = 2 ** Z
@@ -102,7 +102,7 @@ for idx, (lat, lon, tags) in enumerate(pts):
     ln, lon_n = terrain._dest_np(lat, lon, AZ, NEAR)
     hn = elev(ln, lon_n)
     h0 = float(np.median(hn))
-    if hn.max() - hn.min() > 40:     # 近处不平
+    if hn.max() - hn.min() > 40:     # not flat nearby
         continue
     ang = np.degrees(np.arctan2(h - h0 - 1.5, DIST[None, :]))
     hor = ang.max(axis=1)
@@ -111,14 +111,14 @@ for idx, (lat, lon, tags) in enumerate(pts):
     low = hor < 1.2
     if not mt.any() or low.sum() < 6:
         continue
-    # 找紧挨山体的连续平地平线段
+    # find a continuous flat-horizon run right next to the mountain
     best = 0
     for i in range(72):
         if not mt[i]:
             continue
         for sgn in (-1, 1):
             j = (i + sgn) % 72
-            # 允许 1 格过渡
+            # allow a 1-cell transition
             k = 0
             run = 0
             while k < 20:
