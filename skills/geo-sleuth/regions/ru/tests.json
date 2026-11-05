@@ -15,7 +15,7 @@
  {"kind": "area-code", "value": "8 (499) 123-45-67", "expect": [{"admin1": "Москва"}]},
  {"kind": "area-code", "value": "8 812 123 45 67", "expect": [{"admin1": "Санкт-Петербург"}]},
  {"kind": "area-code", "value": "8 (8552) 12-34-56", "expect": [{"admin1": "Татарстан"}]},
- {"kind": "area-code", "value": "8 818", "expect": [{"admin1": "Архангельская область"}, {"admin1": "Ненецкий автономный округ"}]},
+ {"kind": "area-code", "value": "8 818", "expect": []},
  {"kind": "area-code", "value": "8 (3652) 12-34-56", "expect": [{"admin1": "Республика Крым"}]},
  {"kind": "area-code", "value": "8 (401) 212-34-56", "expect": [{"admin1": "Калининградская область"}]},
  {"kind": "area-code", "value": "812 123 45 67", "expect": []},
@@ -30,5 +30,9 @@
  {"kind": "road", "value": "11-100К-01", "expect": [{"admin1": "Ненецкий автономный округ"}]},
  {"kind": "road", "value": "35К-015", "expect": [{"admin1": "Республика Крым"}]},
  {"kind": "road", "value": "Р-255", "expect": []},
- {"kind": "road", "value": "M-11", "expect": []}
+ {"kind": "road", "value": "M-11", "expect": []},
+ {"kind": "plate", "value": "01 A 123 BC", "expect": []},
+ {"kind": "plate", "value": "AB 1234 AG", "expect": []},
+ {"kind": "area-code", "value": "0312 123 45 67", "expect": []},
+ {"kind": "area-code", "value": "3422", "expect": []}
 ]

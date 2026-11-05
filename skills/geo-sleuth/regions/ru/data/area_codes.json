@@ -4,8 +4,8 @@
   "normalize": {
    "digits_only": true
   },
-  "key_pattern": "^8\\d{3}(?=\\d{7}$)|^8\\d{3}$",
-  "usage": "landline in national form with the leading 8 and all ten digits after it: 8 (495) 123-45-67; write +7 as 8 (+7 812 … → 8 812 …); or just 8 and the three-digit zone: 8 495",
+  "key_pattern": "^8\\d{3}(?=\\d{7}$)",
+  "usage": "landline in national form with the leading 8 and all ten digits after it: 8 (495) 123-45-67; write +7 as 8 (+7 812 … → 8 812 …). Type the whole number: a code on its own does not match, so that it can't collide with other countries' codes",
   "note": "Ten-digit numbers: a three-digit geographic zone (ABC, one or two per federal subject) plus a seven-digit number that may start with a city code. Zones begin with 3, 4 or 8; 9xx is mobile. Zones shared by two subjects (495, 818) list both.",
   "miss_note": "not a Russian landline zone: 9xx is mobile (any region), 800 toll-free, 7xx is Kazakhstan (also +7), 6xx Kazakh reserve; or the number was not typed as 8 + ten digits",
   "source": [
