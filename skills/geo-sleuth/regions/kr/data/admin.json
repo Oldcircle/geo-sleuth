@@ -1,0 +1,169 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org/relation/307756 (subarea members of 대한민국, boundary=administrative admin_level=4; name = OSM name tag, alias = name:en)",
+   "https://en.wikipedia.org/wiki/ISO_3166-2:KR",
+   "https://ko.wikipedia.org/wiki/전남광주통합특별시"
+  ],
+  "fetched": "2026-11-05",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 16,
+  "note": "16 province-level units (level 4). Gwangju (KR-29) and South Jeolla (KR-46) merged into 전남광주통합특별시 on 2026-07-01; OSM has the merged relation without an ISO3166-2 tag and ISO still lists both old codes, so its code is left empty and the old names are aliases. Gangwon and Jeonbuk are listed under their 특별자치도 names, as OSM spells them."
+ },
+ "items": [
+  {
+   "name": "서울특별시",
+   "code": "KR-11",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Seoul"
+   ]
+  },
+  {
+   "name": "부산광역시",
+   "code": "KR-26",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Busan"
+   ]
+  },
+  {
+   "name": "대구광역시",
+   "code": "KR-27",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Daegu"
+   ]
+  },
+  {
+   "name": "인천광역시",
+   "code": "KR-28",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Incheon"
+   ]
+  },
+  {
+   "name": "대전광역시",
+   "code": "KR-30",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Daejeon"
+   ]
+  },
+  {
+   "name": "울산광역시",
+   "code": "KR-31",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ulsan"
+   ]
+  },
+  {
+   "name": "세종특별자치시",
+   "code": "KR-50",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Sejong"
+   ]
+  },
+  {
+   "name": "경기도",
+   "code": "KR-41",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Gyeonggi"
+   ]
+  },
+  {
+   "name": "강원특별자치도",
+   "code": "KR-42",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Gangwon State",
+    "강원도",
+    "Gangwon"
+   ]
+  },
+  {
+   "name": "충청북도",
+   "code": "KR-43",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "North Chungcheong"
+   ]
+  },
+  {
+   "name": "충청남도",
+   "code": "KR-44",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "South Chungcheong"
+   ]
+  },
+  {
+   "name": "전북특별자치도",
+   "code": "KR-45",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jeonbuk-do",
+    "전라북도",
+    "North Jeolla"
+   ]
+  },
+  {
+   "name": "경상북도",
+   "code": "KR-47",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "North Gyeongsang"
+   ]
+  },
+  {
+   "name": "경상남도",
+   "code": "KR-48",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "South Gyeongsang"
+   ]
+  },
+  {
+   "name": "제주특별자치도",
+   "code": "KR-49",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jeju"
+   ]
+  },
+  {
+   "name": "전남광주통합특별시",
+   "code": "",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jeonnam-Gwangju Special Metropolitan City",
+    "전남광주시",
+    "광주특별시",
+    "광주광역시",
+    "전라남도",
+    "Gwangju",
+    "South Jeolla"
+   ]
+  }
+ ]
+}
