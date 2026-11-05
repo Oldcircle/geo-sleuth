@@ -1,0 +1,49 @@
+{
+ "code": "KG",
+ "name": "Kyrgyzstan",
+ "names": [
+  "Kyrgyzstan",
+  "Кыргызстан",
+  "Киргизия",
+  "Kirghizia",
+  "Kyrgyz Republic",
+  "Кыргыз Республикасы",
+  "Кыргызская Республика",
+  "KG"
+ ],
+ "status": "community",
+ "maintainers": [
+  "@wntic"
+ ],
+ "admin_levels": {
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "region (облус) or one of the cities of Bishkek and Osh (OSM admin_level 4)"
+ },
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {
+   "file": "data/plates.json"
+  },
+  "plate-1994": {
+   "file": "data/plates_1994.json"
+  },
+  "area-code": {
+   "file": "data/area_codes.json"
+  }
+ },
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "kg"
+  },
+  "street_view": "gsv.py"
+ },
+ "tips": {
+  "plate/area-code/calling-code": "plate region code (two digits at the left, flag and KG under them: 01 Bishkek … 09 Issyk-Kul) or a whole landline number (code 312 Bishkek, four digits elsewhere, after +996 or the trunk 0) readable → `clues.py lookup plate|area-code <value> --country kg` + `board.py apply`; a plate with a letter, four digits and one or two letters is the 1994–2016 format: `--kind plate-1994`"
+ }
+}

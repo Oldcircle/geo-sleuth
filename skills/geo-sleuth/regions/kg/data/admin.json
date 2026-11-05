@@ -1,0 +1,116 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org (boundary=administrative relations inside Kyrgyzstan at admin_level 4: seven regions and the cities of Bishkek and Osh; name = the OSM name tag as gazetteer.py reads it, so that board candidates and lookups share one spelling)",
+   "https://en.wikipedia.org/wiki/ISO_3166-2:KG"
+  ],
+  "fetched": "2026-11-02",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 9,
+  "note": "Seven regions (облус) and the cities of Bishkek and Osh, all first-level divisions at OSM admin_level 4; code = ISO 3166-2:KG. OSM names are Kyrgyz Cyrillic; the two cities appear on the board as Бишкек and Ош (gazetteer.py cuts 'шаары', city, because name:ru is a prefix), the regions keep 'облусу'. Aliases add the full tag, English, Russian and the Latin int_name."
+ },
+ "items": [
+  {
+   "name": "Баткен облусу",
+   "code": "KG-B",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Batken Region",
+    "Batken oblusu",
+    "Баткенская область"
+   ]
+  },
+  {
+   "name": "Бишкек",
+   "code": "KG-GB",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Bishkek",
+    "Bishkek City",
+    "Бишкек шаары",
+    "город Бишкек"
+   ]
+  },
+  {
+   "name": "Жалал-Абад облусу",
+   "code": "KG-J",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jalal-Abad Region",
+    "Jalal-Abad oblusu",
+    "Джалал-Абадская область"
+   ]
+  },
+  {
+   "name": "Нарын облусу",
+   "code": "KG-N",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Naryn Region",
+    "Narın oblusu",
+    "Нарынская область"
+   ]
+  },
+  {
+   "name": "Ош облусу",
+   "code": "KG-O",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Osh Region",
+    "Oş oblusu",
+    "Ошская область"
+   ]
+  },
+  {
+   "name": "Ош",
+   "code": "KG-GO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Osh",
+    "Osh City",
+    "Ош шаары"
+   ]
+  },
+  {
+   "name": "Талас облусу",
+   "code": "KG-T",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Talas Region",
+    "Talas oblusu",
+    "Таласская область"
+   ]
+  },
+  {
+   "name": "Чүй облусу",
+   "code": "KG-C",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Chuy Region",
+    "Chüy Region",
+    "Çüy oblusu",
+    "Чуйская область"
+   ]
+  },
+  {
+   "name": "Ысык-Көл облусу",
+   "code": "KG-Y",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Issyk-Kul Region",
+    "Isık-Köl oblusu",
+    "Ysyk-Köl Region",
+    "Иссык-Кульская область"
+   ]
+  }
+ ]
+}
