@@ -1,0 +1,36 @@
+{
+ "code": "CH",
+ "name": "Switzerland",
+ "names": [
+  "Switzerland",
+  "Schweiz",
+  "Suisse",
+  "Svizzera",
+  "Svizra",
+  "Swiss",
+  "CH"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "admin_levels": {
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "canton"
+ },
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {
+   "file": "data/plates.json"
+  }
+ },
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "ch"
+  },
+  "street_view": "gsv.py"
+ }
+}
