@@ -1,0 +1,23 @@
+[
+ {"kind": "area-code", "value": "02-312-3456", "expect": [{"admin1": "서울특별시"}, {"admin1": "경기도"}]},
+ {"kind": "area-code", "value": "02-2123-4567", "expect": [{"admin1": "서울특별시"}, {"admin1": "경기도"}]},
+ {"kind": "area-code", "value": "051-212-3456", "expect": [{"admin1": "부산광역시"}]},
+ {"kind": "area-code", "value": "(064) 710-2114", "expect": [{"admin1": "제주특별자치도"}]},
+ {"kind": "area-code", "value": "053-810-1234", "expect": [{"admin1": "대구광역시"}, {"admin1": "경상북도"}]},
+ {"kind": "area-code", "value": "042-840-2000", "expect": [{"admin1": "대전광역시"}, {"admin1": "충청남도"}, {"admin1": "충청북도"}]},
+ {"kind": "area-code", "value": "031-1234-5678", "expect": []},
+ {"kind": "area-code", "value": "062 613 2114", "expect": [{"admin1": "전남광주통합특별시"}]},
+ {"kind": "area-code", "value": "010-1234-5678", "expect": []},
+ {"kind": "area-code", "value": "070-1234-5678", "expect": []},
+ {"kind": "area-code", "value": "1588-1234", "expect": []},
+ {"kind": "area-code", "value": "02", "expect": []},
+ {"kind": "area-code", "value": "(04) 812-3456", "expect": []},
+ {"kind": "area-code", "value": "0212 444 55 66", "expect": []},
+ {"kind": "area-code", "value": "081 222 3456", "expect": []},
+ {"kind": "plate", "value": "서울 70바 1234", "expect": [{"admin1": "서울특별시"}]},
+ {"kind": "plate", "value": "전남 12사 3456", "expect": [{"admin1": "전남광주통합특별시"}]},
+ {"kind": "plate", "value": "제주", "expect": [{"admin1": "제주특별자치도"}]},
+ {"kind": "plate", "value": "123가 4567", "expect": []},
+ {"kind": "plate", "value": "WP CAB-1234", "expect": []},
+ {"kind": "plate", "value": "京A12345", "expect": []}
+]
