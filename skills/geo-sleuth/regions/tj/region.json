@@ -43,6 +43,6 @@
   "street_view": "gsv.py"
  },
  "tips": {
-  "plate/area-code/calling-code": "plate region code (the last two digits at the right end; flag and TJ at the left: 01, 05, 10 Dushanbe … 04 Gorno-Badakhshan) or landline code (372 Dushanbe, four digits elsewhere, after +992) readable → `clues.py lookup plate|area-code <value> --country tj` + `board.py apply`; a Russian-style plate with the code over RT in a box at the right is the 1996–2010 format: `--kind plate-1996`"
+  "plate/area-code/calling-code": "plate region code (the last two digits at the right end; flag and TJ at the left: 01, 05, 10 Dushanbe … 04 Gorno-Badakhshan) or a whole landline number (code 372 Dushanbe, four digits elsewhere, after +992) readable → `clues.py lookup plate|area-code <value> --country tj` + `board.py apply`; a Russian-style plate with the code over RT in a box at the right is the 1996–2010 format: `--kind plate-1996`"
  }
 }

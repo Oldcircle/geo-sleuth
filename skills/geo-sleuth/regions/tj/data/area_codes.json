@@ -5,8 +5,8 @@
    "digits_only": true,
    "ensure_prefix": "992"
   },
-  "key_pattern": "^(?=\\d{12}$)992(?:372|3\\d{3})|^992(?:372|3\\d{3})$",
-  "usage": "nine-digit number: 372 21 23 45 or +992 3422 6 1234; or only the code: 3422. Type the nine digits without any dialling prefix written before them",
+  "key_pattern": "^(?=\\d{12}$)992(?:372|3\\d{3})",
+  "usage": "nine-digit number: 372 21 23 45 or +992 3422 6 1234. Type the nine digits without any dialling prefix written before them. Type the whole number: a code on its own does not match, so that it can't collide with other countries' codes",
   "note": "Nine-digit national numbers. Dushanbe has the three-digit code 372, other places four-digit codes: 31xx Districts of Republican Subordination, 32xx and 33xx Khatlon (Bokhtar and Kulob zones), 34xx Sughd (3422 Khujand), 35xx Gorno-Badakhshan (3522 Khorog). Nurek (3138) and Yavan (3141) are in the 31 zone but in Khatlon.",
   "miss_note": "not a geographic Tajik landline: a mobile number (not starting with 3, e.g. 55, 90–93, 98 …), a number with a dialling prefix before the nine digits (drop it and look it up again), a code missing from the list (Shurabad and Nosiri Khusrav have none of their own), or a number of another country",
   "source": [
