@@ -19,11 +19,16 @@
  {"kind": "area-code", "value": "312 123456", "expect": [{"admin1": "Бишкек"}]},
  {"kind": "area-code", "value": "+996 3222 12345", "expect": [{"admin1": "Ош"}]},
  {"kind": "area-code", "value": "(3922) 5-12-34", "expect": [{"admin1": "Ысык-Көл облусу"}]},
- {"kind": "area-code", "value": "3622", "expect": [{"admin1": "Баткен облусу"}]},
+ {"kind": "area-code", "value": "3622", "expect": []},
  {"kind": "area-code", "value": "3138 12345", "expect": [{"admin1": "Чүй облусу"}]},
  {"kind": "area-code", "value": "3765 12345", "expect": [{"admin1": "Жалал-Абад облусу"}, {"admin1": "Ош облусу"}]},
  {"kind": "area-code", "value": "0312 123456", "expect": []},
  {"kind": "area-code", "value": "+996 555 123456", "expect": []},
  {"kind": "area-code", "value": "3999 12345", "expect": []},
- {"kind": "area-code", "value": "+7 727 250 12 34", "expect": []}
+ {"kind": "area-code", "value": "+7 727 250 12 34", "expect": []},
+ {"kind": "plate", "value": "01 A 123 BC", "expect": []},
+ {"kind": "plate", "value": "123 ABC 02", "expect": []},
+ {"kind": "plate", "value": "AB 1234 AG", "expect": []},
+ {"kind": "area-code", "value": "0312 123 45 67", "expect": []},
+ {"kind": "area-code", "value": "3422", "expect": []}
 ]

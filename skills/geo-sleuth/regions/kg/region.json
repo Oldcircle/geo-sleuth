@@ -44,6 +44,6 @@
   "street_view": "gsv.py"
  },
  "tips": {
-  "plate/area-code/calling-code": "plate region code (two digits at the left, flag and KG under them: 01 Bishkek … 09 Issyk-Kul) or landline code (312 Bishkek, four digits elsewhere, after +996 or the trunk 0) readable → `clues.py lookup plate|area-code <value> --country kg` + `board.py apply`; a plate with a letter, four digits and one or two letters is the 1994–2016 format: `--kind plate-1994`"
+  "plate/area-code/calling-code": "plate region code (two digits at the left, flag and KG under them: 01 Bishkek … 09 Issyk-Kul) or a whole landline number (code 312 Bishkek, four digits elsewhere, after +996 or the trunk 0) readable → `clues.py lookup plate|area-code <value> --country kg` + `board.py apply`; a plate with a letter, four digits and one or two letters is the 1994–2016 format: `--kind plate-1994`"
  }
 }
