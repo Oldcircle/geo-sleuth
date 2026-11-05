@@ -1,0 +1,222 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org (boundary=administrative, admin_level=4 relations inside Kazakhstan; name = OSM name tag, Kazakh)",
+   "https://en.wikipedia.org/wiki/ISO_3166-2:KZ"
+  ],
+  "fetched": "2026-11-01",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 20,
+  "note": "17 regions (oblys) and 3 cities of republican significance (Astana, Almaty, Shymkent), all admin_level 4 in OSM; code = ISO 3166-2:KZ. Abai, Jetisu and Ulytau regions were split off East Kazakhstan, Almaty and Karaganda regions in June 2022. Aliases: English and Russian names."
+ },
+ "items": [
+  {
+   "name": "Абай облысы",
+   "code": "KZ-10",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Abai Region",
+    "Абайская область",
+    "Abay Region"
+   ]
+  },
+  {
+   "name": "Алматы",
+   "code": "KZ-75",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Almaty",
+    "Алма-Ата",
+    "Alma-Ata"
+   ]
+  },
+  {
+   "name": "Алматы облысы",
+   "code": "KZ-19",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Almaty Region",
+    "Алматинская область"
+   ]
+  },
+  {
+   "name": "Ақмола облысы",
+   "code": "KZ-11",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Akmola Region",
+    "Акмолинская область"
+   ]
+  },
+  {
+   "name": "Ақтөбе облысы",
+   "code": "KZ-15",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Aktobe Region",
+    "Актюбинская область",
+    "Aqtöbe Region"
+   ]
+  },
+  {
+   "name": "Астана",
+   "code": "KZ-71",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Astana",
+    "Нур-Султан",
+    "Nur-Sultan"
+   ]
+  },
+  {
+   "name": "Атырау облысы",
+   "code": "KZ-23",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Atyrau Region",
+    "Атырауская область"
+   ]
+  },
+  {
+   "name": "Батыс Қазақстан облысы",
+   "code": "KZ-27",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "West Kazakhstan Region",
+    "Западно-Казахстанская область"
+   ]
+  },
+  {
+   "name": "Маңғыстау облысы",
+   "code": "KZ-47",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Mangystau Region",
+    "Мангистауская область"
+   ]
+  },
+  {
+   "name": "Павлодар облысы",
+   "code": "KZ-55",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Pavlodar Region",
+    "Павлодарская область"
+   ]
+  },
+  {
+   "name": "Қарағанды облысы",
+   "code": "KZ-35",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Karaganda Region",
+    "Карагандинская область",
+    "Karagandy Region"
+   ]
+  },
+  {
+   "name": "Қостанай облысы",
+   "code": "KZ-39",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kostanay Region",
+    "Костанайская область"
+   ]
+  },
+  {
+   "name": "Қызылорда облысы",
+   "code": "KZ-43",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kyzylorda Region",
+    "Кызылординская область"
+   ]
+  },
+  {
+   "name": "Шығыс Қазақстан облысы",
+   "code": "KZ-63",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "East Kazakhstan Region",
+    "Восточно-Казахстанская область"
+   ]
+  },
+  {
+   "name": "Шымкент",
+   "code": "KZ-79",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Shymkent",
+    "Чимкент"
+   ]
+  },
+  {
+   "name": "Солтүстік Қазақстан облысы",
+   "code": "KZ-59",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "North Kazakhstan Region",
+    "Северо-Казахстанская область"
+   ]
+  },
+  {
+   "name": "Түркістан облысы",
+   "code": "KZ-61",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Turkistan Region",
+    "Туркестанская область",
+    "Turkestan Region"
+   ]
+  },
+  {
+   "name": "Ұлытау облысы",
+   "code": "KZ-62",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ulytau Region",
+    "Улытауская область"
+   ]
+  },
+  {
+   "name": "Жамбыл облысы",
+   "code": "KZ-31",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jambyl Region",
+    "Жамбылская область",
+    "Zhambyl Region"
+   ]
+  },
+  {
+   "name": "Жетісу облысы",
+   "code": "KZ-33",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jetisu Region",
+    "Жетысуская область",
+    "Zhetysu Region"
+   ]
+  }
+ ]
+}
