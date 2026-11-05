@@ -39,14 +39,14 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### National flag with straight rays
 - Look for: the red flag with the yellow sun: forty **straight** rays and four crossed lines in each direction over the centre (the yurt crown), instead of forty wavy rays and three lines
 - Points to: a flag made after the change of 26 December 2023; the flag of 1992–2023 has wavy rays
-- Strength: medium as a date (the earliest date for that flag); none as a place
+- Strength: medium as a date (single source; the earliest date for that flag); none as a place
 - Counterexamples: old flags stay up on poles, plates, painted walls and signs for years, so a wavy-ray flag does not prove a photo is older than 2024; at a distance the two suns look alike
 - Sources: en.wikipedia "Flag of Kyrgyzstan", sections "History" and "2023 change", https://en.wikipedia.org/wiki/Flag_of_Kyrgyzstan
 
 ### Trolleybuses
 - Look for: trolleybuses or their overhead wires in a city street
 - Points to: Osh (the only system still running, since 1977) for a recent photo; a trolleybus in Bishkek dates the photo before 3 November 2024, one in Naryn before 31 May 2024
-- Strength: medium
+- Strength: medium (single source)
 - Counterexamples: overhead wires can stay after a system closes (Naryn's were due to be taken down in summer 2025); Balykchy has trolleybus wiring that was never used
 - Sources: en.wikipedia "List of trolleybus systems", section "Kyrgyzstan", https://en.wikipedia.org/wiki/List_of_trolleybus_systems
 
@@ -55,7 +55,7 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### One time zone, UTC+6
 - Look for: a clock, timestamp or shadow you want to compare with the sun (`sun.py`)
 - Points to: the whole country is on UTC+6 (Asia/Bishkek) without daylight saving since 12 August 2005; from 1991 to 2005 it was UTC+5 with summer time
-- Strength: — (a setting for `sun.py`, not a place clue)
+- Strength: — (single source; a setting for `sun.py`, not a place clue)
 - Counterexamples: photos from before August 2005 use the older offset; EXIF clocks are often wrong
 - Sources: en.wikipedia "Kyrgyzstan Time", section "History", https://en.wikipedia.org/wiki/Kyrgyzstan_Time
 
@@ -64,6 +64,6 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### Google Street View coverage
 - Look for: a matching place on Google Street View
 - Points to: Kyrgyzstan has had public Street View since May 2016, the first country in Central Asia, with Bishkek, Jalal-Abad, Osh, Naryn, Karakol and more places → `gsv.py` for comparison
-- Strength: — (a comparison source)
+- Strength: — (single source; a comparison source)
 - Counterexamples: coverage of mountain roads and villages is thin, and the imagery may be years old (before the 2024 trolleybus closures and the 2023 flag)
 - Sources: en.wikipedia "Google Street View coverage", sections "2016" and the country table, https://en.wikipedia.org/wiki/Google_Street_View_coverage
