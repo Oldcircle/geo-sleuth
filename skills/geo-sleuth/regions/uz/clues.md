@@ -14,7 +14,7 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### Plates of the 1998–2008 format
 - Look for: an older plate with the two-digit code in a box on the left in **blue** digits, then a letter and four digits (private cars, `10 A 1234`) or two letters and three digits (companies, `30 AB 123`)
 - Points to: the region of registration at the time → `clues.py lookup plate-1998 <plate> --country uz`; the codes then were 10 or 30 Tashkent city, 11 Tashkent Region, 12 Sirdaryo … 23 Karakalpakstan, which overlap today's ranges, so look the plate up under the format it shows
-- Strength: weak (old plates are on old cars that may have moved since)
+- Strength: weak (single source; old plates are on old cars that may have moved since)
 - Counterexamples: misreading the format sends the code to the wrong table (10 is Tashkent city on an old plate, Tashkent Region on a new one); Russian plates of the same years also put a code in a separate box, but on the right
 - Sources: ru.wikipedia "Индекс автомобильных номеров Узбекистана", sections "Галерея номерных знаков формата 1998–2008 годов" and "Таблица кодов регионов", https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Узбекистана
 
@@ -46,7 +46,7 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### Metro stations
 - Look for: a metro station, metro trains, or an elevated metro line on a viaduct
 - Points to: Tashkent: it has the country's only metro (4 lines, 50 stations). The Circle (Halqa) line, opened in stages since 2020, runs almost entirely on elevated overpasses (50.5 of 52.1 km when complete), and the Yunusobod line reached Turkiston and Yunusobod stations on 29 August 2020
-- Strength: strong for a station interior
+- Strength: medium for a station interior (single source)
 - Counterexamples: Almaty (Kazakhstan) also has a metro; a station sign in Uzbek Latin or Cyrillic separates them
 - Sources: en.wikipedia "Tashkent Metro" (lines, stations, opening dates, Circle line overpasses), https://en.wikipedia.org/wiki/Tashkent_Metro
 

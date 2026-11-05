@@ -49,7 +49,7 @@
   "street_view": "gsv.py"
  },
  "tips": {
-  "plate/area-code/calling-code": "plate region code (two digits in the box on the left; each region holds a range, 01–09 Tashkent city … 95–99 Karakalpakstan) or landline code (two digits after +998) readable → `clues.py lookup plate|area-code <value> --country uz` + `board.py apply`; a plate with a letter and four digits after the code is the 1998–2008 format: `--kind plate-1998`",
+  "plate/area-code/calling-code": "plate region code (two digits in the box on the left; each region holds a range, 01–09 Tashkent city … 95–99 Karakalpakstan) or a whole landline number (code two digits after +998) readable → `clues.py lookup plate|area-code <value> --country uz` + `board.py apply`; a plate with a letter and four digits after the code is the 1998–2008 format: `--kind plate-1998`",
   "livery": "car and bus make is not a region marker in Uzbekistan: Chevrolet cars from the national plants are everywhere. Read the plate's region code from vehicles instead (`clues.py lookup plate <two digits> --country uz`)"
  }
 }

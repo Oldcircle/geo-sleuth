@@ -5,8 +5,8 @@
    "digits_only": true,
    "ensure_prefix": "998"
   },
-  "key_pattern": "^998\\d{2}(?=\\d{7}$)|^998\\d{2}$",
-  "usage": "nine-digit number as written on signs: 71 123 45 67, (66) 233-45-67 or +998 65 221 23 45; or only the two-digit code: 66",
+  "key_pattern": "^998\\d{2}(?=\\d{7}$)",
+  "usage": "nine-digit number as written on signs: 71 123 45 67, (66) 233-45-67 or +998 65 221 23 45. Type the whole number: a code on its own does not match, so that it can't collide with other countries' codes",
   "note": "Since 2018–2020 all numbers have nine digits: a two-digit code, then seven digits; there is no trunk prefix. Geographic codes are 61–79; 20, 33, 50, 77, 80, 87–99 are mobile or other non-geographic ranges.",
   "miss_note": "not a geographic Uzbek code: a mobile number (20, 33, 50, 77, 88, 90–99 …), 78 (non-geographic fixed), 55 (VoIP), an old seven-digit local number written without the code, or a number of another country",
   "source": [
