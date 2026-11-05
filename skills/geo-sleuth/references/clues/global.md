@@ -145,7 +145,7 @@ When you recognize infrastructure built to "country X's standard", the candidate
 ### Turkmen letters on signs
 - Look for: Latin text with Ň, Ý or Ž next to Ä, Ç, Ş, Ö or Ü (`Türkmenistan`, `köçesi`, street, `şäheri`, city, `welaýaty`, province)
 - Points to: Turkmenistan, where the Latin alphabet (in its 1999 form) is official. Ň, Ý and Ž are in none of the other Turkic Latin alphabets of the region: Turkish has Ç, Ş, Ö, Ü and Ğ but no Ä, Ň, Ý or Ž; Azerbaijani writes Ə, not Ä; Kazakh Latin writes Ñ, not Ň; Uzbek uses oʻ, gʻ, sh and ch
-- Strength: strong for Ň or Ý together with Ş, Ç or Ä on an official sign
+- Strength: medium for Ň or Ý together with Ş, Ç or Ä on an official sign (single source: all from Wikipedia)
 - Counterexamples: Slovak also has Ä, Ň, Ý and Ž, and Czech Ň, Ý and Ž, but neither has Ş or Ç; Turkmen also has Cyrillic and Arabic-script alphabets, so Turkmen text outside Turkmenistan may not use these letters at all
 - Sources: en.wikipedia "Turkmen alphabet" (letter table; 1993 alphabet, symbols replaced in 1999; official status), https://en.wikipedia.org/wiki/Turkmen_alphabet; en.wikipedia "Turkish alphabet", https://en.wikipedia.org/wiki/Turkish_alphabet; en.wikipedia "Azerbaijani alphabet", https://en.wikipedia.org/wiki/Azerbaijani_alphabet; en.wikipedia "Kazakh alphabets", https://en.wikipedia.org/wiki/Kazakh_alphabets; en.wikipedia "Slovak orthography", https://en.wikipedia.org/wiki/Slovak_orthography; en.wikipedia "Czech orthography", https://en.wikipedia.org/wiki/Czech_orthography
 
