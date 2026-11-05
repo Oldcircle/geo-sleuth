@@ -1,0 +1,50 @@
+{
+ "code": "KR",
+ "name": "South Korea",
+ "names": [
+  "South Korea",
+  "대한민국",
+  "한국",
+  "Republic of Korea",
+  "Korea",
+  "ROK",
+  "KR"
+ ],
+ "status": "community",
+ "maintainers": [
+  "@Yasas-Sri"
+ ],
+ "admin_levels": {
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "province / metropolitan city"
+ },
+ "name_suffixes": [
+  "통합특별시",
+  "특별시",
+  "광역시",
+  "특별자치시",
+  "특별자치도",
+  "도"
+ ],
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "area-code": {
+   "file": "data/area_codes.json"
+  },
+  "plate": {
+   "file": "data/plates.json"
+  }
+ },
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "kr"
+  },
+  "street_view": "gsv.py"
+ }
+}
