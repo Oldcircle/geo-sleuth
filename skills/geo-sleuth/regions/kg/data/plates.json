@@ -1,0 +1,67 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^0\\d(?=\\d{3}[A-Z]{2,3}$)|^0\\d$",
+  "usage": "plates since June 2016 (01 123 ABC, region code at the left with the flag and KG under it; motorcycles 01 123 AB): type the whole plate or only the two digits",
+  "note": "One code per region: 01 Bishkek, 02 Osh city, 03 Batken, 04 Jalal-Abad, 05 Naryn, 06 Osh Region, 07 Talas, 08 Chüy, 09 Issyk-Kul. The code is where the vehicle was registered, not where the photo was taken. 10 (legalized formerly foreign-plated cars, since 2025) and 11 (temporary) are not regions and are left out.",
+  "miss_note": "not a regional Kyrgyz plate: 10 (cars legalized in 2025, mostly right-hand drive with former Armenian or Russian plates) or 11 (temporary), a 1994–2016 plate (a letter, four digits and one or two letters; use `--kind plate-1994`), a yellow foreign-resident plate (01 1234 H, four digits and one letter), a red diplomatic or blue UN plate, or a plate of another country (Uzbekistan, Kazakhstan and Tajikistan also use two-digit codes)",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Kyrgyzstan, sections 'Formats' and 'Region identifiers'",
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Кыргызстана, section 'Коды'"
+  ],
+  "fetched": "2026-11-02",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 9
+ },
+ "entries": {
+  "01": [
+   {
+    "admin1": "Бишкек"
+   }
+  ],
+  "02": [
+   {
+    "admin1": "Ош"
+   }
+  ],
+  "03": [
+   {
+    "admin1": "Баткен облусу"
+   }
+  ],
+  "04": [
+   {
+    "admin1": "Жалал-Абад облусу"
+   }
+  ],
+  "05": [
+   {
+    "admin1": "Нарын облусу"
+   }
+  ],
+  "06": [
+   {
+    "admin1": "Ош облусу"
+   }
+  ],
+  "07": [
+   {
+    "admin1": "Талас облусу"
+   }
+  ],
+  "08": [
+   {
+    "admin1": "Чүй облусу"
+   }
+  ],
+  "09": [
+   {
+    "admin1": "Ысык-Көл облусу"
+   }
+  ]
+ }
+}
