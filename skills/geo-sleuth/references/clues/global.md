@@ -131,7 +131,7 @@ When you recognize infrastructure built to "country X's standard", the candidate
 ### Tajik letters on signs
 - Look for: Cyrillic text with Ӣ, Ӯ or Ҷ, usually next to Ғ, Қ and Ҳ (`Ҷумҳурии Тоҷикистон`, `кӯчаи`, street)
 - Points to: Tajikistan. The Tajik Cyrillic alphabet adds Ғ, Ӣ, Қ, Ӯ, Ҳ and Ҷ to the Russian letters; Ӣ, Ӯ and Ҷ are in none of the neighbours' alphabets (Uzbek Cyrillic has Ў instead of Ӯ, Kyrgyz has Ң, Ө, Ү, Kazakh has Ә, Ғ, Қ, Ң, Ө, Ұ, Ү, Һ, І)
-- Strength: strong for Ӯ or Ҷ on an official sign; medium for Ғ, Қ, Ҳ alone, which Uzbek Cyrillic also has
+- Strength: medium for Ӯ or Ҷ on an official sign (single source: all from Wikipedia); weak for Ғ, Қ, Ҳ alone, which Uzbek Cyrillic also has
 - Counterexamples: Tajik is also spoken by ethnic Tajiks in Uzbekistan (the standard language is based on the dialects of the Samarkand region); in Afghanistan the closely related Dari, and Tajik itself, are written in the Persian alphabet, not Cyrillic; a sign in Russian only says nothing
 - Sources: en.wikipedia "Tajik alphabet" (Cyrillic letter table, Persian alphabet in Afghanistan), https://en.wikipedia.org/wiki/Tajik_alphabet; en.wikipedia "Tajik language" (spoken in Tajikistan and Uzbekistan; Samarkand dialects; Dari), https://en.wikipedia.org/wiki/Tajik_language; en.wikipedia "Uzbek alphabet", https://en.wikipedia.org/wiki/Uzbek_alphabet; en.wikipedia "Kyrgyz alphabets", https://en.wikipedia.org/wiki/Kyrgyz_alphabets; en.wikipedia "Kazakh alphabets", https://en.wikipedia.org/wiki/Kazakh_alphabets
 
