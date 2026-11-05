@@ -23,21 +23,21 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### White marble buildings and white cars
 - Look for: avenues of monumental buildings clad in white marble, and traffic in which nearly every car is white
 - Points to: Ashgabat, which entered the Guinness Book of Records in 2013 for the world's highest concentration of white marble buildings; by 2018 non-white cars were effectively banned in the city, and black cars were impounded
-- Strength: strong when both appear together
+- Strength: medium when both appear together (two sources for each of the two claims, not the three a strong rating needs)
 - Counterexamples: Arkadag and other new government projects follow the same white style, so check the plate (AG Ashgabat, AK Arkadag); the car rule is reported for the capital, and mixed colours are normal elsewhere
 - Sources: en.wikipedia "Ashgabat" (white marble record; non-white cars), https://en.wikipedia.org/wiki/Ashgabat; The Guardian "Turkmenistan enters record books for having the most white marble buildings" (2013), https://www.theguardian.com/world/2013/may/26/turkmenistan-world-record-white-marble-buildings; RFE/RL "'Bad Luck' For Black Car Owners in Turkmen Capital" (2018), https://www.rferl.org/a/turkmenistan-black-car-owners-bad-luck/28963539.html
 
 ### Arkadag, the new city
 - Look for: a brand-new planned "smart city", signs reading `Arkadag`, plates with `AK`
 - Points to: Ahal Province; Arkadag became the province's capital on 20 December 2022 and was formally opened on 29 June 2023, so a finished-looking photo of it dates from 2023 or later
-- Strength: medium as a date (the earliest date for a finished street there)
+- Strength: medium as a date (single source; the earliest date for a finished street there)
 - Counterexamples: Ashgabat looks much the same; construction photos predate the opening
 - Sources: en.wikipedia "Arkadag" (regional capital from 20 December 2022, opening set for 29 June 2023), https://en.wikipedia.org/wiki/Arkadag
 
 ### Awaza resort on the Caspian
 - Look for: a row of new resort hotels on a Caspian beach
 - Points to: Awaza, a tourist zone and borough of Türkmenbaşy, 12 km west of the city centre, in Balkan Province
-- Strength: medium
+- Strength: medium (single source)
 - Counterexamples: other Caspian resorts (Kazakhstan's Aktau, Azerbaijan, Iran) look similar; read the plates or signs
 - Sources: en.wikipedia "Avaza", https://en.wikipedia.org/wiki/Avaza
 
@@ -46,6 +46,6 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### One time zone, UTC+5
 - Look for: a clock, timestamp or shadow you want to compare with the sun (`sun.py`)
 - Points to: the whole country is on UTC+5, without daylight saving time, although most of its territory lies in the geographical zone of UTC+4, so the sun is lower in the morning by the clock than the longitude alone suggests
-- Strength: — (a setting for `sun.py`, not a place clue)
+- Strength: — (single source; a setting for `sun.py`, not a place clue)
 - Counterexamples: EXIF clocks are often wrong
 - Sources: en.wikipedia "Time in Turkmenistan", https://en.wikipedia.org/wiki/Time_in_Turkmenistan

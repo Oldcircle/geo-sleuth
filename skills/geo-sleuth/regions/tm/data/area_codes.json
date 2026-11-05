@@ -5,8 +5,8 @@
    "digits_only": true,
    "ensure_prefix": "993"
   },
-  "key_pattern": "^(?=\\d{11}$)993(?:12(?:57|336)?|1392|1354|2444|\\d{3})|^993(?:12(?:57|336)?|1392|1354|2444|\\d{3})$",
-  "usage": "eight-digit number: 12 34-56-78 in Ashgabat, (322) 5-12-34 or +993 422 6 12 34 elsewhere; or only the code: 322. Inside the country a long-distance number starts with the trunk 8 (8 322 …): drop that 8",
+  "key_pattern": "^(?=\\d{11}$)993(?:12(?:57|336)?|1392|1354|2444|\\d{3})",
+  "usage": "eight-digit number: 12 34-56-78 in Ashgabat, (322) 5-12-34 or +993 422 6 12 34 elsewhere. Inside the country a long-distance number starts with the trunk 8 (8 322 …): drop that 8. Type the whole number: a code on its own does not match, so that it can't collide with other countries' codes",
   "note": "Eight-digit national numbers. Ashgabat has the two-digit code 12, other places three- or four-digit codes, in the alphabetical order of the provinces: 1xx Ahal, 2xx Balkan, 3xx Daşoguz, 4xx Lebap, 5xx Mary. Arkadag numbers are 12 57 xx xx.",
   "miss_note": "not a geographic Turkmen landline: a number written with the trunk 8 (drop it and look it up again), a mobile number (61–65, 71, 72; 66–69 were the closed MTS network), 6020 (Ashgabat CDMA), a code missing from the list, or a number of another country",
   "source": [

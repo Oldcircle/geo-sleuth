@@ -15,9 +15,14 @@
  {"kind": "area-code", "value": "243 2 12 34", "expect": [{"admin1": "Balkan"}]},
  {"kind": "area-code", "value": "2444 12 34", "expect": [{"admin1": "Balkan"}]},
  {"kind": "area-code", "value": "1354 12 34", "expect": [{"admin1": "Ahal"}]},
- {"kind": "area-code", "value": "522", "expect": [{"admin1": "Mary"}]},
+ {"kind": "area-code", "value": "522", "expect": []},
  {"kind": "area-code", "value": "999 1 23 45", "expect": []},
  {"kind": "area-code", "value": "8 322 5 12 34", "expect": []},
  {"kind": "area-code", "value": "+993 65 12 34 56", "expect": []},
- {"kind": "area-code", "value": "+7 727 250 12 34", "expect": []}
+ {"kind": "area-code", "value": "+7 727 250 12 34", "expect": []},
+ {"kind": "plate", "value": "01 A 123 BC", "expect": []},
+ {"kind": "plate", "value": "123 ABC 02", "expect": []},
+ {"kind": "plate", "value": "01", "expect": []},
+ {"kind": "area-code", "value": "0312 123 45 67", "expect": []},
+ {"kind": "area-code", "value": "322", "expect": []}
 ]

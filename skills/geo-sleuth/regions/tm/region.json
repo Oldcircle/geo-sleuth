@@ -39,7 +39,7 @@
   "street_view": "gsv.py"
  },
  "tips": {
-  "plate/area-code/calling-code": "plate region letters (the last two letters of a white plate: AG Ashgabat, AH Ahal, AK Arkadag, BN Balkan, DZ Daşoguz, LB Lebap, MR Mary) or landline code (12 Ashgabat, three or four digits elsewhere, after +993 or the trunk 8) readable → `clues.py lookup plate|area-code <value> --country tm` + `board.py apply`",
+  "plate/area-code/calling-code": "plate region letters (the last two letters of a white plate: AG Ashgabat, AH Ahal, AK Arkadag, BN Balkan, DZ Daşoguz, LB Lebap, MR Mary) or a whole landline number (code 12 Ashgabat, three or four digits elsewhere, after +993 or the trunk 8) readable → `clues.py lookup plate|area-code <value> --country tm` + `board.py apply`",
   "livery": "car colour is not a free choice in Ashgabat: non-white cars were effectively banned there by 2018, so a street of white cars points to the capital; read the plate letters (`clues.py lookup plate <two letters> --country tm`)"
  }
 }
