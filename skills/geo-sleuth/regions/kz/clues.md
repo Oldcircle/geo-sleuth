@@ -14,7 +14,7 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### Region letter at the start of a pre-2012 plate
 - Look for: an older white plate starting with one Latin letter, then three digits and two or three letters (`A 644 DC`, `Z 123 ABC`)
 - Points to: the region of registration at the time → `clues.py lookup plate <whole plate> --country kz`; O and W are each shared by two regions, and the board keeps both
-- Strength: weak (old plates are on old cars that may have moved since)
+- Strength: weak (single source; old plates are on old cars that may have moved since)
 - Counterexamples: these regions are the pre-2022 ones, so a B or V plate can be from today's Jetisu, F or U from Abai, K or M from Ulytau, X from Shymkent; misreading the letter as a digit (O and 0, Z and 2)
 - Sources: en.wikipedia "Vehicle registration plates of Kazakhstan", sections "Design until August 2012" and "Regional codes", https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Kazakhstan
 
@@ -69,7 +69,7 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### Clock time before and after 1 March 2024
 - Look for: a time from EXIF, a watermark or a visible clock, used with `sun.py`
 - Points to: since 1 March 2024 the whole country is on UTC+5. From 21 December 2018 to 29 February 2024, West Kazakhstan, Atyrau, Mangystau, Aktobe and Kyzylorda regions used UTC+5 and every other region UTC+6 (Kostanay was UTC+6 too). Pass the offset that matches the date and the candidate region; a one-hour error shifts the sun's hour angle by 15°
-- Strength: medium (it decides whether a sun computation is right, not where the photo is)
+- Strength: medium (single source; it decides whether a sun computation is right, not where the photo is)
 - Counterexamples: phones that kept an outdated time-zone database; cameras whose clock was never set; Kyzylorda used UTC+6 from 2004 to December 2018. The single zone puts solar noon near 11:30 in Oskemen and near 13:35 in Aktau (about 11:10 and 13:55 at the eastern and western extremes), so "midday" shadows can mislead
 - Sources: en.wikipedia "Time in Kazakhstan" (single UTC+5 zone since 1 March 2024; 2018–2024 two-zone split; per-city history), https://en.wikipedia.org/wiki/Time_in_Kazakhstan
 
@@ -117,7 +117,7 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 ### Birch and aspen groves in open steppe
 - Look for: small round groves of white-barked birch and aspen ("kolky") scattered over flat grassland; long strips of pine on sandy soil ("ribbon forests")
 - Points to: the forest-steppe fringe along the Russian border: North Kazakhstan and the north of Kostanay, Akmola and Pavlodar
-- Strength: weak (vegetation without a month)
+- Strength: weak (single source; vegetation without a month)
 - Counterexamples: the same landscape continues for hundreds of kilometres in Russia; birches are planted in parks and along roads in many cities
 - Sources: en.wikipedia "Kazakh forest steppe" (birch, aspen and pine; kolky; ribbon forests; along the Russian border), https://en.wikipedia.org/wiki/Kazakh_forest_steppe
 

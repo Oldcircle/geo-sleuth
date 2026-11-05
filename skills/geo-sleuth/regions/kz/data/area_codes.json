@@ -5,7 +5,7 @@
    "digits_only": true,
    "ensure_prefix": "8"
   },
-  "usage": "landline number in national form: 8 (7172) 12-34-56, (727) 250 12 34, 72772 1 23 45; drop a leading +7",
+  "usage": "landline number in national form: 8 (7172) 12-34-56, (727) 250 12 34, 72772 1 23 45; drop a leading +7. Type the whole number: a code on its own does not match, so that it can't collide with other countries' codes",
   "note": "Ten-digit numbers: a three-digit zone (710–729, one per region) plus a city or district code. The regional centre's code ends in 2 (7172 Astana, 7252 Shymkent); Almaty city is 727 followed by 2 or 3. Zones that predate the 2022 regions (710, 722) list both regions.",
   "miss_note": "not a Kazakh landline code: 70x/747/77x are mobile (any region), 75x/76x non-geographic, 800 toll-free; a number written with +7 (drop the 7); or a Russian number, which shares country code +7 (3xx, 4xx, 8xx, 9xx zones)",
   "source": [
@@ -14,7 +14,8 @@
   ],
   "fetched": "2026-11-01",
   "license": "Derived from Wikipedia, CC BY-SA 4.0",
-  "count": 42
+  "count": 42,
+  "key_pattern": "^(?=\\d{11}$)(?:872740|872752|872757|872934|873622|87102|87112|87122|87132|87142|87152|87162|87182|87212|87222|87232|87242|87252|87262|87272|87273|87277|87282|87292|8710|8711|8712|8713|8714|8715|8716|8717|8718|8721|8722|8723|8724|8725|8726|8727|8728|8729)"
  },
  "entries": {
   "8710": [
