@@ -1,0 +1,58 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^[A-Z]{2}$",
+  "usage": "plates since 1994 (flag and TM at the left, then AB 1234 AG for private cars, 1234 AGA on green company and government plates): type only the two region letters (the last two letters of a white plate, the first two of the three letters on a green one)",
+  "note": "Region letters: AG Ashgabat, AH Ahal, AK Arkadag (in Ahal), BN Balkan, DZ Daşoguz, LB Lebap, MR Mary. They are where the vehicle was registered, not where the photo was taken. The letters are at the end of a white plate, so a whole plate does not work here: type the two letters only.",
+  "miss_note": "not a Turkmen region code: the serial letters at the start of a white plate instead of the two at the end, a yellow foreign-resident plate (2H 50035), a blue diplomatic plate (12 CD 345), an export plate (TDG), or a plate of another country",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Turkmenistan, sections 'Current series' and 'Province identifiers'",
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Туркмении, sections 'Типы выдаваемых регистрационных знаков' and 'Коды регионов'"
+  ],
+  "fetched": "2026-11-02",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 7
+ },
+ "entries": {
+  "AG": [
+   {
+    "admin1": "Aşgabat"
+   }
+  ],
+  "AH": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "AK": [
+   {
+    "admin1": "Ahal",
+    "note": "AK is the city of Arkadag, the capital of Ahal Province (since 2022); on the OSM map it lies inside Ahal"
+   }
+  ],
+  "BN": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "DZ": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "LB": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "MR": [
+   {
+    "admin1": "Mary"
+   }
+  ]
+ }
+}
