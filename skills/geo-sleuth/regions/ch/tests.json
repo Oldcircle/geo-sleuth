@@ -1,0 +1,38 @@
+[
+ {
+  "kind": "plate",
+  "value": "ZH 123456",
+  "expect": [
+   {
+    "admin1": "Zürich"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "GE 1",
+  "expect": [
+   {
+    "admin1": "Geneva"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "TI 123 456",
+  "expect": [
+   {
+    "admin1": "Ticino"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "vd 12.345",
+  "expect": [
+   {
+    "admin1": "Vaud"
+   }
+  ]
+ }
+]
