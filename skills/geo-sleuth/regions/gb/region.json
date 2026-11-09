@@ -1,0 +1,22 @@
+{
+ "code": "GB",
+ "name": "United Kingdom",
+ "names": [
+  "United Kingdom",
+  "UK",
+  "Britain",
+  "Great Britain",
+  "GB"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "gb"
+  },
+  "street_view": "gsv.py"
+ }
+}
