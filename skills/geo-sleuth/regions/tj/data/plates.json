@@ -1,0 +1,74 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^\\d{2}$",
+  "usage": "plates since 2009–2010 (flag and TJ at the left, then 1234 AB 01): type only the two digits at the right end of the plate",
+  "note": "The region code is the last two digits: 01, 05, 10 Dushanbe; 02, 06, 20 Sughd; 03 Khatlon; 04 Gorno-Badakhshan; 07, 08 Districts of Republican Subordination. It is where the vehicle was registered, not where the photo was taken. A whole plate does not work here: the code is at the end, so type the two digits only.",
+  "miss_note": "not a Tajik region code: a 1996–2010 plate (letter(s) and four digits with the code and RT in a box at the right; use `--kind plate-1996`), a green non-resident or red diplomatic plate, a whole plate instead of the last two digits, or a plate of another country (Kazakhstan also puts a two-digit region code at the right end)",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Tajikistan, section 'Codes' (unreferenced; translated from the ru article)",
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Таджикистана, section 'Коды регионов Таджикистана'"
+  ],
+  "fetched": "2026-11-02",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 10
+ },
+ "entries": {
+  "01": [
+   {
+    "admin1": "Душанбе"
+   }
+  ],
+  "02": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "03": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "04": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "05": [
+   {
+    "admin1": "Душанбе"
+   }
+  ],
+  "06": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "07": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "08": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "10": [
+   {
+    "admin1": "Душанбе",
+    "note": "ru.wikipedia only (not in the en.wikipedia table)"
+   }
+  ],
+  "20": [
+   {
+    "admin1": "Вилояти Суғд",
+    "note": "ru.wikipedia only (not in the en.wikipedia table)"
+   }
+  ]
+ }
+}

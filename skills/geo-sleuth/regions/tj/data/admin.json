@@ -1,0 +1,80 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org (boundary=administrative relations inside Tajikistan at admin_level 4; name = the OSM name tag as gazetteer.py reads it, so that board candidates and lookups share one spelling)",
+   "https://en.wikipedia.org/wiki/ISO_3166-2:TJ"
+  ],
+  "fetched": "2026-11-02",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 5,
+  "note": "Sughd and Khatlon regions, the Gorno-Badakhshan Autonomous Region, the Districts of Republican Subordination and the city of Dushanbe, all first-level divisions at OSM admin_level 4; code = ISO 3166-2:TJ. OSM names are Tajik Cyrillic (Вилояти Суғд); aliases add the short ISO names, English and Russian."
+ },
+ "items": [
+  {
+   "name": "Вилояти Мухтори Кӯҳистони Бадахшон",
+   "code": "TJ-GB",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "GBAO",
+    "Gorno-Badakhshan",
+    "Gorno-Badakhshan Autonomous Region",
+    "Kŭhistoni Badakhshon",
+    "ГБАО",
+    "Горно-Бадахшанская автономная область",
+    "Горный Бадахшан",
+    "Кӯҳистони Бадахшон"
+   ]
+  },
+  {
+   "name": "Вилояти Суғд",
+   "code": "TJ-SU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Sogd",
+    "Sughd",
+    "Sughd Province",
+    "Sughd Region",
+    "Согд",
+    "Согдийская область",
+    "Суғд"
+   ]
+  },
+  {
+   "name": "Вилояти Хатлон",
+   "code": "TJ-KT",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Khatlon",
+    "Khatlon Province",
+    "Khatlon Region",
+    "Хатлон",
+    "Хатлонская область"
+   ]
+  },
+  {
+   "name": "Душанбе",
+   "code": "TJ-DU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Dushanbe"
+   ]
+  },
+  {
+   "name": "Ноҳияҳои тобеи ҷумҳурӣ",
+   "code": "TJ-RA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Districts of Republican Subordination",
+    "Region of Republican Subordination",
+    "nohiyahoi tobei jumhurí",
+    "РРП",
+    "Районы республиканского подчинения"
+   ]
+  }
+ ]
+}
