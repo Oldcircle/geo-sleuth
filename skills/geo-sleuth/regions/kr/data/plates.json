@@ -1,0 +1,109 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·."
+  },
+  "key_pattern": "^(?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)(?=(\\d{1,2}[\\uac00-\\ud7a3]\\d{4})?$)",
+  "usage": "region name in Hangul on a commercial plate (taxi, bus, truck), alone or with the rest: 서울, 서울 70바 1234, 부산 12사 3456",
+  "note": "The region is where the vehicle was registered. Since 2004 private cars carry no region (12가 3456, 123가 4567); construction equipment plates dropped it from 2022-11-26 and new motorcycle plates from 2026-03-20. Commercial plates still show it; older private (before 2004), motorcycle and construction plates still on the road show it too (motorcycles also add the district, so they miss here). How plates for the merged 전남광주통합특별시 will read after 2026-07-01 is not in the sources; 광주 and 전남 plates stay valid.",
+  "miss_note": "no region name: a private plate (2004 on), a military or diplomatic plate, an older motorcycle plate (region + district, e.g. 서울 관악 가 1234), or not a Korean plate",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_South_Korea (commercial plates: province/city name list)",
+   "https://ko.wikipedia.org/wiki/대한민국의_차량_번호판 (2004 national plates without region; 세종 added; construction plates without region from 2022-11-26)",
+   "https://www.the-pr.co.kr/news/articleView.html?idxno=55047 (motorcycle plates without region from 2026-03-20)"
+  ],
+  "fetched": "2026-11-05",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0; a news report used as a fact, not copied",
+  "count": 17
+ },
+ "entries": {
+  "서울": [
+   {
+    "admin1": "서울특별시"
+   }
+  ],
+  "부산": [
+   {
+    "admin1": "부산광역시"
+   }
+  ],
+  "대구": [
+   {
+    "admin1": "대구광역시"
+   }
+  ],
+  "인천": [
+   {
+    "admin1": "인천광역시"
+   }
+  ],
+  "광주": [
+   {
+    "admin1": "전남광주통합특별시",
+    "note": "former Gwangju Metropolitan City (merged 2026-07-01)"
+   }
+  ],
+  "대전": [
+   {
+    "admin1": "대전광역시"
+   }
+  ],
+  "울산": [
+   {
+    "admin1": "울산광역시"
+   }
+  ],
+  "세종": [
+   {
+    "admin1": "세종특별자치시"
+   }
+  ],
+  "경기": [
+   {
+    "admin1": "경기도"
+   }
+  ],
+  "강원": [
+   {
+    "admin1": "강원특별자치도"
+   }
+  ],
+  "충북": [
+   {
+    "admin1": "충청북도"
+   }
+  ],
+  "충남": [
+   {
+    "admin1": "충청남도"
+   }
+  ],
+  "전북": [
+   {
+    "admin1": "전북특별자치도"
+   }
+  ],
+  "전남": [
+   {
+    "admin1": "전남광주통합특별시",
+    "note": "former South Jeolla (merged 2026-07-01)"
+   }
+  ],
+  "경북": [
+   {
+    "admin1": "경상북도"
+   }
+  ],
+  "경남": [
+   {
+    "admin1": "경상남도"
+   }
+  ],
+  "제주": [
+   {
+    "admin1": "제주특별자치도"
+   }
+  ]
+ }
+}
