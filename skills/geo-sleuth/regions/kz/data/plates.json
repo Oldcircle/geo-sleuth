@@ -1,0 +1,241 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^(\\d{2}$|[A-Z](?=\\d{3}[A-Z]{2,3}$))",
+  "usage": "current plates (since 2012, 123 ABC 02): type only the two digits in the square on the right (02); pre-2012 plates (A 123 BCD): type the whole plate",
+  "note": "The code is where the vehicle was registered, not where the photo was taken. A whole current-format plate is not looked up: the region code is at its end, so type just the two digits. Pre-2012 letters follow the regions of that time: Shymkent (17) and Abai, Jetisu, Ulytau (18–20) have no letter of their own.",
+  "miss_note": "not 01–20 and not a pre-2012 letter plate: misread characters, a whole current-format plate (type only the two digits on the right), a yellow foreign-owner or red diplomatic plate, or a foreign plate",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Kazakhstan (Regional codes table, citing egov.kz and 24pdd.kz)",
+   "https://egov.kz/cms/en/articles/vehicle/grnz",
+   "https://24pdd.kz/numeric-codes/"
+  ],
+  "fetched": "2026-11-01",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 41
+ },
+ "entries": {
+  "01": [
+   {
+    "admin1": "Астана"
+   }
+  ],
+  "02": [
+   {
+    "admin1": "Алматы"
+   }
+  ],
+  "03": [
+   {
+    "admin1": "Ақмола облысы"
+   }
+  ],
+  "04": [
+   {
+    "admin1": "Ақтөбе облысы"
+   }
+  ],
+  "05": [
+   {
+    "admin1": "Алматы облысы"
+   }
+  ],
+  "06": [
+   {
+    "admin1": "Атырау облысы"
+   }
+  ],
+  "07": [
+   {
+    "admin1": "Батыс Қазақстан облысы"
+   }
+  ],
+  "08": [
+   {
+    "admin1": "Жамбыл облысы"
+   }
+  ],
+  "09": [
+   {
+    "admin1": "Қарағанды облысы"
+   }
+  ],
+  "10": [
+   {
+    "admin1": "Қостанай облысы"
+   }
+  ],
+  "11": [
+   {
+    "admin1": "Қызылорда облысы"
+   }
+  ],
+  "12": [
+   {
+    "admin1": "Маңғыстау облысы"
+   }
+  ],
+  "13": [
+   {
+    "admin1": "Түркістан облысы"
+   }
+  ],
+  "14": [
+   {
+    "admin1": "Павлодар облысы"
+   }
+  ],
+  "15": [
+   {
+    "admin1": "Солтүстік Қазақстан облысы"
+   }
+  ],
+  "16": [
+   {
+    "admin1": "Шығыс Қазақстан облысы"
+   }
+  ],
+  "17": [
+   {
+    "admin1": "Шымкент"
+   }
+  ],
+  "18": [
+   {
+    "admin1": "Абай облысы"
+   }
+  ],
+  "19": [
+   {
+    "admin1": "Жетісу облысы"
+   }
+  ],
+  "20": [
+   {
+    "admin1": "Ұлытау облысы"
+   }
+  ],
+  "Z": [
+   {
+    "admin1": "Астана"
+   }
+  ],
+  "A": [
+   {
+    "admin1": "Алматы"
+   }
+  ],
+  "C": [
+   {
+    "admin1": "Ақмола облысы"
+   }
+  ],
+  "O": [
+   {
+    "admin1": "Ақмола облысы"
+   },
+   {
+    "admin1": "Солтүстік Қазақстан облысы"
+   }
+  ],
+  "W": [
+   {
+    "admin1": "Ақмола облысы"
+   },
+   {
+    "admin1": "Қостанай облысы"
+   }
+  ],
+  "D": [
+   {
+    "admin1": "Ақтөбе облысы"
+   }
+  ],
+  "B": [
+   {
+    "admin1": "Алматы облысы",
+    "note": "before 2022 also today's Jetisu Region"
+   }
+  ],
+  "V": [
+   {
+    "admin1": "Алматы облысы",
+    "note": "before 2022 also today's Jetisu Region"
+   }
+  ],
+  "E": [
+   {
+    "admin1": "Атырау облысы"
+   }
+  ],
+  "L": [
+   {
+    "admin1": "Батыс Қазақстан облысы"
+   }
+  ],
+  "H": [
+   {
+    "admin1": "Жамбыл облысы"
+   }
+  ],
+  "K": [
+   {
+    "admin1": "Қарағанды облысы",
+    "note": "before 2022 also today's Ulytau Region"
+   }
+  ],
+  "M": [
+   {
+    "admin1": "Қарағанды облысы",
+    "note": "before 2022 also today's Ulytau Region"
+   }
+  ],
+  "P": [
+   {
+    "admin1": "Қостанай облысы"
+   }
+  ],
+  "N": [
+   {
+    "admin1": "Қызылорда облысы"
+   }
+  ],
+  "R": [
+   {
+    "admin1": "Маңғыстау облысы"
+   }
+  ],
+  "X": [
+   {
+    "admin1": "Түркістан облысы",
+    "note": "then South Kazakhstan Region, which also held today's Shymkent"
+   }
+  ],
+  "S": [
+   {
+    "admin1": "Павлодар облысы"
+   }
+  ],
+  "T": [
+   {
+    "admin1": "Солтүстік Қазақстан облысы"
+   }
+  ],
+  "F": [
+   {
+    "admin1": "Шығыс Қазақстан облысы",
+    "note": "before 2022 also today's Abai Region"
+   }
+  ],
+  "U": [
+   {
+    "admin1": "Шығыс Қазақстан облысы",
+    "note": "before 2022 also today's Abai Region"
+   }
+  ]
+ }
+}

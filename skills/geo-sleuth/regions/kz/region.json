@@ -1,0 +1,52 @@
+{
+ "code": "KZ",
+ "name": "Kazakhstan",
+ "names": [
+  "Kazakhstan",
+  "Qazaqstan",
+  "Қазақстан",
+  "Казахстан",
+  "Republic of Kazakhstan",
+  "Қазақстан Республикасы",
+  "Республика Казахстан",
+  "KZ"
+ ],
+ "status": "community",
+ "maintainers": [
+  "@wntic"
+ ],
+ "admin_levels": {
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "oblys (region) or city of republican significance"
+ },
+ "name_suffixes": [
+  " облысы",
+  " область",
+  " Region",
+  " oblysy"
+ ],
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {
+   "file": "data/plates.json"
+  },
+  "area-code": {
+   "file": "data/area_codes.json"
+  }
+ },
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "kz"
+  },
+  "street_view": "gsv.py"
+ },
+ "tips": {
+  "livery": "bus colour is not a city marker in Kazakhstan: one city runs several liveries at once and they change with each fleet renewal. Read the route number, operator name and the plate's region code from the bus instead (`clues.py lookup plate <two digits> --country kz`); in Astana the bus generation dates the photo (clues.md, Public transport)"
+ }
+}
