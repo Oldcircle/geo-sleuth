@@ -1,0 +1,54 @@
+{
+ "code": "RU",
+ "name": "Russia",
+ "names": [
+  "Russia",
+  "Россия",
+  "Russian Federation",
+  "Российская Федерация",
+  "RF",
+  "РФ",
+  "RU"
+ ],
+ "status": "community",
+ "maintainers": [
+  "@wntic"
+ ],
+ "admin_levels": {
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "federal subject (republic, krai, oblast, city of federal significance, autonomous oblast or okrug); list them with `board.py children Russia --level 4`, because OSM's admin_level 3 is the eight federal districts"
+ },
+ "name_suffixes": [
+  " область",
+  " край",
+  " Oblast",
+  " Krai"
+ ],
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {
+   "file": "data/plates.json"
+  },
+  "area-code": {
+   "file": "data/area_codes.json"
+  },
+  "road": {
+   "file": "data/roads.json"
+  }
+ },
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "ru"
+  },
+  "street_view": "gsv.py"
+ },
+ "tips": {
+  "plate/area-code/calling-code": "plate region code (the digits by RUS), landline zone (8 + ten digits) or a regional road number such as 47К-021 readable → `clues.py lookup plate|area-code|road <value> --country ru` + `board.py apply`; the road number's leading digits are an OKATO code, not a plate code"
+ }
+}
