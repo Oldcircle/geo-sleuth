@@ -56,6 +56,8 @@ In China the same point differs by several hundred meters between WGS84 and GCJ-
 
 ## Street view and ground-level imagery
 
+- Optional example: [Google Maps photo metadata through Monid](../../../examples/monid-maps-photo/README.md), using Litescrape ([Monid docs](https://docs.monid.ai?utm_source=github&utm_medium=oss-pr&utm_campaign=oldcircle-geo-sleuth)).
+
 ### Baidu panoramas (main source in China)
 
 The endpoints are all at `https://mapsv0.bdimg.com/`, need no key, and must be accessed directly:
