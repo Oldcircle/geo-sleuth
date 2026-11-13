@@ -1,0 +1,102 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "998"
+  },
+  "key_pattern": "^(?=\\d{12}$)998(?:6[125679]|7[0-689])",
+  "usage": "nine-digit national landline number (e.g. 71 123 45 67, 66 234 56 78) or in international format (+998 71 123 45 67). Type the whole number: a bare code on its own does not match",
+  "note": "Nine-digit closed national numbering plan; 71 Tashkent city and suburban districts, 70 Tashkent Region, 78 Tashkent commercial/alternative fixed networks, 66 Samarkand, 73 Fergana, 74 Andijan, 69 Namangan, 65 Bukhara, 61 Karakalpakstan (Nukus), 62 Khorezm (Urgench), 75 Kashkadarya, 76 Surkhandarya, 72 Jizzakh, 67 Syrdarya, 79 Navoiy.",
+  "miss_note": "not an Uzbek geographic landline: mobile numbers (90/91 Beeline, 93/94/55 Ucell, 97/88 Mobiuz, 99/95/77 Uzmobile, 33 Humans, 98 Perfectum), short numbers, freephone (800) or a number of another country",
+  "source": [
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Uzbekistan",
+   "https://ru.wikipedia.org/wiki/Телефонный_план_нумерации_Узбекистана",
+   "https://www.goldenpages.uz/spravka/phone_codes/"
+  ],
+  "fetched": "2026-11-13",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 15
+ },
+ "entries": {
+  "99861": [
+   {
+    "admin1": "Qoraqalpogʻiston Respublikasi"
+   }
+  ],
+  "99862": [
+   {
+    "admin1": "Xorazm viloyati"
+   }
+  ],
+  "99865": [
+   {
+    "admin1": "Buxoro viloyati"
+   }
+  ],
+  "99866": [
+   {
+    "admin1": "Samarqand viloyati"
+   }
+  ],
+  "99867": [
+   {
+    "admin1": "Sirdaryo viloyati"
+   }
+  ],
+  "99869": [
+   {
+    "admin1": "Namangan viloyati"
+   }
+  ],
+  "99870": [
+   {
+    "admin1": "Toshkent viloyati"
+   }
+  ],
+  "99871": [
+   {
+    "admin1": "Toshkent shahri"
+   },
+   {
+    "admin1": "Toshkent viloyati"
+   }
+  ],
+  "99872": [
+   {
+    "admin1": "Jizzax viloyati"
+   }
+  ],
+  "99873": [
+   {
+    "admin1": "Fargʻona viloyati"
+   }
+  ],
+  "99874": [
+   {
+    "admin1": "Andijon viloyati"
+   }
+  ],
+  "99875": [
+   {
+    "admin1": "Qashqadaryo viloyati"
+   }
+  ],
+  "99876": [
+   {
+    "admin1": "Surxondaryo viloyati"
+   }
+  ],
+  "99878": [
+   {
+    "admin1": "Toshkent shahri",
+    "note": "Alternative fixed-line operators and commercial numbers, primarily Tashkent"
+   }
+  ],
+  "99879": [
+   {
+    "admin1": "Navoiy viloyati"
+   }
+  ]
+ }
+}

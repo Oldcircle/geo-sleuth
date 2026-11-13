@@ -1,0 +1,204 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org (boundary=administrative relations inside Uzbekistan at admin_level 4: 12 regions, Tashkent city and the Republic of Karakalpakstan; name = the OSM name tag as gazetteer.py reads it)",
+   "https://en.wikipedia.org/wiki/ISO_3166-2:UZ"
+  ],
+  "fetched": "2026-11-13",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 14,
+  "note": "12 regions (viloyatlar), Tashkent city and the Republic of Karakalpakstan, all first-level divisions at OSM admin_level 4; code = ISO 3166-2:UZ. OSM names use Latin Uzbek. Aliases include Cyrillic Uzbek, Russian and English."
+ },
+ "items": [
+  {
+   "name": "Andijon viloyati",
+   "code": "UZ-AN",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Andijan Region",
+    "Andijan",
+    "Андижанская область",
+    "Андижон вилояти",
+    "Andijon"
+   ]
+  },
+  {
+   "name": "Buxoro viloyati",
+   "code": "UZ-BU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Bukhara Region",
+    "Bukhara",
+    "Бухарская область",
+    "Бухоро вилояти",
+    "Buxoro"
+   ]
+  },
+  {
+   "name": "Fargʻona viloyati",
+   "code": "UZ-FA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Fergana Region",
+    "Fergana",
+    "Ферганская область",
+    "Фарғона вилояти",
+    "Farg'ona viloyati",
+    "Fargona viloyati",
+    "Fargʻona"
+   ]
+  },
+  {
+   "name": "Jizzax viloyati",
+   "code": "UZ-JI",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jizzakh Region",
+    "Jizzakh",
+    "Джизакская область",
+    "Жиззах вилояти",
+    "Jizzax"
+   ]
+  },
+  {
+   "name": "Namangan viloyati",
+   "code": "UZ-NG",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Namangan Region",
+    "Namangan",
+    "Наманганская область",
+    "Наманган вилояти",
+    "Namangan"
+   ]
+  },
+  {
+   "name": "Navoiy viloyati",
+   "code": "UZ-NW",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Navoiy Region",
+    "Navoi Region",
+    "Navoiy",
+    "Navoi",
+    "Навоийская область",
+    "Навоий вилояти"
+   ]
+  },
+  {
+   "name": "Qashqadaryo viloyati",
+   "code": "UZ-QA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Qashqadaryo Region",
+    "Kashkadarya Region",
+    "Кашкадарьинская область",
+    "Қашқадарё вилояти",
+    "Qashqadaryo",
+    "Kashkadarya"
+   ]
+  },
+  {
+   "name": "Qoraqalpogʻiston Respublikasi",
+   "code": "UZ-QR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Republic of Karakalpakstan",
+    "Karakalpakstan",
+    "Республика Каракалпакстан",
+    "Каракалпакстан",
+    "Қорақалпоғистон Республикаси",
+    "Qaraqalpaqstan Respublikası",
+    "Qaraqalpaqstan"
+   ]
+  },
+  {
+   "name": "Samarqand viloyati",
+   "code": "UZ-SA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Samarkand Region",
+    "Samarkand",
+    "Самаркандская область",
+    "Самарқанд вилояти",
+    "Samarqand"
+   ]
+  },
+  {
+   "name": "Sirdaryo viloyati",
+   "code": "UZ-SI",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Sirdaryo Region",
+    "Syrdarya Region",
+    "Сырдарьинская область",
+    "Сирдарё вилояти",
+    "Sirdaryo",
+    "Syrdarya"
+   ]
+  },
+  {
+   "name": "Surxondaryo viloyati",
+   "code": "UZ-SU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Surxondaryo Region",
+    "Surkhandarya Region",
+    "Сурхандарьинская область",
+    "Сурхондарё вилояти",
+    "Surxondaryo",
+    "Surkhandarya"
+   ]
+  },
+  {
+   "name": "Toshkent shahri",
+   "code": "UZ-TK",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tashkent City",
+    "Tashkent",
+    "город Ташкент",
+    "Ташкент",
+    "Тошкент шаҳри",
+    "Тошкент",
+    "Toshkent"
+   ]
+  },
+  {
+   "name": "Toshkent viloyati",
+   "code": "UZ-TO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tashkent Region",
+    "Ташкентская область",
+    "Тошкент вилояти"
+   ]
+  },
+  {
+   "name": "Xorazm viloyati",
+   "code": "UZ-XO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Khorezm Region",
+    "Xorazm",
+    "Khorezm",
+    "Хорезмская область",
+    "Хоразм вилояти"
+   ]
+  }
+ ]
+}

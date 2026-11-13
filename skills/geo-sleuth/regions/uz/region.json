@@ -1,0 +1,59 @@
+{
+ "code": "UZ",
+ "name": "Uzbekistan",
+ "names": [
+  "Uzbekistan",
+  "Oʻzbekiston",
+  "Ozbekiston",
+  "O'zbekiston",
+  "Узбекистан",
+  "Ўзбекистон",
+  "Republic of Uzbekistan",
+  "Oʻzbekiston Respublikasi",
+  "UZ"
+ ],
+ "status": "community",
+ "maintainers": [
+  "@Lama189"
+ ],
+ "admin_levels": {
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "region (viloyat), Tashkent city or Republic of Karakalpakstan (OSM admin_level 4)"
+ },
+ "name_suffixes": [
+  "viloyati",
+  "вилояти",
+  "области",
+  "область",
+  "shahri",
+  "шаҳри",
+  "город",
+  "Respublikasi",
+  "Республикаси",
+  "Республика"
+ ],
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {
+   "file": "data/plates.json"
+  },
+  "area-code": {
+   "file": "data/area_codes.json"
+  }
+ },
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "uz"
+  },
+  "street_view": "gsv.py"
+ },
+ "tips": {
+  "plate/area-code/calling-code": "plate region code (two digits at the left, flag and UZ at the right: 01 Tashkent … 95 Karakalpakstan) or landline area code (code 71 Tashkent, 66 Samarkand, 61 Nukus…, nine-digit national format or with +998) → `clues.py lookup plate|area-code <value> --country uz` + `board.py apply`"
+ }
+}
