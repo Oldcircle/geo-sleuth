@@ -1,0 +1,5272 @@
+{
+ "_meta": {
+  "kind": "postal-code",
+  "normalize": {
+   "digits_only": true
+  },
+  "key_pattern": "^\\d{3}(?=(?:\\d{5})?$)",
+  "usage": "a whole CEP (22041-001, 22041001) or its first three digits (220); for a pre-1992 five-digit CEP pass its first three digits. Other lengths, five-digit values included (they look like US, German or French postcodes), don't fit this table and are not looked up",
+  "note": "CEP first digits → UF (Correios ranges). The first digit is one of ten postal regions counted anticlockwise from São Paulo (0–1 SP, 2 RJ/ES, 3 MG, 4 BA/SE, 5 PE/AL/PB/RN, 6 CE/PI/MA/PA/AP/AM/RR/AC, 7 DF/GO/TO/MT/RO/MS, 8 PR/SC, 9 RS). Split ranges: Distrito Federal 70000–72799 and 73000–73699; Goiás 72800–72999 (towns around the DF) and 73700–76799 (the rest of the state, Goiânia included); Amazonas around Roraima's 69300–69399. Rows inside a state capital's range say so where the range falls on whole 3-digit keys (single table). In August 2008 Rondônia moved from 78900–78999 to 76800–76999 (until then the end of Goiás's block), so old signs and documents can carry 789xx for Rondônia; 789 is kept with that note. Rows 100–109 are unverified: one published table puts them in São Paulo, the other skips them; the Correios' own range search sits behind a CAPTCHA and its API needs a contract. A CEP on a sign is the address of that shop or office, so it is strong evidence for the photo's place; a CEP on a delivery van or packaging is not.",
+  "miss_note": "000–009 are not used",
+  "source": [
+   "https://pt.wikipedia.org/wiki/Código_de_Endereçamento_Postal (table 'Zonas Postais e Faixas de CEP', capital ranges, and history of Rondônia's 2008 change, revision 72831864, citing Correios)",
+   "https://www.ruacep.com.br/guias/postais/faixa-de-cep-por-estado/ (UF ranges, stated to follow Correios data)",
+   "https://www.correios.com.br/atendimento/developers/manuais/manual-api-busca-cep (Correios API manual; its example gives Acre 69900000–69999999)",
+   "https://overpass-api.de (OpenStreetMap postal_code tags of the 2,469 Brazilian municipality relations that have one, boundary=administrative admin_level=8, queried 2026-11-12; all fall inside their UF's range here)"
+  ],
+  "fetched": "2026-11-12",
+  "license": "Derived from Wikipedia (CC BY-SA 4.0); ranges are facts, checked against OSM (ODbL)",
+  "count": 990
+ },
+ "entries": {
+  "010": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "011": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "012": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "013": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "014": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "015": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "016": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "017": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "018": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "019": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "020": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "021": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "022": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "023": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "024": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "025": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "026": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "027": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "028": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "029": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "030": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "031": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "032": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "033": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "034": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "035": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "036": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "037": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "038": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "039": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "040": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "041": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "042": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "043": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "044": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "045": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "046": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "047": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "048": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "049": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "050": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "051": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "052": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "053": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "054": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "055": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "056": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "057": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "058": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "059": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "060": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "061": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "062": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "063": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "064": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "065": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "066": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "067": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "068": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "069": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "070": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "071": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "072": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "073": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "074": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "075": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "076": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "077": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "078": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "079": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "080": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "081": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "082": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "083": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "084": [
+   {
+    "admin1": "São Paulo",
+    "note": "city of São Paulo (capital range in one table, single source)"
+   }
+  ],
+  "085": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "086": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "087": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "088": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "089": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "090": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "091": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "092": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "093": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "094": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "095": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "096": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "097": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "098": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "099": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "100": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "101": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "102": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "103": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "104": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "105": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "106": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "107": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "108": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "109": [
+   {
+    "admin1": "São Paulo",
+    "unverified": true,
+    "note": "10000–10999: one published table gives São Paulo as a single span 01000–19999; pt.wikipedia's table skips it; no municipality in OSM uses it"
+   }
+  ],
+  "110": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "111": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "112": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "113": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "114": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "115": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "116": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "117": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "118": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "119": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "120": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "121": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "122": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "123": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "124": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "125": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "126": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "127": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "128": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "129": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "130": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "131": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "132": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "133": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "134": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "135": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "136": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "137": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "138": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "139": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "140": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "141": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "142": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "143": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "144": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "145": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "146": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "147": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "148": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "149": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "150": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "151": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "152": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "153": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "154": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "155": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "156": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "157": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "158": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "159": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "160": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "161": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "162": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "163": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "164": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "165": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "166": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "167": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "168": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "169": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "170": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "171": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "172": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "173": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "174": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "175": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "176": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "177": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "178": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "179": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "180": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "181": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "182": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "183": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "184": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "185": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "186": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "187": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "188": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "189": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "190": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "191": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "192": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "193": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "194": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "195": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "196": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "197": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "198": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "199": [
+   {
+    "admin1": "São Paulo"
+   }
+  ],
+  "200": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "201": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "202": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "203": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "204": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "205": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "206": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "207": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "208": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "209": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "210": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "211": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "212": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "213": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "214": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "215": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "216": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "217": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "218": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "219": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "220": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "221": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "222": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "223": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "224": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "225": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "226": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "227": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "228": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "229": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "230": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "231": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "232": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "233": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "234": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "235": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "236": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "237": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "city of Rio de Janeiro (capital range in one table, single source)"
+   }
+  ],
+  "238": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "239": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "240": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "241": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "242": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "243": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "244": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "245": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "246": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "247": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "248": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "249": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "250": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "251": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "252": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "253": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "254": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "255": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "256": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "257": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "258": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "259": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "260": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "261": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "262": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "263": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "264": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "265": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "266": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "267": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "268": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "269": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "270": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "271": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "272": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "273": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "274": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "275": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "276": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "277": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "278": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "279": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "280": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "281": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "282": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "283": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "284": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "285": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "286": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "287": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "288": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "289": [
+   {
+    "admin1": "Rio de Janeiro"
+   }
+  ],
+  "290": [
+   {
+    "admin1": "Espírito Santo",
+    "note": "city of Vitória (capital range in one table, single source)"
+   }
+  ],
+  "291": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "292": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "293": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "294": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "295": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "296": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "297": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "298": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "299": [
+   {
+    "admin1": "Espírito Santo"
+   }
+  ],
+  "300": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "301": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "302": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "303": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "304": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "305": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "306": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "307": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "308": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "309": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "310": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "311": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "312": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "313": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "314": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "315": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "316": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "317": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "318": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "319": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "city of Belo Horizonte (capital range in one table, single source)"
+   }
+  ],
+  "320": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "321": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "322": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "323": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "324": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "325": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "326": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "327": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "328": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "329": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "330": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "331": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "332": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "333": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "334": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "335": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "336": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "337": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "338": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "339": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "340": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "341": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "342": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "343": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "344": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "345": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "346": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "347": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "348": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "349": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "350": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "351": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "352": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "353": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "354": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "355": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "356": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "357": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "358": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "359": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "360": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "361": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "362": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "363": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "364": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "365": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "366": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "367": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "368": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "369": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "370": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "371": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "372": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "373": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "374": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "375": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "376": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "377": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "378": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "379": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "380": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "381": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "382": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "383": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "384": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "385": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "386": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "387": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "388": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "389": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "390": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "391": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "392": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "393": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "394": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "395": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "396": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "397": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "398": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "399": [
+   {
+    "admin1": "Minas Gerais"
+   }
+  ],
+  "400": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "401": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "402": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "403": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "404": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "405": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "406": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "407": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "408": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "409": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "410": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "411": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "412": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "413": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "414": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "415": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "416": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "417": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "418": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "419": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "420": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "421": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "422": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "423": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "424": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "425": [
+   {
+    "admin1": "Bahia",
+    "note": "city of Salvador (capital range in one table, single source)"
+   }
+  ],
+  "426": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "427": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "428": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "429": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "430": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "431": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "432": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "433": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "434": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "435": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "436": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "437": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "438": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "439": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "440": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "441": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "442": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "443": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "444": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "445": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "446": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "447": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "448": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "449": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "450": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "451": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "452": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "453": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "454": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "455": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "456": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "457": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "458": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "459": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "460": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "461": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "462": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "463": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "464": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "465": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "466": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "467": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "468": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "469": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "470": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "471": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "472": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "473": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "474": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "475": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "476": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "477": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "478": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "479": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "480": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "481": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "482": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "483": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "484": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "485": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "486": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "487": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "488": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "489": [
+   {
+    "admin1": "Bahia"
+   }
+  ],
+  "490": [
+   {
+    "admin1": "Sergipe",
+    "note": "city of Aracaju (capital range in one table, single source)"
+   }
+  ],
+  "491": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "492": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "493": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "494": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "495": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "496": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "497": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "498": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "499": [
+   {
+    "admin1": "Sergipe"
+   }
+  ],
+  "500": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "501": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "502": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "503": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "504": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "505": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "506": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "507": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "508": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "509": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "510": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "511": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "512": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "513": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "514": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "515": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "516": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "517": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "518": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "519": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "520": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "521": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "522": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "523": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "524": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "525": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "526": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "527": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "528": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "529": [
+   {
+    "admin1": "Pernambuco",
+    "note": "city of Recife (capital range in one table, single source)"
+   }
+  ],
+  "530": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "531": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "532": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "533": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "534": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "535": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "536": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "537": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "538": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "539": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "540": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "541": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "542": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "543": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "544": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "545": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "546": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "547": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "548": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "549": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "550": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "551": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "552": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "553": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "554": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "555": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "556": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "557": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "558": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "559": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "560": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "561": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "562": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "563": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "564": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "565": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "566": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "567": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "568": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "569": [
+   {
+    "admin1": "Pernambuco"
+   }
+  ],
+  "570": [
+   {
+    "admin1": "Alagoas",
+    "note": "city of Maceió (capital range in one table, single source)"
+   }
+  ],
+  "571": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "572": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "573": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "574": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "575": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "576": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "577": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "578": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "579": [
+   {
+    "admin1": "Alagoas"
+   }
+  ],
+  "580": [
+   {
+    "admin1": "Paraíba",
+    "note": "city of João Pessoa (capital range in one table, single source)"
+   }
+  ],
+  "581": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "582": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "583": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "584": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "585": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "586": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "587": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "588": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "589": [
+   {
+    "admin1": "Paraíba"
+   }
+  ],
+  "590": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "591": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "592": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "593": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "594": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "595": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "596": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "597": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "598": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "599": [
+   {
+    "admin1": "Rio Grande do Norte"
+   }
+  ],
+  "600": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "601": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "602": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "603": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "604": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "605": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "606": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "607": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "608": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "609": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "610": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "611": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "612": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "613": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "614": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "615": [
+   {
+    "admin1": "Ceará",
+    "note": "city of Fortaleza (capital range in one table, single source)"
+   }
+  ],
+  "616": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "617": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "618": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "619": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "620": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "621": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "622": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "623": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "624": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "625": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "626": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "627": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "628": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "629": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "630": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "631": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "632": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "633": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "634": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "635": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "636": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "637": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "638": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "639": [
+   {
+    "admin1": "Ceará"
+   }
+  ],
+  "640": [
+   {
+    "admin1": "Piauí",
+    "note": "city of Teresina (capital range in one table, single source)"
+   }
+  ],
+  "641": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "642": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "643": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "644": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "645": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "646": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "647": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "648": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "649": [
+   {
+    "admin1": "Piauí"
+   }
+  ],
+  "650": [
+   {
+    "admin1": "Maranhão",
+    "note": "city of São Luís (capital range in one table, single source)"
+   }
+  ],
+  "651": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "652": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "653": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "654": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "655": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "656": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "657": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "658": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "659": [
+   {
+    "admin1": "Maranhão"
+   }
+  ],
+  "660": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "661": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "662": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "663": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "664": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "665": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "666": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "667": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "668": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "669": [
+   {
+    "admin1": "Pará",
+    "note": "city of Belém (capital range in one table, single source)"
+   }
+  ],
+  "670": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "671": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "672": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "673": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "674": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "675": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "676": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "677": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "678": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "679": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "680": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "681": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "682": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "683": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "684": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "685": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "686": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "687": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "688": [
+   {
+    "admin1": "Pará"
+   }
+  ],
+  "689": [
+   {
+    "admin1": "Amapá"
+   }
+  ],
+  "690": [
+   {
+    "admin1": "Amazonas",
+    "note": "city of Manaus (capital range in one table, single source)"
+   }
+  ],
+  "691": [
+   {
+    "admin1": "Amazonas"
+   }
+  ],
+  "692": [
+   {
+    "admin1": "Amazonas"
+   }
+  ],
+  "693": [
+   {
+    "admin1": "Roraima"
+   }
+  ],
+  "694": [
+   {
+    "admin1": "Amazonas"
+   }
+  ],
+  "695": [
+   {
+    "admin1": "Amazonas"
+   }
+  ],
+  "696": [
+   {
+    "admin1": "Amazonas"
+   }
+  ],
+  "697": [
+   {
+    "admin1": "Amazonas"
+   }
+  ],
+  "698": [
+   {
+    "admin1": "Amazonas"
+   }
+  ],
+  "699": [
+   {
+    "admin1": "Acre"
+   }
+  ],
+  "700": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "701": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "702": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "703": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "704": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "705": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "706": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "707": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "708": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "709": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "city of Brasília (Plano Piloto) (capital range in one table, single source)"
+   }
+  ],
+  "710": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "711": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "712": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "713": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "714": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "715": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "716": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "717": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "718": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "719": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "720": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "721": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "722": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "723": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "724": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "725": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "726": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "727": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "728": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "729": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "730": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "731": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "732": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "733": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "734": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "735": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "736": [
+   {
+    "admin1": "Distrito Federal"
+   }
+  ],
+  "737": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "738": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "739": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "740": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "741": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "742": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "743": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "744": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "745": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "746": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "747": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "748": [
+   {
+    "admin1": "Goiás",
+    "note": "city of Goiânia (capital range in one table, single source)"
+   }
+  ],
+  "749": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "750": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "751": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "752": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "753": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "754": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "755": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "756": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "757": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "758": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "759": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "760": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "761": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "762": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "763": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "764": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "765": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "766": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "767": [
+   {
+    "admin1": "Goiás"
+   }
+  ],
+  "768": [
+   {
+    "admin1": "Rondônia",
+    "note": "Rondônia since August 2008; before that this range was the end of Goiás's block"
+   }
+  ],
+  "769": [
+   {
+    "admin1": "Rondônia",
+    "note": "Rondônia since August 2008; before that this range was the end of Goiás's block"
+   }
+  ],
+  "770": [
+   {
+    "admin1": "Tocantins",
+    "note": "city of Palmas (capital range in one table, single source)"
+   }
+  ],
+  "771": [
+   {
+    "admin1": "Tocantins",
+    "note": "city of Palmas (capital range in one table, single source)"
+   }
+  ],
+  "772": [
+   {
+    "admin1": "Tocantins",
+    "note": "city of Palmas (capital range in one table, single source)"
+   }
+  ],
+  "773": [
+   {
+    "admin1": "Tocantins"
+   }
+  ],
+  "774": [
+   {
+    "admin1": "Tocantins"
+   }
+  ],
+  "775": [
+   {
+    "admin1": "Tocantins"
+   }
+  ],
+  "776": [
+   {
+    "admin1": "Tocantins"
+   }
+  ],
+  "777": [
+   {
+    "admin1": "Tocantins"
+   }
+  ],
+  "778": [
+   {
+    "admin1": "Tocantins"
+   }
+  ],
+  "779": [
+   {
+    "admin1": "Tocantins"
+   }
+  ],
+  "780": [
+   {
+    "admin1": "Mato Grosso"
+   }
+  ],
+  "781": [
+   {
+    "admin1": "Mato Grosso"
+   }
+  ],
+  "782": [
+   {
+    "admin1": "Mato Grosso"
+   }
+  ],
+  "783": [
+   {
+    "admin1": "Mato Grosso"
+   }
+  ],
+  "784": [
+   {
+    "admin1": "Mato Grosso"
+   }
+  ],
+  "785": [
+   {
+    "admin1": "Mato Grosso"
+   }
+  ],
+  "786": [
+   {
+    "admin1": "Mato Grosso"
+   }
+  ],
+  "787": [
+   {
+    "admin1": "Mato Grosso"
+   }
+  ],
+  "788": [
+   {
+    "admin1": "Mato Grosso",
+    "note": "one pt.wikipedia sentence puts Rondônia's pre-2008 range at 78800–78999; current tables give it to Mato Grosso"
+   }
+  ],
+  "789": [
+   {
+    "admin1": "Rondônia",
+    "note": "former range: Rondônia used 78900–78999 from 1971 until August 2008, when it moved to 76800–76999; seen on old signs and documents"
+   }
+  ],
+  "790": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "791": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "792": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "793": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "794": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "795": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "796": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "797": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "798": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "799": [
+   {
+    "admin1": "Mato Grosso do Sul"
+   }
+  ],
+  "800": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "801": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "802": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "803": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "804": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "805": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "806": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "807": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "808": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "809": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "810": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "811": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "812": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "813": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "814": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "815": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "816": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "817": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "818": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "819": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "820": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "821": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "822": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "823": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "824": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "825": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "826": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "827": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "828": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "829": [
+   {
+    "admin1": "Paraná",
+    "note": "city of Curitiba (capital range in one table, single source)"
+   }
+  ],
+  "830": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "831": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "832": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "833": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "834": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "835": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "836": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "837": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "838": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "839": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "840": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "841": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "842": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "843": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "844": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "845": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "846": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "847": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "848": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "849": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "850": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "851": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "852": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "853": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "854": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "855": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "856": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "857": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "858": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "859": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "860": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "861": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "862": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "863": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "864": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "865": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "866": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "867": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "868": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "869": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "870": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "871": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "872": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "873": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "874": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "875": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "876": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "877": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "878": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "879": [
+   {
+    "admin1": "Paraná"
+   }
+  ],
+  "880": [
+   {
+    "admin1": "Santa Catarina",
+    "note": "city of Florianópolis (capital range in one table, single source)"
+   }
+  ],
+  "881": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "882": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "883": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "884": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "885": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "886": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "887": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "888": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "889": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "890": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "891": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "892": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "893": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "894": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "895": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "896": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "897": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "898": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "899": [
+   {
+    "admin1": "Santa Catarina"
+   }
+  ],
+  "900": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "901": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "902": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "903": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "904": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "905": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "906": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "907": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "908": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "909": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "910": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "911": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "912": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "913": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "914": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "915": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "916": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "917": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "918": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "919": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "city of Porto Alegre (capital range in one table, single source)"
+   }
+  ],
+  "920": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "921": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "922": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "923": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "924": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "925": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "926": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "927": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "928": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "929": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "930": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "931": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "932": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "933": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "934": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "935": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "936": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "937": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "938": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "939": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "940": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "941": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "942": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "943": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "944": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "945": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "946": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "947": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "948": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "949": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "950": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "951": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "952": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "953": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "954": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "955": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "956": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "957": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "958": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "959": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "960": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "961": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "962": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "963": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "964": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "965": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "966": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "967": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "968": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "969": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "970": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "971": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "972": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "973": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "974": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "975": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "976": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "977": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "978": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "979": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "980": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "981": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "982": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "983": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "984": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "985": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "986": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "987": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "988": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "989": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "990": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "991": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "992": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "993": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "994": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "995": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "996": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "997": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "998": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ],
+  "999": [
+   {
+    "admin1": "Rio Grande do Sul"
+   }
+  ]
+ }
+}
