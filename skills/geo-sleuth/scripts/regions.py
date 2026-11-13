@@ -75,6 +75,8 @@ def packs(reload: bool = False) -> dict[str, dict]:
 
 
 def _fold(s: str) -> str:
+    """Country name or alias as resolve() compares it: lower case, spaces and punctuation dropped, accents kept
+    (place names in admin tables use fold_name instead)."""
     s = unicodedata.normalize("NFKC", s or "").strip().lower()
     return re.sub(r"[\s.()\-_'’]", "", s)
 
@@ -130,6 +132,13 @@ def normalize(value: str, spec: dict) -> str:
     v = unicodedata.normalize("NFKC", value or "") if spec.get("fullwidth", True) else (value or "")
     for ch in spec.get("strip", " "):
         v = v.replace(ch, "")
+    # An international prefix in front of a national number ("+55" → "21 …"). Checked after strip and before digits_only,
+    # so "+55" is only dropped where the plus sign is written and a bare "55" (a valid area code) is left alone.
+    dp = spec.get("drop_prefix")
+    for pre in (dp if isinstance(dp, list) else []):   # a malformed (non-list) value is ignored here; lint reports it
+        if isinstance(pre, str) and pre and v.startswith(pre):
+            v = v[len(pre):]
+            break
     if spec.get("digits_only"):
         v = re.sub(r"\D", "", v)
     if spec.get("upper", True):
@@ -143,7 +152,8 @@ def normalize(value: str, spec: dict) -> str:
 def prefix_lookup(pack: dict, kind: str, value: str) -> dict:
     """Look a value up in one pack's prefix table.
     Returns {"status": ok|no_match|not_applicable|unsupported, "matches": [...], "note", "source", "fetched"}.
-    not_applicable = the value doesn't have this table's format (e.g. a Latin plate against a table of Han-character prefixes)."""
+    not_applicable = the value doesn't have this table's format (e.g. a Latin plate against a table of Han-character prefixes);
+    its note repeats the table's `usage`, so a caller that asked this pack directly learns what input it takes."""
     spec = (pack.get("lookups") or {}).get(kind)
     if not spec:
         return {"status": "unsupported", "matches": [], "note": f"{pack['code']} pack has no {kind} table", "source": "", "fetched": ""}
@@ -158,7 +168,10 @@ def prefix_lookup(pack: dict, kind: str, value: str) -> dict:
     if meta.get("key_pattern"):
         m = re.match(meta["key_pattern"], v)
         if not m:
-            return {"status": "not_applicable", "matches": [], "note": "", **base}
+            note = f"'{value}' doesn't fit the {pack['code']} {kind} format"
+            if meta.get("usage"):
+                note += f"; this table takes: {meta['usage']}"
+            return {"status": "not_applicable", "matches": [], "note": note, **base}
         target = m.group(0)
     entries = t.get("entries") or {}
     key = next((target[:n] for n in range(len(target), 0, -1) if target[:n] in entries), None)
@@ -273,14 +286,50 @@ def admin_index(pack: dict) -> tuple[list[dict], dict]:
     return _INDEX[key]
 
 
-def admin_chain(pack: dict, item: dict) -> list[str]:
+def _level_num(item: dict) -> float | None:
+    try:
+        return float(item.get("level"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _parent_item(pack: dict, item: dict) -> dict | None:
+    """The table item an item's `parent` names. When several items share that name (a state and a municipality both called
+    São Paulo), prefer one at a higher level (smaller number) than the item; otherwise take the first in table order, never
+    the item itself."""
+    p = item.get("parent", "")
+    if not p:
+        return None
     _, by = admin_index(pack)
-    chain, p = [item["name"]], item.get("parent", "")
-    while p:
-        chain.append(p)
-        nxt = by.get(p)
-        p = nxt[0].get("parent", "") if nxt else ""
+    cands = [c for c in by.get(p, []) if c is not item]
+    lv = _level_num(item)
+    higher = [c for c in cands if lv is not None and _level_num(c) is not None and _level_num(c) < lv]
+    return (higher or cands or [None])[0]
+
+
+def admin_chain_items(pack: dict, item: dict) -> list[dict]:
+    """The item and its ancestors in the table, top first. Each step follows the item's own parent (see _parent_item), so a
+    municipality named like a state (Tocantins in Minas Gerais) keeps its real parent; a loop in the data stops the walk."""
+    chain, seen, cur = [item], {id(item)}, item
+    while True:
+        par = _parent_item(pack, cur)
+        if par is None or id(par) in seen:
+            break
+        chain.append(par)
+        seen.add(id(par))
+        cur = par
     return list(reversed(chain))
+
+
+def admin_chain(pack: dict, item: dict) -> list[str]:
+    """Names from the top of the chain down to item. A parent the table names but does not list is kept at the top."""
+    _, by = admin_index(pack)
+    items = admin_chain_items(pack, item)
+    names = [it["name"] for it in items]
+    top = items[0]
+    if top.get("parent") and top["parent"] not in by:
+        names.insert(0, top["parent"])
+    return names
 
 
 def valid_alias(a) -> bool:
@@ -293,24 +342,88 @@ def aliases(item: dict) -> list[str]:
     return [x for x in a if valid_alias(x)] if isinstance(a, list) else []
 
 
-def admin_find(name: str, country: str | None = None) -> list[tuple[dict, dict]]:
-    """Exact name first, then a match on the name or an alias ignoring the pack's generic suffixes (市/省/区/县 in CN). [(pack, item)]"""
-    pk = [resolve(country)] if country else list(packs().values())
-    out = []
-    for p in pk:
-        if not p:
-            continue
-        items, by = admin_index(p)
-        want = strip_suffix(name, p)
-        hits = by.get(name) or [it for it in items
-                                if want in {strip_suffix(n, p) for n in [it["name"], *aliases(it)]}]
-        out += [(p, it) for it in hits]
+# Apostrophe look-alikes, and letters that NFKD doesn't decompose into a base letter plus a mark (Turkish dotless ı: AYDIN = Aydın)
+_FOLD_CHARS = str.maketrans({**{c: "'" for c in "’‘´`ʼ′"},
+                             "ı": "i", "ł": "l", "Ł": "l", "ø": "o", "Ø": "o", "đ": "d", "Đ": "d", "ħ": "h", "Ħ": "h"})
+
+
+def fold_name(name: str) -> str:
+    """Name for loose matching: case folded, accents and other combining marks dropped, apostrophe look-alikes made ASCII,
+    and a few letters without a decomposition mapped to their plain form (ı → i). "SÃO JOÃO D’ALIANÇA" and
+    "sao joao d'alianca" fold to the same string, as do "AYDIN" and "Aydın"."""
+    s = unicodedata.normalize("NFKD", (name or "").translate(_FOLD_CHARS))
+    return "".join(ch for ch in s if not unicodedata.combining(ch)).casefold().translate(_FOLD_CHARS).strip()
+
+
+def _fold_key(name: str, pack: dict) -> str:
+    out = fold_name(name)
+    for s in pack.get("name_suffixes") or []:
+        fs = fold_name(s)
+        if fs and out.endswith(fs) and len(out) > len(fs):
+            return out[: -len(fs)].strip()   # a suffix written with a leading space (" District") leaves one behind
     return out
 
 
-def admin_children(name: str, country: str | None = None) -> tuple[dict | None, list[dict]]:
+_ALIASES: dict[str, dict[str, list[dict]]] = {}
+
+
+def _alias_index(pack: dict) -> dict[str, list[dict]]:
+    """Exact alias → the items that list it, in table order (an alias equal to the item's own name is left out)."""
+    key = str(pack["dir"])
+    if key not in _ALIASES:
+        idx: dict[str, list[dict]] = {}
+        for it in admin_items(pack):
+            for a in dict.fromkeys(aliases(it)):
+                if a != it["name"]:
+                    idx.setdefault(a, []).append(it)
+        _ALIASES[key] = idx
+    return _ALIASES[key]
+
+
+_FOLDED: dict[str, dict[str, list[dict]]] = {}
+
+
+def _folded_index(pack: dict) -> dict[str, list[dict]]:
+    key = str(pack["dir"])
+    if key not in _FOLDED:
+        idx: dict[str, list[dict]] = {}
+        for it in admin_items(pack):
+            for k in dict.fromkeys(_fold_key(n, pack) for n in [it["name"], *aliases(it)]):
+                idx.setdefault(k, []).append(it)
+        _FOLDED[key] = idx
+    return _FOLDED[key]
+
+
+def admin_find(name: str, country: str | None = None, fold: bool = True,
+               join_aliases: bool = True) -> list[tuple[dict, dict]]:
+    """Exact name first, joined by the items that list it as an alias, after the items named so ("Marau" finds Marau in
+    Rio Grande do Sul and Maraú in Bahia, whose alias it is). Otherwise a match on the name or an alias ignoring the pack's
+    generic suffixes (市/省/区/县 in CN), which also finds exact aliases. [(pack, item)]
+    If no pack matches that way and fold is true, names and aliases are compared case- and accent-folded (see fold_name), so
+    "Sao Paulo" or "BRASILIA" still find their places; an exact hit in any pack always wins over folded ones.
+    fold=False with join_aliases=False is the lookup as it was before both (clues.py lookup admin --exact)."""
+    pk = [p for p in ([resolve(country)] if country else list(packs().values())) if p]
+    out = []
+    for p in pk:
+        items, by = admin_index(p)
+        hits = by.get(name, [])
+        if hits:
+            if join_aliases:
+                hits = hits + _alias_index(p).get(name, [])
+        else:
+            want = strip_suffix(name, p)
+            hits = [it for it in items if want in {strip_suffix(n, p) for n in [it["name"], *aliases(it)]}]
+        out += [(p, it) for it in hits]
+    if out or not fold or not (name or "").strip():
+        return out
+    for p in pk:
+        out += [(p, it) for it in _folded_index(p).get(_fold_key(name, p), [])]
+    return out
+
+
+def admin_children(name: str, country: str | None = None, fold: bool = True) -> tuple[dict | None, list[dict]]:
     """Direct children of an admin area in the local tables. (pack, items); (None, []) when no pack knows the parent."""
-    hits = admin_find(name, country)
+    hits = admin_find(name, country, fold=fold)
     if not hits:
         return None, []
     p, parent = hits[0]
@@ -319,13 +432,11 @@ def admin_children(name: str, country: str | None = None) -> tuple[dict | None, 
 
 
 def match_from_item(pack: dict, item: dict) -> dict:
-    """Admin-table item → match dict with explicit board levels along its chain."""
-    _, by = admin_index(pack)
+    """Admin-table item → match dict with explicit board levels along its chain. Levels come from the chain's own items, not
+    from the first item of each name, so a municipality named like a state keeps its state as admin1."""
     row = {"country": pack.get("name", pack["code"]), "country_code": pack["code"]}
-    for nm in admin_chain(pack, item):
-        lv = by[nm][0]["level"] if nm in by else None
-        if lv is not None:
-            row[level_name(pack, lv)] = nm
+    for it in admin_chain_items(pack, item):
+        row[level_name(pack, it.get("level"))] = it["name"]
     return row
 
 
@@ -462,6 +573,10 @@ def _lint_table(pack: dict, kind: str, spec: dict, errs: list, warns: list) -> N
             re.compile(meta["key_pattern"])
         except re.error as exc:
             errs.append(f"{spec['file']}: key_pattern doesn't compile ({exc})")
+    norm = meta.get("normalize") or {}
+    dp = norm.get("drop_prefix") if isinstance(norm, dict) else None
+    if dp is not None and not (isinstance(dp, list) and all(isinstance(x, str) and x for x in dp)):
+        errs.append(f"{spec['file']}: _meta.normalize.drop_prefix must be a list of non-empty strings (e.g. [\"+55\"])")
     if not isinstance(entries, dict) or not entries:
         errs.append(f"{spec['file']}: 'entries' must be a non-empty object of key → [match, ...]")
         return

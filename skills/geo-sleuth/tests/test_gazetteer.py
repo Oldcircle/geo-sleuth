@@ -232,6 +232,59 @@ class ChildMembership(unittest.TestCase):
             _, rows = gazetteer.children(parent["name"], None, Path('.'), 5, None)
         self.assertEqual(len(rows), 3)
 
+    def test_country_children_skip_a_neighbours_divisions_by_iso_code(self):
+        # Brazil's level-4 query also returns Bolivia's Beni (ISO3166-2 BO-B); rows without the tag stay
+        parent = gazetteer._rel_rows({"elements": [rel(1, 2, **{"name": "Testland", "ISO3166-1": "QQ"})]})[0]
+        data = {"elements": [rel(10, 4, **{"name": "North", "ISO3166-2": "QQ-N"}), rel(11, 4, **{"name": "South", "ISO3166-2": "QQ-S"}),
+                             rel(12, 4, **{"name": "Beni", "ISO3166-2": "BO-B"}), rel(13, 4, name="Untagged")]}
+        with patch.object(gazetteer, "find_relation", return_value=[parent]), patch.object(gazetteer.osm, "run", return_value=data):
+            _, rows = gazetteer.children(parent["name"], None, Path('.'), 4, None)
+        self.assertEqual({r["name"] for r in rows}, {"North", "South", "Untagged"})
+
+    def test_territory_keeps_relations_that_share_its_own_iso_codes(self):
+        # Guadeloupe: ISO3166-1 GP, ISO3166-2 FR-971, and its region and department relations carry the same tags;
+        # Åland's subdivision carries only its ISO3166-2 (FI-01)
+        for parent_tags, child_tags in (({"ISO3166-1": "GP", "ISO3166-2": "FR-971"}, {"ISO3166-1": "GP", "ISO3166-2": "FR-971"}),
+                                        ({"ISO3166-1": "AX", "ISO3166-2": "FI-01"}, {"ISO3166-2": "FI-01"})):
+            with self.subTest(parent=parent_tags):
+                parent = gazetteer._rel_rows({"elements": [rel(3, 3, **{"name": "Territory", **parent_tags})]})[0]
+                data = {"elements": [rel(30, 4, **{"name": "Same land", **child_tags}),
+                                     rel(31, 4, **{"name": "Neighbour", "ISO3166-2": "ZZ-1"})]}
+                with patch.object(gazetteer, "find_relation", return_value=[parent]), patch.object(gazetteer.osm, "run", return_value=data):
+                    _, rows = gazetteer.children(parent["name"], None, Path('.'), 4, None)
+                self.assertEqual([r["name"] for r in rows], ["Same land"])
+
+    def test_neighbour_filter_keeps_a_child_that_only_folds_to_a_name_elsewhere(self):
+        # "ALDA" is not in the table; folded it would equal "Ålda" under South, but a guess must not drop an OSM child
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            items = [{"name": n, "parent": p, "level": lv} for n, p, lv in [("North", "", 1), ("South", "", 1), ("Ålda", "South", 2)]]
+            (root / 'admin.json').write_text(json.dumps({'items': items}, ensure_ascii=False), encoding='utf-8')
+            pack = {'code': 'QQ', 'dir': root, 'admin_table': 'admin.json'}
+            with patch.object(gazetteer.regions, 'packs', return_value={'QQ': pack}):
+                kept = gazetteer._filter_known_neighbours({'name': 'North'}, [{'name': 'ALDA'}])
+            self.assertEqual([r['name'] for r in kept], ['ALDA'])
+
+    def test_neighbour_filter_keeps_a_child_whose_name_is_an_alias_inside_the_parent(self):
+        # Marau lies in South, but North's Maraú lists "Marau" as an alias: an OSM child "Marau" of North may be that one
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            items = [{"name": "North", "parent": "", "level": 1}, {"name": "South", "parent": "", "level": 1},
+                     {"name": "Maraú", "parent": "North", "level": 2, "aliases": ["Marau"]},
+                     {"name": "Marau", "parent": "South", "level": 2}, {"name": "Outside", "parent": "South", "level": 2}]
+            (root / 'admin.json').write_text(json.dumps({'items': items}, ensure_ascii=False), encoding='utf-8')
+            pack = {'code': 'QQ', 'dir': root, 'admin_table': 'admin.json'}
+            with patch.object(gazetteer.regions, 'packs', return_value={'QQ': pack}):
+                kept = gazetteer._filter_known_neighbours({'name': 'North'}, [{'name': 'Marau'}, {'name': 'Outside'}])
+            self.assertEqual([r['name'] for r in kept], ['Marau'])
+
+    def test_subdivision_parent_takes_its_country_from_its_own_iso_code(self):
+        parent = gazetteer._rel_rows({"elements": [rel(2, 4, **{"name": "Provincia", "ISO3166-2": "QQ-P"})]})[0]
+        data = {"elements": [rel(20, 8, name="Town"), rel(21, 8, **{"name": "Across", "ISO3166-2": "ZZ-1"})]}
+        with patch.object(gazetteer, "find_relation", return_value=[parent]), patch.object(gazetteer.osm, "run", return_value=data):
+            _, rows = gazetteer.children(parent["name"], None, Path('.'), 8, None)
+        self.assertEqual([r["name"] for r in rows], ["Town"])
+
     def test_explicit_level_keeps_a_single_valid_child(self):
         parent = gazetteer._rel_rows({"elements": [INNER_MONGOLIA]})[0]
         data = {"elements": [rel(1, 5, name="呼和浩特市"), rel(2, 5, name="忻州市")]}

@@ -313,6 +313,210 @@ class FixturePack(unittest.TestCase):
                 self.assertTrue(any(field in e for e in errs), errs)
 
 
+def admin_pack(root: Path, items: list[dict], lookups: dict | None = None, tables: dict | None = None) -> dict:
+    """A minimal in-memory pack with an admin table (and optional prefix tables) for admin and format tests."""
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "admin.json").write_text(json.dumps({"items": items}, ensure_ascii=False), encoding="utf-8")
+    for rel_path, body in (tables or {}).items():
+        (root / rel_path).write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
+    return {"code": "QQ", "name": "Testland", "dir": root, "admin_table": "admin.json",
+            "admin_levels": {"4": "admin1", "8": "admin2"}, "lookups": lookups or {}}
+
+
+# A state and a municipality share a name (São Paulo); a municipality is named like another state (Tocantins in Minas Gerais)
+SAME_NAMES = [
+    {"name": "São Paulo", "level": 4, "parent": ""},
+    {"name": "Minas Gerais", "level": 4, "parent": ""},
+    {"name": "Tocantins", "level": 4, "parent": ""},
+    {"name": "Rio Grande do Sul", "level": 4, "parent": ""},
+    {"name": "São Paulo", "level": 8, "parent": "São Paulo"},
+    {"name": "Tocantins", "level": 8, "parent": "Minas Gerais"},
+    {"name": "Sant'Ana do Livramento", "level": 8, "parent": "Rio Grande do Sul"},
+]
+
+
+class AdminNamesAndFormats(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def find(self, pack: dict, name: str, **kw) -> list[tuple[str, int]]:
+        from unittest.mock import patch
+        with patch.object(regions, "packs", return_value={"QQ": pack}):
+            return [(it["name"], it["level"]) for _, it in regions.admin_find(name, **kw)]
+
+    def test_case_and_accents_are_ignored_only_when_nothing_matches_exactly(self):
+        pack = admin_pack(self.root / "a", SAME_NAMES + [{"name": "Para", "level": 8, "parent": "Minas Gerais"},
+                                                         {"name": "Pará", "level": 4, "parent": ""}])
+        both = [("São Paulo", 4), ("São Paulo", 8)]
+        self.assertEqual(self.find(pack, "sao paulo"), both)
+        self.assertEqual(self.find(pack, "SÃO PAULO"), both)
+        self.assertEqual(self.find(pack, "Sant’Ana do Livramento"), [("Sant'Ana do Livramento", 8)])   # typographic apostrophe
+        self.assertEqual(self.find(pack, "sao paulo", fold=False), [])
+        self.assertEqual(self.find(pack, "Pará"), [("Pará", 4)])        # an exact hit is not joined by its folded twin "Para"
+        self.assertEqual(self.find(pack, "nowhere"), [])
+
+    def test_an_alias_is_found_next_to_an_item_with_that_exact_name(self):
+        # BR: Marau is a municipality in Rio Grande do Sul and an alias of Maraú in Bahia; the exact name used to hide the alias
+        from unittest.mock import patch
+        pack = admin_pack(self.root / "h", [{"name": "Bahia", "level": 4, "parent": ""},
+                                            {"name": "Rio Grande do Sul", "level": 4, "parent": ""},
+                                            {"name": "Maraú", "level": 8, "parent": "Bahia", "aliases": ["Marau", "Marau"]},
+                                            {"name": "Marau", "level": 8, "parent": "Rio Grande do Sul", "aliases": ["Marau"]},
+                                            {"name": "Seat in Bahia", "level": 8, "parent": "Maraú"},
+                                            {"name": "Seat in Rio Grande do Sul", "level": 8, "parent": "Marau"}])
+        both = [("Marau", 8), ("Maraú", 8)]                                    # items named so come first, each one once
+        self.assertEqual(self.find(pack, "Marau"), both)
+        self.assertEqual(self.find(pack, "Marau", fold=False), both)
+        self.assertEqual(self.find(pack, "Maraú"), [("Maraú", 8)])
+        with patch.object(regions, "packs", return_value={"QQ": pack}):         # children of a name: the item named so
+            self.assertEqual([k["name"] for k in regions.admin_children("Marau")[1]], ["Seat in Rio Grande do Sul"])
+        # With no item of that exact name, an exact alias doesn't cut the matches that ignore the pack's suffixes
+        lk = admin_pack(self.root / "k", [{"name": "Kandy District", "level": 4, "parent": ""},
+                                          {"name": "Kandy City", "level": 8, "parent": "Kandy District", "aliases": ["Kandy"]}])
+        lk["name_suffixes"] = [" District", " City"]
+        self.assertEqual(self.find(lk, "Kandy"), [("Kandy District", 4), ("Kandy City", 8)])
+
+    def test_chain_follows_each_items_own_parent(self):
+        pack = admin_pack(self.root / "b", SAME_NAMES)
+        items = regions.admin_items(pack)
+        tocantins_mg = next(i for i in items if i["name"] == "Tocantins" and i["level"] == 8)
+        sp_city = next(i for i in items if i["name"] == "São Paulo" and i["level"] == 8)
+        self.assertEqual({k: v for k, v in regions.match_from_item(pack, tocantins_mg).items() if k in regions.MATCH_LEVELS},
+                         {"admin1": "Minas Gerais", "admin2": "Tocantins"})
+        self.assertEqual({k: v for k, v in regions.match_from_item(pack, sp_city).items() if k in regions.MATCH_LEVELS},
+                         {"admin1": "São Paulo", "admin2": "São Paulo"})
+        self.assertEqual(regions.admin_chain(pack, sp_city), ["São Paulo", "São Paulo"])
+
+    def test_chain_ends_whatever_the_item_order_and_on_bad_data(self):
+        # Run in a child process with a timeout: the old walk looped forever on these tables, which would hang the suite
+        items = [{"name": "São Paulo", "level": 8, "parent": "São Paulo"}, {"name": "São Paulo", "level": 4, "parent": ""},
+                 {"name": "Loop", "level": 8, "parent": "Loop"},
+                 {"name": "A", "level": 8, "parent": "B"}, {"name": "B", "level": 8, "parent": "A"},
+                 {"name": "Orphan", "level": 8, "parent": "Missing"}]
+        d = self.root / "c"
+        d.mkdir()
+        (d / "admin.json").write_text(json.dumps({"items": items}, ensure_ascii=False), encoding="utf-8")
+        code = ("import json, sys; from pathlib import Path; sys.path.insert(0, sys.argv[1]); import regions\n"
+                "p = {'code': 'QQ', 'dir': Path(sys.argv[2]), 'admin_table': 'admin.json', 'admin_levels': {'4': 'admin1', '8': 'admin2'}}\n"
+                "print(json.dumps({it['name'] + str(it['level']): regions.admin_chain(p, it) for it in regions.admin_items(p)}))")
+        try:
+            r = subprocess.run([sys.executable, "-c", code, str(SCRIPTS), str(d)], capture_output=True, text=True,
+                               encoding="utf-8", timeout=60)
+        except subprocess.TimeoutExpired:
+            self.fail("admin_chain did not finish: a same-name or cyclic parent made it loop")
+        got = json.loads(r.stdout)
+        self.assertEqual(got["São Paulo8"], ["São Paulo", "São Paulo"])     # the municipality listed first no longer loops
+        self.assertEqual(got["São Paulo4"], ["São Paulo"])
+        self.assertEqual(got["Loop8"], ["Loop"])
+        self.assertEqual(got["A8"], ["B", "A"])
+        self.assertEqual(got["Orphan8"], ["Missing", "Orphan"])            # a parent the table doesn't list stays on top
+
+    def test_folding_covers_dotless_i_and_suffixes_written_with_a_space(self):
+        tr = admin_pack(self.root / "tr", [{"name": "Aydın", "level": 4, "parent": ""}, {"name": "Iğdır", "level": 4, "parent": ""}])
+        for q in ("AYDIN", "Aydin", "aydın", "IĞDIR", "Igdir"):
+            self.assertEqual([n for n, _ in self.find(tr, q)], ["Aydın" if q.lower().startswith("ayd") else "Iğdır"], q)
+        lk = dict(admin_pack(self.root / "lk", [{"name": "Western Province", "level": 4, "parent": ""},
+                                                {"name": "Colombo District", "level": 8, "parent": "Western Province"}]),
+                  name_suffixes=[" Province", " District"])
+        self.assertEqual(self.find(lk, "colombo"), [("Colombo District", 8)])
+        self.assertEqual(self.find(lk, "WESTERN"), [("Western Province", 4)])
+        self.assertEqual(self.find(lk, "Colombo"), [("Colombo District", 8)])   # the exact, suffix-stripped path still works
+
+    def test_a_value_in_another_format_says_what_the_table_takes(self):
+        table = {"_meta": {"kind": "plate", "source": ["test"], "fetched": "2026-11-12", "license": "CC0",
+                           "key_pattern": "^[A-Z]{3}(?=\\d{4}$)", "usage": "three letters and four digits, ABC1234"},
+                 "entries": {"ABC": [{"admin1": "São Paulo"}]}}
+        pack = admin_pack(self.root / "d", SAME_NAMES, {"plate": {"file": "plates.json"}}, {"plates.json": table})
+        r = regions.prefix_lookup(pack, "plate", "12-34")
+        self.assertEqual((r["status"], r["matches"]), ("not_applicable", []))
+        self.assertIn("three letters and four digits", r["note"])
+        self.assertEqual(regions.prefix_lookup(pack, "plate", "ABC1234")["status"], "ok")
+
+    def test_drop_prefix_only_drops_a_written_international_prefix(self):
+        spec = {"digits_only": True, "drop_prefix": ["+55", "0055"], "ensure_prefix": "0"}
+        self.assertEqual(regions.normalize("+55 21 2541-1234", spec), "02125411234")
+        self.assertEqual(regions.normalize("0055 21 2541-1234", spec), "02125411234")
+        self.assertEqual(regions.normalize("(55) 3222-1234", spec), "05532221234")   # area code 55 itself is kept
+        self.assertEqual(regions.normalize("55 3222-1234", spec), "05532221234")
+        self.assertEqual(regions.normalize("+55 55 3222-1234", spec), "05532221234")   # only the first prefix is dropped
+        # A string instead of a list (lint reports it) must not be read character by character
+        self.assertEqual(regions.normalize("51 3222-1234", dict(spec, drop_prefix="+55")), "05132221234")
+
+    def test_cli_and_board_name_a_value_in_another_format(self):
+        table = {"_meta": {"kind": "plate", "source": ["test"], "fetched": "2026-11-12", "license": "CC0",
+                           "key_pattern": "^[A-Z]{3}(?=\\d{4}$)", "usage": "three letters and four digits, ABC1234"},
+                 "entries": {"ABC": [{"admin1": "North"}]}}
+        files = json.loads(json.dumps(FIXTURE))
+        files["region.json"]["lookups"]["plate"] = {"file": "data/plates.json"}
+        files["data/plates.json"] = table
+        files["tests.json"].append({"kind": "plate", "value": "ABC1234", "expect": [{"admin1": "North"}]})
+        write_pack(self.root / "packs", files)
+        env = {"GEO_SLEUTH_REGIONS": str(self.root / "packs")}
+        r = run("clues.py", "lookup", "plate", "12-34", "--country", "qq", env=env)
+        self.assertIn("not in this table's format", r.stdout)
+        self.assertIn("three letters and four digits", r.stdout)
+        d = json.loads(run("clues.py", "lookup", "plate", "12-34", "--country", "qq", "--json", env=env).stdout)
+        self.assertEqual(d["status"], "not_applicable")
+        board = self.root / "board.json"
+        run("board.py", "--board", str(board), "init", "--photo", "x.jpg", env=env)
+        r = run("board.py", "--board", str(board), "apply", "--kind", "plate", "--value", "12-34", "--country", "qq", env=env)
+        self.assertIn("Value doesn't fit the table's format", r.stdout)
+        self.assertIn("three letters and four digits", r.stdout)
+
+    def test_exact_switch_gives_the_admin_lookup_as_it_was(self):
+        files = json.loads(json.dumps(FIXTURE))
+        files["region.json"]["admin_table"] = "data/admin.json"
+        files["data/admin.json"] = {"_meta": {"source": ["test"], "fetched": "2026-11-13", "license": "CC0", "count": 4},
+                                    "items": [{"name": "North", "code": "N", "level": 1, "parent": ""},
+                                              {"name": "South", "code": "S", "level": 1, "parent": ""},
+                                              {"name": "Maraú", "code": "N1", "level": 2, "parent": "North", "aliases": ["Marau"]},
+                                              {"name": "Marau", "code": "S1", "level": 2, "parent": "South"}]}
+        write_pack(self.root / "packs", files)
+        env = {"GEO_SLEUTH_REGIONS": str(self.root / "packs")}
+
+        def admin2(*args: str) -> list[str]:
+            r = run("clues.py", "lookup", "admin", *args, "--country", "qq", "--json", env=env)
+            return [m["admin2"] for m in json.loads(r.stdout)["matches"]]
+        self.assertEqual(admin2("Marau"), ["Marau", "Maraú"])
+        self.assertEqual(admin2("Marau", "--exact"), ["Marau"])            # no alias join
+        self.assertEqual(admin2("MARAU"), ["Maraú", "Marau"])
+        self.assertEqual(admin2("MARAU", "--exact"), [])                   # no folding
+        r = run("clues.py", "lookup", "admin", "MARAU", "--country", "qq", "--exact", env=env)
+        self.assertIn("without --exact", r.stdout)
+
+    def test_a_hand_added_spelling_without_accents_receives_the_lookup(self):
+        # No country on the board: the lookup's "Ålda" must land on the hand-added "ALDA", not create a twin that leaves
+        # "ALDA" counted as "doesn't point here"
+        files = json.loads(json.dumps(FIXTURE))
+        files["region.json"]["admin_table"] = "data/admin.json"
+        files["data/admin.json"] = {"_meta": {"source": ["test"], "fetched": "2026-11-12", "license": "CC0"},
+                                    "items": [{"name": "North", "level": 1, "parent": ""}, {"name": "Ålda", "level": 2, "parent": "North"}]}
+        files["data/area_codes.json"]["entries"]["0120"] = [{"admin1": "North", "admin2": "Ålda"}]
+        files["tests.json"] = [{"kind": "area-code", "value": "0120-555", "expect": [{"admin1": "North", "admin2": "Ålda"}]}]
+        write_pack(self.root / "packs", files)
+        env = {"GEO_SLEUTH_REGIONS": str(self.root / "packs")}
+        board = self.root / "board.json"
+        run("board.py", "--board", str(board), "init", "--photo", "x.jpg", env=env)
+        run("board.py", "--board", str(board), "add", "ALDA", "--level", "admin2", "--parent", "North", env=env)
+        r = run("board.py", "--board", str(board), "apply", "--kind", "area-code", "--value", "0120-555", env=env)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        b = json.loads(board.read_text(encoding="utf-8"))
+        self.assertNotIn("Ålda", b["candidates"])
+        alda = [e for e in b["evidence"] if e["candidate"] == "ALDA"]
+        self.assertTrue(alda and all(e["lr"] > 1 for e in alda), alda)
+
+    def test_lint_rejects_a_malformed_drop_prefix(self):
+        files = json.loads(json.dumps(FIXTURE))
+        files["data/area_codes.json"]["_meta"]["normalize"]["drop_prefix"] = "+55"
+        d = write_pack(self.root / "bad-prefix", files)
+        errs, _ = regions.lint(dict(files["region.json"], dir=d))
+        self.assertTrue(any("drop_prefix" in e for e in errs), errs)
+
+
 class GlobalTables(unittest.TestCase):
     def test_driving_side_of_split_countries(self):
         import clues
