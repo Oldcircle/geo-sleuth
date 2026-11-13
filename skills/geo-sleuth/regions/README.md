@@ -78,7 +78,7 @@ regions/<cc>/
 }
 ```
 
-- Lookup = normalize the value (`normalize`: `strip` characters, `digits_only`, `upper`, `ensure_prefix`), cut it with `key_pattern` if given (a value that doesn't fit is "not this country's format"), then take the **longest key that is a prefix** of it.
+- Lookup = normalize the value (`normalize`, in this order: `fullwidth` (NFKC, on by default), `strip` characters, `drop_prefix` (a list of international prefixes such as `["+55"]`; the first one the value starts with is dropped, before `digits_only`, so a bare `55` area code stays), `digits_only`, `upper`, `ensure_prefix`), cut it with `key_pattern` if given (a value that doesn't fit is "not this country's format": status `not_applicable`; with `--country` the CLI says so and prints the table's `usage`, so write `usage` to name every accepted form), then take the **longest key that is a prefix** of it.
 - Each key maps to a **list**. A key that covers several places lists every one of them; never merge two places into one name, and never pick one. The board keeps them all as hypotheses.
 - A match names admin levels explicitly (`admin1` … `district`) with the names as the admin table or OSM spells them, plus optional `note` and `unverified: true` for rows not backed by the source.
 - A key that covers only part of an area (part of a state, part of a district) names the larger area and says what part in `note`.
@@ -86,7 +86,7 @@ regions/<cc>/
 
 ### Admin table (`admin_table`)
 
-`{"_meta": {source, fetched, license, count}, "items": [{"name", "code", "level", "parent"}]}` — `parent` is the parent's `name`; top-level items have `"parent": ""`. An item may add `"aliases": [...]` (a list of non-empty strings) for other spellings `clues.py lookup admin` should accept; `name` stays the one lookup tables and the board use. Every `level` needs an entry in `admin_levels`.
+`{"_meta": {source, fetched, license, count}, "items": [{"name", "code", "level", "parent"}]}` — `parent` is the parent's `name`; top-level items have `"parent": ""`. An item may add `"aliases": [...]` (a list of non-empty strings) for other spellings `clues.py lookup admin` should accept; `name` stays the one lookup tables and the board use. Every `level` needs an entry in `admin_levels`. Names are matched exactly first, together with the aliases equal to them ("Marau" finds the item named Marau and Maraú, which lists it as an alias; items with the name come first), then names and aliases ignoring the pack's `name_suffixes`. When nothing matches, `lookup admin` and `board.py` compare them ignoring case, accents, apostrophe look-alikes and letters such as Turkish ı (`regions.fold_name`), so aliases are only needed for real alternative spellings (`gazetteer.py` keeps to exact names when it decides that an OSM child lies outside its parent). `clues.py lookup admin --exact` turns off both the alias join and the folding, as the lookup was before them. Item order matters only for names shared across levels: list higher levels first.
 
 ### clues.md
 
