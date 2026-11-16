@@ -13,11 +13,15 @@ Region-pack tables (regions/<cc>/, see `regions.py list`):
   lookup <kind> <value> [--country cc]   kinds the packs declare, e.g. plate, area-code; without --country every pack with
                                 that kind is searched and matches from several countries are all returned; with --country only
                                 that pack is used, and a pack that lacks the kind (or isn't installed) answers "unsupported"
-  lookup admin <name> [--country cc]     parent chain from a pack's admin table; `admin --children <name>` lists the children
+  lookup admin <name> [--country cc]     parent chain from a pack's admin table; `admin --children <name>` lists the children;
+                                case and accents are ignored when nothing matches exactly, and `--exact` turns that and
+                                alias joins off (the lookup as it was before them)
   list                          global tables and installed packs with entry counts and fetch dates
 
 --json output follows one contract (used by board.py apply):
-  {"kind", "value", "status": ok|no_match|unsupported|error (error = that country's pack is broken), "matches": [...], "searched": [pack codes], "source", "table_fetched", "note"}
+  {"kind", "value", "status": ok|no_match|not_applicable|unsupported|error, "matches": [...], "searched": [pack codes], "source", "table_fetched", "note"}
+  not_applicable = with --country, the value doesn't have that table's format (the note repeats the table's usage);
+  error = that country's pack is broken
   region matches: {"country", "country_code", "admin1", "admin2"?, "city"?, "district"?, "note", "unverified"?} — levels are explicit
   global matches: {"country", "continent"?, "subregion"?, "side"?, "utc"?, "note"}
 
@@ -136,10 +140,11 @@ def lookup_region(kind: str, value: str, country: str | None) -> dict:
             "source": r.get("source", ""), "table_fetched": r.get("fetched", ""), "note": r.get("note", "")}
 
 
-def lookup_admin(value: str | None, children: str | None, level: str | None, country: str | None) -> dict:
+def lookup_admin(value: str | None, children: str | None, level: str | None, country: str | None,
+                 exact: bool = False) -> dict:
     want = {"city": "admin2", "county": "district"}.get(level or "", level)
     if children:
-        p, kids = regions.admin_children(children.strip(), country)
+        p, kids = regions.admin_children(children.strip(), country, fold=not exact)
         if not p:
             return _result("admin-children", children, [], "", "", "no installed pack has this admin area (use the full name, or gazetteer.py for OSM)",
                            status="unsupported" if country and not regions.resolve(country) else None)
@@ -153,12 +158,14 @@ def lookup_admin(value: str | None, children: str | None, level: str | None, cou
         return _result("admin-children", children, rows, ", ".join(meta.get("source") or []), meta.get("fetched", ""))
     name = (value or "").strip()
     rows, srcs = [], set()
-    for p, it in regions.admin_find(name, country):
+    for p, it in regions.admin_find(name, country, fold=not exact, join_aliases=not exact):
         m = regions.match_from_item(p, it)
         m.update(chain=regions.admin_chain(p, it), code=it.get("code", ""), level=regions.level_name(p, it["level"]))
         rows.append(m)
         srcs.add(", ".join(regions.load_table(p, p["admin_table"]).get("_meta", {}).get("source") or []))
-    return _result("admin", name, rows, " | ".join(sorted(srcs)), "", "" if rows else "no admin area with this name in the installed packs (use the full name)")
+    miss = ("no admin area with exactly this name in the installed packs (without --exact, case and accents are ignored)" if exact
+            else "no admin area with this name in the installed packs (case and accents are ignored; try the full name or another spelling)")
+    return _result("admin", name, rows, " | ".join(sorted(srcs)), "", "" if rows else miss)
 
 
 def cmd_lookup(args) -> None:
@@ -170,7 +177,7 @@ def cmd_lookup(args) -> None:
     elif k == "territories":
         res = lookup_territories(args.value or "", args.continent)
     elif k == "admin":
-        res = lookup_admin(args.value, args.children, args.level, args.country)
+        res = lookup_admin(args.value, args.children, args.level, args.country, args.exact)
     else:
         kinds = sorted({x for p in regions.packs().values() for x in (p.get("lookups") or {})})
         if k not in kinds:
@@ -182,6 +189,8 @@ def cmd_lookup(args) -> None:
     head = f"[{res['kind']}] {res['value']} → {len(res['matches'])} matches"
     if res["status"] == "unsupported":
         head = f"[{res['kind']}] {res['value']} → unsupported"
+    elif res["status"] == "not_applicable":
+        head = f"[{res['kind']}] {res['value']} → not in this table's format"
     if res.get("searched"):
         head += f" (packs searched: {', '.join(res['searched'])})"
     print(head + (f" ({res['note']})" if res["note"] else ""))
@@ -229,6 +238,8 @@ def main() -> None:
     lk.add_argument("--continent")
     lk.add_argument("--children")
     lk.add_argument("--level", help="with --children: keep one level (admin2/district; city/county also accepted)")
+    lk.add_argument("--exact", action="store_true",
+                    help="admin: exact names only, without case/accent folding or alias joins (the lookup as it was before them)")
     lk.add_argument("--json", action="store_true")
     lk.add_argument("--limit", type=int, default=40)
     sub.add_parser("list")

@@ -969,7 +969,11 @@ def _ensure(b: dict, level: str, name: str, parent: str | None, code: str | None
         if cid and c.get("cid") == cid:
             return k
     for k, c in b["candidates"].items():
-        if _norm(k.split(" (")[0]) == _norm(name) and _same_tier(c["level"], level) and _same_place(c, name, parent, code, cid):
+        a, z = _norm(k.split(" (")[0]), _norm(name)
+        # A hand-added candidate (no cid, no country) spelled without accents or in capitals ("Sao Paulo", "ISTANBUL") is the
+        # same place as the lookup's "São Paulo" / "İstanbul": regions.admin_find folds the same way when deciding coverage.
+        same = a == z or (not c.get("cid") and not c.get("country") and regions.fold_name(a) == regions.fold_name(z))
+        if same and _same_tier(c["level"], level) and _same_place(c, name, parent, code, cid):
             if cid and not c.get("cid"):
                 c["cid"] = cid
             if code and not c.get("country"):
@@ -1019,7 +1023,8 @@ def cmd_apply(args, p: Path) -> None:
         b["clues"][kid] = {"text": f"{args.kind} {args.value}", "kind": args.kind, "status": "read",
                            "file": args.file or "", "source": d.get("source", ""), "used": False}
     if not matches:
-        what = "Lookup not supported" if d.get("status") == "unsupported" else "Lookup returned nothing"
+        what = {"unsupported": "Lookup not supported",
+                "not_applicable": "Value doesn't fit the table's format"}.get(d.get("status"), "Lookup returned nothing")
         print(f"{what}: {d.get('note', '')}. Clue {kid} recorded, no evidence added.")
         _save(p, b)
         return

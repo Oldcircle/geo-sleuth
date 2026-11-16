@@ -120,7 +120,9 @@ def _rel_rows(data: dict) -> list[dict]:
                      "admin_level": int(t.get("admin_level") or 0), "bbox": [round(v, 5) for v in bbox],
                      "bbox_km2": round(_bbox_km2(bbox), 1),
                      "center": [round((bbox[0] + bbox[2]) / 2, 5), round((bbox[1] + bbox[3]) / 2, 5)],
-                     "population": t.get("population", "")})
+                     "population": t.get("population", ""),
+                     "iso1": (t.get("ISO3166-1") or t.get("ISO3166-1:alpha2") or "").upper(),
+                     "iso2": (t.get("ISO3166-2") or "").upper()})
     return rows
 
 
@@ -151,15 +153,41 @@ def find_relation(name: str, proxy: str | None, cache: Path, within: str | None 
 def _filter_known_neighbours(parent: dict, rows: list[dict]) -> list[dict]:
     """An area query also returns relations touching the border. Drop only places the same pack locates outside this parent;
     unknown names and ambiguous parents stay in the results, because a partial admin table cannot prove they are outside."""
-    parents = regions.admin_find(parent["name"])
+    # Exact names only (fold=False): a case- or accent-folded match is a guess, and a guess must not drop an OSM child.
+    parents = regions.admin_find(parent["name"], fold=False)
     if len(parents) != 1:
         return rows
     pack, item = parents[0]
     kept = []
     for row in rows:
-        hits = [hit for name in {row["name"], *row.get("names", [])} for _, hit in regions.admin_find(name, pack["code"])]
+        hits = [hit for name in {row["name"], *row.get("names", [])} for _, hit in regions.admin_find(name, pack["code"], fold=False)]
         if hits and not any(item["name"] in regions.admin_chain(pack, hit)[:-1] for hit in hits):
             print(f"Skipping {row['name']}: {pack['code']} admin table places it outside {parent['name']}", file=sys.stderr)
+        else:
+            kept.append(row)
+    return kept
+
+
+def _country_code_of(row: dict) -> str:
+    """ISO country of an admin relation: its ISO 3166-1 code, or the country part of its ISO 3166-2 code (BR-SP → BR)."""
+    return row.get("iso1") or (row.get("iso2") or "").split("-")[0]
+
+
+def _drop_foreign(parent: dict, rows: list[dict]) -> list[dict]:
+    """An area query also returns divisions of the neighbouring country that touch the border (Bolivia's Beni next to Brazil,
+    level 4 like Brazil's states). Drop a row only when its own ISO 3166-2 code names another country than the parent's
+    (ISO 3166-1 code, else the country part of its ISO 3166-2 code). Rows without that tag stay, because nothing proves they
+    are outside, and so do rows that share the parent's own ISO codes: a territory like Guadeloupe (ISO3166-1 GP,
+    ISO3166-2 FR-971) has region and department relations tagged GP / FR-971 that cover the same land."""
+    cc = _country_code_of(parent)
+    if not cc:
+        return rows
+    kept = []
+    for row in rows:
+        iso2 = row.get("iso2") or ""
+        same_as_parent = (row.get("iso1") and row.get("iso1") == parent.get("iso1")) or (iso2 and iso2 == parent.get("iso2"))
+        if "-" in iso2 and iso2.split("-")[0] != cc and not same_as_parent:
+            print(f"Skipping {row['name']}: its ISO 3166-2 code {iso2} is not in {cc}", file=sys.stderr)
         else:
             kept.append(row)
     return kept
@@ -176,7 +204,7 @@ def children(parent: str, proxy: str | None, cache: Path, level: int | None, wit
         ql = (f'[out:json][timeout:180];rel({p["osm_id"]});map_to_area->.a;'
               f'rel(area.a)["boundary"="administrative"]["admin_level"="{lv}"];out tags bb;')
         rows = _rel_rows(osm.run(ql, proxy, cache))
-        rows = _filter_known_neighbours(p, [r for r in rows if r["osm_id"] != p["osm_id"]])
+        rows = _filter_known_neighbours(p, _drop_foreign(p, [r for r in rows if r["osm_id"] != p["osm_id"]]))
         rows = sorted(rows, key=lambda r: r["name"])
         if level:
             return p, rows
