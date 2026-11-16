@@ -214,6 +214,15 @@ geo-sleuth is a standard [Agent Skill](https://agentskills.io): one folder holdi
 npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemini-cli -a opencode -a github-copilot -y
 ```
 
+**Claude Code plugin marketplace:**
+
+```text
+/plugin marketplace add Oldcircle/geo-sleuth
+/plugin install geo-sleuth@geo-sleuth
+```
+
+The plugin tracks the latest commit of this repository; pull updates with `/plugin marketplace update geo-sleuth`.
+
 **By hand:**
 
 ```bash

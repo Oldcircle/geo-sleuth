@@ -214,6 +214,15 @@ geo-sleuth 是一个标准的 [Agent Skill](https://agentskills.io)：一个文�
 npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemini-cli -a opencode -a github-copilot -y
 ```
 
+**Claude Code 插件市场：**
+
+```text
+/plugin marketplace add Oldcircle/geo-sleuth
+/plugin install geo-sleuth@geo-sleuth
+```
+
+插件会跟随本仓库的最新提交；用 `/plugin marketplace update geo-sleuth` 拉取更新。
+
 **手动安装：**
 
 ```bash
