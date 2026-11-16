@@ -69,7 +69,11 @@ def read(path: Path) -> dict:
         out["gps_wgs84"] = [round(lat, 7), round(lon, 7)]
         out["gps_gcj02"] = [round(x, 7) for x in geo.convert(lat, lon, "wgs", "gcj")]
         if 6 in g:
-            out["altitude_m"] = round(float(g[6]), 1)
+            alt = round(float(g[6]), 1)
+            ref = g.get(5, 0)    # GPSAltitudeRef: 0 = above sea level, 1 = below (GPSAltitude holds the absolute value)
+            if isinstance(ref, (bytes, tuple)):
+                ref = ref[0] if ref else 0
+            out["altitude_m"] = -alt if ref == 1 and alt else alt
         if 17 in g:
             out["image_direction_deg"] = round(float(g[17]), 1)   # some phones write the lens heading
     return out

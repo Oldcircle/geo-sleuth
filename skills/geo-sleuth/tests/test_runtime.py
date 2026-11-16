@@ -1139,6 +1139,21 @@ class OrientationTests(unittest.TestCase):
             save_oriented(self.control, 6, self.d / "h6.heic", fmt="HEIF", quality=-1)
             self.assertNotIn("orientation", json.loads(self._run("exif.py", self.d / "h6.heic").stdout.splitlines()[0]))
 
+    def test_exif_altitude_below_sea_level_is_negative(self):
+        cases = ((None, 430.5, 430.5), (b"\x00", 430.5, 430.5), (b"\x01", 430.5, -430.5), (1, 430.5, -430.5),
+                 (b"\x01", 0.0, 0.0))
+        for ref, alt, expected in cases:
+            ex = Image.Exif()
+            gps = {1: "N", 2: (31.0, 30.0, 0.0), 3: "E", 4: (35.0, 28.0, 0.0), 6: alt}
+            if ref is not None:
+                gps[5] = ref
+            ex[0x8825] = gps
+            path = self.d / "alt.jpg"
+            self.control.save(path, exif=ex, quality=95)
+            out = json.loads(self._run("exif.py", path).stdout.splitlines()[0])
+            self.assertEqual(out["altitude_m"], expected, ref)
+            self.assertEqual(math.copysign(1, out["altitude_m"]), math.copysign(1, expected), ref)
+
     def _fit_sheet(self, photo, ridge, out):
         import terrain
         rec = {"f": 200.0, "cam": [30.0, 120.0], "g": 0.0, "H": 0.0, "cc": 0.0, "hit": 1, "name": "x",
