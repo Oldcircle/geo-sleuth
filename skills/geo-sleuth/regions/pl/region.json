@@ -1,0 +1,21 @@
+{
+ "code": "PL",
+ "name": "Poland",
+ "names": [
+  "Poland",
+  "Polska",
+  "Polish",
+  "PL"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "pl"
+  },
+  "street_view": "gsv.py"
+ }
+}
