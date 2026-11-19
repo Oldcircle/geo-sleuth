@@ -1,0 +1,45 @@
+{
+ "_meta": {
+  "kind": "plate-1996",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^0[1-4]$",
+  "usage": "1996–2010 plates (Russian-style: A 1234 or AB 1234, then a box at the right with the two-digit code over RT, no flag): type only the two digits in that box",
+  "note": "Codes of the 1996 format: 01 Dushanbe and the Districts of Republican Subordination, 02 Sughd, 03 Khatlon, 04 Gorno-Badakhshan. These plates are on old cars and point to the region of registration at the time.",
+  "miss_note": "not a 1996–2010 Tajik code: a current plate (flag and TJ at the left; use `--kind plate`), or a Russian plate (RUS and the Russian flag in the box at the right)",
+  "source": [
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Таджикистана, section 'Коды регионов Таджикистана'"
+  ],
+  "fetched": "2026-11-02",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 4
+ },
+ "entries": {
+  "01": [
+   {
+    "admin1": "Душанбе"
+   },
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ",
+    "note": "01 covered Dushanbe and the Districts of Republican Subordination until 2010"
+   }
+  ],
+  "02": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "03": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "04": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ]
+ }
+}

@@ -1,0 +1,69 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^\\d{2}$",
+  "usage": "plates since 2009–2010 (flag and TJ at the left, then 1234 AB 01): type only the two digits at the right end of the plate",
+  "note": "The region code is the last two digits: 01, 05, 10 Dushanbe; 02, 06 Sughd; 03 Khatlon; 04 Gorno-Badakhshan; 07, 08 Districts of Republican Subordination. It is where the vehicle was registered, not where the photo was taken. A whole plate does not work here: the code is at the end, so type the two digits only. 20 is left out as unverified: ru.wikipedia lists it for Sughd, but no other source confirms it, and YOUR.tj (January 2023) reports Sughd still on 02 when Dushanbe moved to 10.",
+  "miss_note": "not a Tajik region code: a 1996–2010 plate (letter(s) and four digits with the code and RT in a box at the right; use `--kind plate-1996`), a green non-resident or red diplomatic plate, a whole plate instead of the last two digits, 20 (listed for Sughd in ru.wikipedia only, unverified), or a plate of another country (Kazakhstan also puts a two-digit region code at the right end)",
+  "source": [
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Tajikistan, section 'Codes' (unreferenced; translated from the ru article)",
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Таджикистана, section 'Коды регионов Таджикистана'",
+   "https://your.tj/10-vmesto-01-vladelcam-avtomobilej-v-dushanbe-budut-vydavat-gosnomera-s-novoj-seriej/ (YOUR.tj, 24 January 2023: Dushanbe series 10 instead of 01; the other regions still on 02, 03, 04, 07, 08)"
+  ],
+  "fetched": "2026-11-16",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0; YOUR.tj facts (codes) only",
+  "count": 9
+ },
+ "entries": {
+  "01": [
+   {
+    "admin1": "Душанбе"
+   }
+  ],
+  "02": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "03": [
+   {
+    "admin1": "Вилояти Хатлон"
+   }
+  ],
+  "04": [
+   {
+    "admin1": "Вилояти Мухтори Кӯҳистони Бадахшон"
+   }
+  ],
+  "05": [
+   {
+    "admin1": "Душанбе"
+   }
+  ],
+  "06": [
+   {
+    "admin1": "Вилояти Суғд"
+   }
+  ],
+  "07": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "08": [
+   {
+    "admin1": "Ноҳияҳои тобеи ҷумҳурӣ"
+   }
+  ],
+  "10": [
+   {
+    "admin1": "Душанбе",
+    "note": "new Dushanbe series since January 2023, after the 01 combinations ran out (YOUR.tj, 24 January 2023, citing the traffic police); 01 plates already issued stay valid"
+   }
+  ]
+ }
+}
