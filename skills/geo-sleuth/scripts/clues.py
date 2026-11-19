@@ -20,8 +20,11 @@ Region-pack tables (regions/<cc>/, see `regions.py list`):
 
 --json output follows one contract (used by board.py apply):
   {"kind", "value", "status": ok|no_match|not_applicable|unsupported|error, "matches": [...], "searched": [pack codes], "source", "table_fetched", "note"}
-  not_applicable = with --country, the value doesn't have that table's format (the note repeats the table's usage);
-  error = that country's pack is broken
+  not_applicable = the value doesn't have the table's format (the note repeats each table's usage); without --country
+           this is the answer when every installed table with the kind rejected the format, and
+           error when no table could search it because at least one of them is broken
+  error = no table could search the value: a pack's table is missing or doesn't load, or (with --country) that
+           country's pack is broken
   region matches: {"country", "country_code", "admin1", "admin2"?, "city"?, "district"?, "note", "unverified"?} — levels are explicit
   global matches: {"country", "continent"?, "subregion"?, "side"?, "utc"?, "note"}
 
@@ -191,6 +194,8 @@ def cmd_lookup(args) -> None:
         head = f"[{res['kind']}] {res['value']} → unsupported"
     elif res["status"] == "not_applicable":
         head = f"[{res['kind']}] {res['value']} → not in this table's format"
+    elif res["status"] == "error":
+        head = f"[{res['kind']}] {res['value']} → lookup error"
     if res.get("searched"):
         head += f" (packs searched: {', '.join(res['searched'])})"
     print(head + (f" ({res['note']})" if res["note"] else ""))

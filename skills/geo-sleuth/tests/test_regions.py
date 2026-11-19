@@ -101,21 +101,57 @@ class BundledPacks(unittest.TestCase):
         d = regions.lookup("plate", "KA01AB1234")
         self.assertEqual(d["matches"], [])
 
-    def test_a_value_no_pack_takes_is_not_reported_as_a_missing_table(self):
-        # Every installed plate table rejected the format, so the answer is "not_applicable" with what each table takes,
-        # not "no installed pack has a plate table" (which sent the agent looking for a pack that was already there).
+    def test_foreign_plate_format_reaches_the_agent_with_each_table_usage(self):
+        # QA against the bundled packs, which is what an agent runs; the status rules themselves are in MixedFormatPacks.
         d = regions.lookup("plate", "KA01AB1234")
-        self.assertEqual(d["status"], "not_applicable")
-        self.assertEqual(d["searched"], [])
+        self.assertEqual((d["status"], d["searched"]), ("not_applicable", []))
         self.assertIn("doesn't fit the CN plate format", d["note"])
         self.assertIn("whole civil plate", d["note"])          # TR usage reaches the caller too
-        self.assertEqual(regions.lookup("postal-code", "12345")["status"], "unsupported")   # no pack has the table at all
 
     def test_same_name_districts_stay_apart(self):
         rows = run("clues.py", "lookup", "admin", "朝阳区", "--json")
         chains = {tuple(m["chain"]) for m in json.loads(rows.stdout)["matches"]}
         self.assertIn(("北京市", "朝阳区"), chains)
         self.assertIn(("吉林省", "长春市", "朝阳区"), chains)
+
+
+class MixedFormatPacks(unittest.TestCase):
+    """Status when an installed pack couldn't be searched: that is a lookup error, not a format verdict about the value."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        good = admin_pack(self.root / "aa", SAME_NAMES, {"plate": {"file": "plates.json"}},
+                          {"plates.json": {"_meta": {"kind": "plate", "source": ["test"], "fetched": "2026-11-19",
+                                                      "license": "CC0", "key_pattern": "^[A-Z]{3}(?=\\d{4}$)",
+                                                      "usage": "three letters and four digits, ABC1234"},
+                                            "entries": {"ABC": [{"admin1": "North"}]}}})
+        good["code"] = "AA"
+        self.packs = {"AA": good,
+                      "ZZ": {"code": "ZZ", "name": "Brokenland", "dir": self.root / "zz",
+                             "lookups": {"plate": {"file": "data/missing.json"}}}}
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def lookup(self, kind: str, value: str) -> dict:
+        from unittest.mock import patch
+        with patch.object(regions, "packs", return_value=self.packs):
+            return regions.lookup(kind, value)
+
+    def test_no_table_could_search_the_value_is_an_error_not_a_format_verdict(self):
+        d = self.lookup("plate", "12-34")
+        self.assertEqual((d["status"], d["searched"]), ("error", []))
+        self.assertIn("ZZ pack is broken", d["note"])
+        self.assertIn("three letters and four digits", d["note"])   # the healthy table's usage still reaches the caller
+
+    def test_matches_from_healthy_tables_survive_a_broken_one(self):
+        d = self.lookup("plate", "ABC1234")
+        self.assertEqual((d["status"], [m["country_code"] for m in d["matches"]]), ("ok", ["AA"]))
+        self.assertIn("ZZ pack is broken", d["note"])
+
+    def test_a_kind_no_pack_declares_is_unsupported(self):
+        self.assertEqual(self.lookup("postal-code", "12345")["status"], "unsupported")
 
 
 class FixturePack(unittest.TestCase):

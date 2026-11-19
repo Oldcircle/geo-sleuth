@@ -216,7 +216,7 @@ def lookup(kind: str, value: str, country: str | None = None) -> dict:
         if r["status"] == "unsupported":
             r["note"] += f" (its lookups: {', '.join(p.get('lookups') or {}) or 'none'})"
         return r
-    searched, matches, notes, sources, fetched, wrong_format = [], [], [], [], [], []
+    searched, matches, notes, sources, fetched, wrong_format, broken = [], [], [], [], [], [], []
     for code, p in packs().items():
         if kind not in (p.get("lookups") or {}):
             continue
@@ -225,7 +225,7 @@ def lookup(kind: str, value: str, country: str | None = None) -> dict:
             wrong_format.append(r["note"])
             continue
         if r["status"] == "error":   # one broken pack mustn't take down the other countries' answers
-            notes.append(r["note"])
+            broken.append(r["note"])
             continue
         searched.append(code)
         matches += r["matches"]
@@ -235,6 +235,11 @@ def lookup(kind: str, value: str, country: str | None = None) -> dict:
             sources.append(r["source"])
             fetched.append(f"{code} {r['fetched']}")
     if not searched:
+        # A table that failed to load is why the value went unsearched: "not_applicable" would claim every installed
+        # table looked at it and rejected the format, which the broken one never did.
+        if broken:
+            return {"status": "error", "matches": [], "searched": [],
+                    "note": "; ".join([*broken, *wrong_format]), "source": "", "fetched": ""}
         # Every pack that has the kind rejected the value's format: that is not "no pack has this table", and the
         # notes say which input each table takes.
         if wrong_format:
@@ -244,7 +249,7 @@ def lookup(kind: str, value: str, country: str | None = None) -> dict:
         return {"status": "unsupported", "matches": [], "searched": [],
                 "note": "; ".join([f"no installed pack has a {kind} table", *notes]),
                 "source": "", "fetched": ""}
-    note = "; ".join(notes)
+    note = "; ".join([*broken, *notes])
     if len({m["country_code"] for m in matches}) > 1:
         note = "; ".join(x for x in ("matches in several countries: keep each as a hypothesis, or pass --country", note) if x)
     return {"status": "ok" if matches else "no_match", "matches": matches, "searched": searched, "note": note,
