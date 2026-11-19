@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.10, <3.14"
 # dependencies = ["pillow", "pillow-heif", "numpy", "torch", "transformers", "opencv-python-headless", "socksio", "pysocks", "requests"]
 # ///
 """Similarity ranking of a photo against a batch of candidate real-scene images (street-view renders, satellite thumbnails, reference images): the machine ranks first, you look only at the top few.
@@ -185,7 +185,14 @@ def sift_inliers(a: Image.Image, b: Image.Image, max_side: int = 1024,
 
 def _items_from_panos(args) -> list[dict]:
     import baidu_pano as bp
-    panos = json.loads(Path(args.panos).read_text(encoding="utf-8"))
+    panos_data = json.loads(Path(args.panos).read_text(encoding="utf-8"))
+    if isinstance(panos_data, dict) and "panos" in panos_data and isinstance(panos_data["panos"], list):
+        pts = panos_data["panos"]
+        panos = {p["id"]: {"wgs": (p["lat"], p["lon"]), "road": p.get("name", ""), "date": p.get("date", "")} for p in pts}
+    elif isinstance(panos_data, list):
+        panos = {p["id"]: {"wgs": (p["lat"], p["lon"]), "road": p.get("name", ""), "date": p.get("date", "")} for p in panos_data}
+    else:
+        panos = panos_data
     if args.within:
         wl, wo, wr = (float(v) for v in args.within.split(","))
         panos = {k: v for k, v in panos.items() if geo.distance((wl, wo), tuple(v["wgs"])) <= wr}
@@ -195,9 +202,7 @@ def _items_from_panos(args) -> list[dict]:
     items = []
     for pid, v in panos.items():
         heads = [float(x) for x in args.headings.split(",")] if args.headings else (
-            [geo.bearing(tuple(v["wgs"]), target) + args.offset] if target else None)
-        if heads is None:
-            sys.exit("--panos needs --toward or --headings")
+            [geo.bearing(tuple(v["wgs"]), target) + args.offset] if target else [0, 60, 120, 180, 240, 300])
         for hd in heads:
             items.append({"id": pid, "heading": hd % 360, "pitch": args.pitch, "fov": args.fov, "wgs": v["wgs"],
                           "road": v.get("road", ""), "date": v.get("date", "")})
@@ -208,7 +213,8 @@ def _overlay(engine: str | None) -> tuple | None:
     """The box a street-view renderer bakes into every view (its LOGO_BOX), to keep out of SIFT; None for plain images."""
     if not engine:
         return None
-    return getattr(__import__("baidu_pano" if engine == "baidu" else "gsv"), "LOGO_BOX", None)
+    mod = "baidu_pano" if engine == "baidu" else ("yandex_pano" if engine == "yandex" else "gsv")
+    return getattr(__import__(mod), "LOGO_BOX", None)
 
 
 def _render_items(items: list[dict], engine: str, proxy: str | None, cache: Path) -> list[Image.Image | None]:
@@ -218,6 +224,13 @@ def _render_items(items: list[dict], engine: str, proxy: str | None, cache: Path
             try:
                 return gsv.render(it["id"], it["heading"], it.get("pitch", 0), it.get("fov", 90), 640, 480, proxy, cache / "gsv")
             except Exception:  # noqa: BLE001
+                return None
+    elif engine == "yandex":
+        import yandex_pano as yp
+        def one(it):
+            try:
+                return yp.render(it["id"], it["heading"], it.get("pitch", -8), it.get("fov", 90), 640, 480, cache=cache / "yandex", proxy=proxy)
+            except (OSError, RuntimeError, ValueError):
                 return None
     else:
         import baidu_pano as bp
@@ -280,7 +293,14 @@ def _load_candidates(args) -> tuple[list[dict], list[Image.Image]]:
             how = "in list order"
         print(f"{len(items)} candidates, more than --max-candidates {args.max_candidates}; taking {args.max_candidates} {how} (narrow first with --within/--spread)", file=sys.stderr)
         items = items[: args.max_candidates]
-    engine = args.render or ("gsv" if items and str(items[0].get("id", "")).startswith(("CAoS", "CIHM")) or len(str(items[0].get("id", ""))) == 22 else "baidu")
+    if args.render:
+        engine = args.render
+    elif items and (str(items[0].get("id", "")).startswith(("CAoS", "CIHM")) or len(str(items[0].get("id", ""))) == 22):
+        engine = "gsv"
+    elif items and "_" in str(items[0].get("id", "")):
+        engine = "yandex"
+    else:
+        engine = "baidu"
     ims = _render_items(items, engine, args.proxy, cache)
     ok_items, ok_ims = [], []
     for it, im in zip(items, ims):
@@ -397,7 +417,7 @@ def main() -> None:
     r.add_argument("--query-box", help="x0,y0,x1,y1: compare only this region")
     r.add_argument("--images")
     r.add_argument("--items", help=".index.json from baidu_pano.py / gsv.py")
-    r.add_argument("--render", choices=["baidu", "gsv"], help="which engine renders --items; if omitted, guessed from the id format")
+    r.add_argument("--render", choices=["baidu", "gsv", "yandex"], help="which engine renders --items; if omitted, guessed from the id format")
     r.add_argument("--spread-headings", help="extra heading offsets for each --items entry, e.g. -30,0,30")
     r.add_argument("--panos", help="output of baidu_pano.py scan")
     r.add_argument("--toward", help="lat,lon")
@@ -405,8 +425,8 @@ def main() -> None:
     r.add_argument("--offset", type=float, default=0)
     r.add_argument("--within", help="lat,lon,radius in meters")
     r.add_argument("--spread", type=float, help="thinning spacing in meters")
-    r.add_argument("--pitch", type=float, default=10)
-    r.add_argument("--fov", type=float, default=80)
+    r.add_argument("--pitch", type=float, default=-8)
+    r.add_argument("--fov", type=float, default=90)
     r.add_argument("--max-candidates", type=int, default=400)
     r.add_argument("--method", choices=["dino", "clip", "both"], default="dino")
     r.add_argument("--refine", choices=["none", "sift"], default="sift")

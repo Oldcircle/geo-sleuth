@@ -35,6 +35,7 @@ SERVICES = {
     "Baidu image search": "https://graph.baidu.com/pcpage/index?tpl_from=pc",
     "Baidu panoramas": "https://mapsv0.bdimg.com/?qt=qsdata&x=0&y=0",
     "Yandex Images": "https://yandex.com/images/",
+    "Yandex Panoramas": "https://api-maps.yandex.ru/services/panoramas/1.x?l=stv&lang=ru_RU&ll=37.6173,55.7558&origin=userAction&format=json",
     "Google satellite tiles": "https://mt1.google.com/vt/lyrs=s&x=0&y=0&z=0",
     "Overpass": "https://overpass-api.de/api/status",
     "Elevation tiles": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/0/0/0.png",
