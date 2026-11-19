@@ -6,14 +6,14 @@
   },
   "key_pattern": "^8\\d{3}(?=\\d{7}$)",
   "usage": "landline in national form with the leading 8 and all ten digits after it: 8 (495) 123-45-67; write +7 as 8 (+7 812 … → 8 812 …). Type the whole number: a code on its own does not match, so that it can't collide with other countries' codes",
-  "note": "Ten-digit numbers: a three-digit geographic zone (ABC, one or two per federal subject) plus a seven-digit number that may start with a city code. Zones begin with 3, 4 or 8; 9xx is mobile. Zones shared by two subjects (495, 818) list both.",
-  "miss_note": "not a Russian landline zone: 9xx is mobile (any region), 800 toll-free, 7xx is Kazakhstan (also +7), 6xx Kazakh reserve; or the number was not typed as 8 + ten digits",
+  "note": "Ten-digit numbers: a three-digit geographic zone (ABC, one or two per federal subject) plus a seven-digit number that may start with a city code. Zones begin with 3, 4 or 8; 9xx is mobile. Zones shared by two subjects (495, 818) list both. Zones 810, 856, 857 and 860 (Russian-occupied parts of Zaporizhzhia, Donetsk, Luhansk and Kherson oblasts, Ukraine) are left out of the lookup because the place they name is outside Russia's boundary as OSM maps it, and a pack row can't state the issuer and the location apart.",
+  "miss_note": "not a Russian landline zone: 9xx is mobile (any region), 800 toll-free, 7xx is Kazakhstan (also +7), 6xx Kazakh reserve; 810, 856, 857, 860 are left out on purpose (see note); or the number was not typed as 8 + ten digits",
   "source": [
    "https://ru.wikipedia.org/wiki/Телефонный_план_нумерации_России, section 'Список географических кодов зоны' (citing Приказ Минцифры России от 31.01.2022 № 75)"
   ],
   "fetched": "2026-11-01",
   "license": "Derived from Wikipedia, CC BY-SA 4.0",
-  "count": 95
+  "count": 91
  },
  "entries": {
   "8301": [
@@ -287,12 +287,6 @@
     "admin1": "Москва"
    }
   ],
-  "8810": [
-   {
-    "admin1": "Запорізька область",
-    "note": "Russian code introduced after 2022 in the Russian-occupied part of Zaporizhzhia Oblast, Ukraine; single source"
-   }
-  ],
   "8811": [
    {
     "admin1": "Псковская область"
@@ -422,24 +416,6 @@
    {
     "admin1": "Татарстан",
     "note": "Naberezhnye Chelny and the east of the republic"
-   }
-  ],
-  "8856": [
-   {
-    "admin1": "Донецька область",
-    "note": "Russian code introduced after 2022 in the Russian-occupied part of Donetsk Oblast, Ukraine"
-   }
-  ],
-  "8857": [
-   {
-    "admin1": "Луганська область",
-    "note": "Russian code introduced after 2022 in the Russian-occupied part of Luhansk Oblast, Ukraine"
-   }
-  ],
-  "8860": [
-   {
-    "admin1": "Херсонська область",
-    "note": "Russian code introduced after 2022 in the Russian-occupied part of Kherson Oblast, Ukraine; single source"
    }
   ],
   "8861": [

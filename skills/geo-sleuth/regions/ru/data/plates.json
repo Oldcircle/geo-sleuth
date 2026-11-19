@@ -5,10 +5,10 @@
    "strip": " -·.",
    "upper": true
   },
-  "key_pattern": "^\\d{2,3}$",
+  "key_pattern": "^(?:101|102|103|105|109|111|113|115|116|118|121|122|123|124|125|126|131|133|134|136|138|142|147|150|152|154|155|156|158|159|161|163|164|166|172|173|174|177|178|186|190|193|196|197|198|199|224|250|252|323|550|702|716|750|761|763|774|777|778|790|797|799|977|997|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71|72|73|74|75|76|77|78|79|82|83|86|87|88|89|90|91|92|93|95|96|97|98|99)$",
   "usage": "type only the region code: the two or three digits on the right of the plate, above RUS and the flag (А 123 ВС 77 → 77, А 123 ВС 799 → 799)",
-  "note": "The code is where the vehicle was registered, not where the photo was taken. A three-digit code that is not in the table falls back to its first two digits, which are usually another region: the lookup marks such a match with \"only '..' matched\"; treat it as a miss. Some codes have an earlier owner (an autonomous okrug merged into a krai or oblast) or were issued in other regions for a time; those keys list every place.",
-  "miss_note": "not a Russian region code: misread digits, a whole plate (type only the digits on the right), a yellow or black plate of another country, a military plate (black, code = military district), a diplomatic plate (red), or a code issued after this table was fetched",
+  "note": "The code is where the vehicle was registered, not where the photo was taken. Only a whole code in the table matches: a code that is not in it (100, or a series issued after the table was fetched) returns nothing rather than falling back to its first two digits. Some codes have an earlier owner (an autonomous okrug merged into a krai or oblast) or were issued in other regions for a time; those keys list every place. Codes 80, 81, 84, 85 and 180–188 (Russian-occupied parts of Ukrainian oblasts; 80–85 also on old plates of merged autonomous okrugs) and 94 (Baikonur, Kazakhstan) are left out of the lookup because the place they name is outside Russia's boundary as OSM maps it, and a pack row can't state the issuer and the location apart; clues.md covers them.",
+  "miss_note": "not a Russian region code: misread digits, a code not in the table (80, 81, 84, 85, 94 and 180–188 are left out on purpose, see note), a whole plate (type only the digits on the right), a yellow or black plate of another country, a military plate (black, code = military district), a diplomatic plate (red), or a code issued after this table was fetched",
   "source": [
    "https://ru.wikipedia.org/wiki/Коды_субъектов_Российской_Федерации (plate codes per subject, earlier owners of reused codes)",
    "https://ru.wikipedia.org/wiki/Регистрационные_знаки_транспортных_средств_в_России (region-code table, introduction dates, code 82 issued in other regions, codes 88/188)",
@@ -16,7 +16,7 @@
   ],
   "fetched": "2026-11-01",
   "license": "Derived from Wikipedia, CC BY-SA 4.0",
-  "count": 168
+  "count": 158
  },
  "entries": {
   "01": [
@@ -415,26 +415,6 @@
     "admin1": "Еврейская автономная область"
    }
   ],
-  "80": [
-   {
-    "admin1": "Донецька область",
-    "note": "codes issued by Russian authorities in the Russian-occupied part of Donetsk Oblast, Ukraine, since 2022"
-   },
-   {
-    "admin1": "Забайкальский край",
-    "note": "old plates of the Agin-Buryat Autonomous Okrug, merged into Zabaykalsky Krai in 2008"
-   }
-  ],
-  "81": [
-   {
-    "admin1": "Луганська область",
-    "note": "codes issued by Russian authorities in the Russian-occupied part of Luhansk Oblast, Ukraine, since 2022"
-   },
-   {
-    "admin1": "Пермский край",
-    "note": "old plates of the Komi-Permyak Autonomous Okrug, merged into Perm Krai in 2005"
-   }
-  ],
   "82": [
    {
     "admin1": "Республика Крым",
@@ -502,26 +482,6 @@
     "admin1": "Ненецкий автономный округ"
    }
   ],
-  "84": [
-   {
-    "admin1": "Херсонська область",
-    "note": "codes issued by Russian authorities in the Russian-occupied part of Kherson Oblast, Ukraine, since 2022"
-   },
-   {
-    "admin1": "Красноярский край",
-    "note": "old plates of the Taymyr Autonomous Okrug, merged into Krasnoyarsk Krai in 2007"
-   }
-  ],
-  "85": [
-   {
-    "admin1": "Запорізька область",
-    "note": "codes issued by Russian authorities in the Russian-occupied part of Zaporizhzhia Oblast, Ukraine, since 2022"
-   },
-   {
-    "admin1": "Иркутская область",
-    "note": "old plates of the Ust-Orda Buryat Autonomous Okrug, merged into Irkutsk Oblast in 2008"
-   }
-  ],
   "86": [
    {
     "admin1": "Ханты-Мансийский автономный округ — Югра"
@@ -563,12 +523,6 @@
   "93": [
    {
     "admin1": "Краснодарский край"
-   }
-  ],
-  "94": [
-   {
-    "admin1": "Қызылорда облысы",
-    "note": "Baikonur, a city in Kazakhstan leased by Russia; plates issued by the Russian Interior Ministry"
    }
   ],
   "95": [
@@ -798,39 +752,9 @@
     "admin1": "Санкт-Петербург"
    }
   ],
-  "180": [
-   {
-    "admin1": "Донецька область",
-    "note": "codes issued by Russian authorities in the Russian-occupied part of Donetsk Oblast, Ukraine, since 2022"
-   }
-  ],
-  "181": [
-   {
-    "admin1": "Луганська область",
-    "note": "codes issued by Russian authorities in the Russian-occupied part of Luhansk Oblast, Ukraine, since 2022"
-   }
-  ],
-  "184": [
-   {
-    "admin1": "Херсонська область",
-    "note": "codes issued by Russian authorities in the Russian-occupied part of Kherson Oblast, Ukraine, since 2022"
-   }
-  ],
-  "185": [
-   {
-    "admin1": "Запорізька область",
-    "note": "codes issued by Russian authorities in the Russian-occupied part of Zaporizhzhia Oblast, Ukraine, since 2022"
-   }
-  ],
   "186": [
    {
     "admin1": "Ханты-Мансийский автономный округ — Югра"
-   }
-  ],
-  "188": [
-   {
-    "admin1": "Харківська область",
-    "note": "issued in August 2022 in the Russian-occupied part of Kharkiv Oblast, Ukraine, then stopped"
    }
   ],
   "190": [

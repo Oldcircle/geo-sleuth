@@ -5,10 +5,10 @@
    "strip": " -",
    "upper": true
   },
-  "key_pattern": "^\\d{2}(?:\\d{3})?(?=\\D)",
+  "key_pattern": "^(?:11100|71100|71140|\\d{2})(?=[КНРАKHPA]\\d{1,4}$)",
   "usage": "regional or intermunicipal road number, as on route signs and OSM ref tags: 47К-021, 46Н-1234, 71-100К-27 (federal М-, Р-, А- numbers have no region code)",
-  "note": "The leading digits are the federal subject's OKATO code (not its plate code). The autonomous okrugs inside Arkhangelsk and Tyumen oblasts use five digits (11-100 Nenets, 71-100 Khanty-Mansi, 71-140 Yamalo-Nenets). The letter after it is the road class: Р and А regional, К other regional, Н intermunicipal.",
-  "miss_note": "not a regional road number: a federal М-/Р-/А- road (no region code), an E or AH number, a street number, or misread digits",
+  "note": "The leading digits are the federal subject's OKATO code (not its plate code). The autonomous okrugs inside Arkhangelsk and Tyumen oblasts use five digits (11-100 Nenets, 71-100 Khanty-Mansi, 71-140 Yamalo-Nenets). The letter after it is the road class: Р and А regional, К other regional, Н intermunicipal. The whole number must have this shape (region digits, one class letter, 1–4 digits): 47 bus or 47К-021а does not match. OKATO 21, 23, 43 and 74 (Russian-occupied parts of Donetsk, Zaporizhzhia, Luhansk and Kherson oblasts, Ukraine) are left out of the lookup because the place they name is outside Russia's boundary as OSM maps it, and a pack row can't state the issuer and the location apart.",
+  "miss_note": "not a regional road number: a federal М-/Р-/А- road (no region code), an E or AH number, a street number or bus route (47 bus), OKATO 21, 23, 43 or 74 (left out on purpose, see note), or misread digits",
   "source": [
    "https://ru.wikipedia.org/wiki/Коды_субъектов_Российской_Федерации (OKATO code per subject)",
    "https://en.wikipedia.org/wiki/Russian_federal_highways, section 'Roads of regional and intermunicipal importance' (OKATO prefix and letter classes)",
@@ -16,7 +16,7 @@
   ],
   "fetched": "2026-11-01",
   "license": "Derived from Wikipedia, CC BY-SA 4.0",
-  "count": 89
+  "count": 85
  },
  "entries": {
   "01": [
@@ -99,21 +99,9 @@
     "admin1": "Воронежская область"
    }
   ],
-  "21": [
-   {
-    "admin1": "Донецька область",
-    "note": "OKATO code Russia assigned to the region it annexed in 2022; Russian-style road indexes may be rare there"
-   }
-  ],
   "22": [
    {
     "admin1": "Нижегородская область"
-   }
-  ],
-  "23": [
-   {
-    "admin1": "Запорізька область",
-    "note": "OKATO code Russia assigned to the region it annexed in 2022; Russian-style road indexes may be rare there"
    }
   ],
   "24": [
@@ -199,12 +187,6 @@
   "42": [
    {
     "admin1": "Липецкая область"
-   }
-  ],
-  "43": [
-   {
-    "admin1": "Луганська область",
-    "note": "OKATO code Russia assigned to the region it annexed in 2022; Russian-style road indexes may be rare there"
    }
   ],
   "44": [
@@ -335,12 +317,6 @@
   "73": [
    {
     "admin1": "Ульяновская область"
-   }
-  ],
-  "74": [
-   {
-    "admin1": "Херсонська область",
-    "note": "OKATO code Russia assigned to the region it annexed in 2022; Russian-style road indexes may be rare there"
    }
   ],
   "75": [

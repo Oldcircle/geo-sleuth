@@ -248,5 +248,40 @@ class LevelGapTests(unittest.TestCase):
         self.run_board("move", "A ST 100", "--parent", "spot4", ok=False)
 
 
+class PackLookupWeightTests(unittest.TestCase):
+    """A region-pack value the table doesn't hold must leave every candidate's weight alone."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "board.json"
+
+    def run_board(self, *args):
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "board.py"), "--board", str(self.path), *args],
+            cwd=self.tmp.name, capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        return result
+
+    def evidence(self):
+        return json.loads(self.path.read_text(encoding="utf-8"))["evidence"]
+
+    def board(self, country, *names):
+        self.run_board("init", "--photo", "photo.jpg", "--country", country)
+        self.run_board("add", *names, "--level", "admin1")
+
+    def test_ru_unknown_codes_leave_weights_alone(self):
+        self.board("ru", "Москва", "Карелия")
+        for kind, value in (("plate", "100"), ("plate", "94"), ("plate", "180"), ("road", "47 bus"), ("area-code", "8 856 123 45 67")):
+            with self.subTest(kind=kind, value=value):
+                self.run_board("apply", "--kind", kind, "--value", value)
+                self.assertEqual(self.evidence(), [])
+        self.run_board("apply", "--kind", "plate", "--value", "10")   # the whole code still scores
+        lr = {e["candidate"]: e["lr"] for e in self.evidence()}
+        self.assertGreater(lr["Карелия"], 1)
+        self.assertLess(lr["Москва"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()
