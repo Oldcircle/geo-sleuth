@@ -101,6 +101,16 @@ class BundledPacks(unittest.TestCase):
         d = regions.lookup("plate", "KA01AB1234")
         self.assertEqual(d["matches"], [])
 
+    def test_a_value_no_pack_takes_is_not_reported_as_a_missing_table(self):
+        # Every installed plate table rejected the format, so the answer is "not_applicable" with what each table takes,
+        # not "no installed pack has a plate table" (which sent the agent looking for a pack that was already there).
+        d = regions.lookup("plate", "KA01AB1234")
+        self.assertEqual(d["status"], "not_applicable")
+        self.assertEqual(d["searched"], [])
+        self.assertIn("doesn't fit the CN plate format", d["note"])
+        self.assertIn("whole civil plate", d["note"])          # TR usage reaches the caller too
+        self.assertEqual(regions.lookup("postal-code", "12345")["status"], "unsupported")   # no pack has the table at all
+
     def test_same_name_districts_stay_apart(self):
         rows = run("clues.py", "lookup", "admin", "朝阳区", "--json")
         chains = {tuple(m["chain"]) for m in json.loads(rows.stdout)["matches"]}

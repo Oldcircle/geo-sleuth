@@ -216,12 +216,13 @@ def lookup(kind: str, value: str, country: str | None = None) -> dict:
         if r["status"] == "unsupported":
             r["note"] += f" (its lookups: {', '.join(p.get('lookups') or {}) or 'none'})"
         return r
-    searched, matches, notes, sources, fetched = [], [], [], [], []
+    searched, matches, notes, sources, fetched, wrong_format = [], [], [], [], [], []
     for code, p in packs().items():
         if kind not in (p.get("lookups") or {}):
             continue
         r = safe_lookup(p, kind, value)
         if r["status"] == "not_applicable":
+            wrong_format.append(r["note"])
             continue
         if r["status"] == "error":   # one broken pack mustn't take down the other countries' answers
             notes.append(r["note"])
@@ -234,8 +235,14 @@ def lookup(kind: str, value: str, country: str | None = None) -> dict:
             sources.append(r["source"])
             fetched.append(f"{code} {r['fetched']}")
     if not searched:
+        # Every pack that has the kind rejected the value's format: that is not "no pack has this table", and the
+        # notes say which input each table takes.
+        if wrong_format:
+            return {"status": "not_applicable", "matches": [], "searched": [],
+                    "note": "; ".join([f"no installed pack takes a {kind} in this format", *wrong_format, *notes]),
+                    "source": "", "fetched": ""}
         return {"status": "unsupported", "matches": [], "searched": [],
-                "note": "; ".join([f"no installed pack has a {kind} table in this format", *notes]),
+                "note": "; ".join([f"no installed pack has a {kind} table", *notes]),
                 "source": "", "fetched": ""}
     note = "; ".join(notes)
     if len({m["country_code"] for m in matches}) > 1:
