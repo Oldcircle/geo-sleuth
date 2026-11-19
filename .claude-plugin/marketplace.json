@@ -1,0 +1,17 @@
+{
+  "name": "geo-sleuth",
+  "owner": {
+    "name": "Oldcircle",
+    "url": "https://github.com/Oldcircle"
+  },
+  "description": "Agent skill that finds where a photo was taken, with every step checked against real data.",
+  "plugins": [
+    {
+      "name": "geo-sleuth",
+      "source": "./",
+      "description": "Find where a photo was taken: OpenStreetMap geometry, elevation skylines, satellite imagery and street view, reported as coordinates, an error radius and evidence images.",
+      "category": "research",
+      "homepage": "https://github.com/Oldcircle/geo-sleuth"
+    }
+  ]
+}

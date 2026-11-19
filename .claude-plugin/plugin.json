@@ -1,0 +1,12 @@
+{
+  "name": "geo-sleuth",
+  "description": "Find where a photo was taken: OpenStreetMap geometry, elevation skylines, satellite imagery and street view, reported as coordinates, an error radius and evidence images.",
+  "author": {
+    "name": "Oldcircle",
+    "url": "https://github.com/Oldcircle"
+  },
+  "homepage": "https://github.com/Oldcircle/geo-sleuth",
+  "repository": "https://github.com/Oldcircle/geo-sleuth",
+  "license": "MIT",
+  "keywords": ["geolocation", "photo-geolocation", "osint", "openstreetmap", "satellite-imagery", "street-view"]
+}

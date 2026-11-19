@@ -214,6 +214,15 @@ geo-sleuth は標準的な [Agent Skill](https://agentskills.io) です。`SKILL
 npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemini-cli -a opencode -a github-copilot -y
 ```
 
+**Claude Code のプラグインマーケットプレイス：**
+
+```text
+/plugin marketplace add Oldcircle/geo-sleuth
+/plugin install geo-sleuth@geo-sleuth
+```
+
+プラグインはこのリポジトリの最新コミットに追従します。更新は `/plugin marketplace update geo-sleuth` で取得します。
+
 **手動で：**
 
 ```bash
