@@ -15,8 +15,8 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 - Look for: a fixed-line number on a shop sign, banner or company van: `(12) 34-56-78` in Ashgabat, `(322) 5-12-34` or `+993 422 6 12 34` elsewhere
 - Points to: the region of that landline → `clues.py lookup area-code <number without the trunk 8> --country tm`: 12 Ashgabat (12 57 … Arkadag), 1xx Ahal, 2xx Balkan (243 Türkmenbaşy, 222 Balkanabat), 3xx Daşoguz (322), 4xx Lebap (422 Türkmenabat), 5xx Mary (522)
 - Strength: medium (a shop's own landline is usually local)
-- Counterexamples: most numbers on signs are mobile (61–65, 71, 72) and say nothing about the region; Gypjak (Ahal) also has numbers under Ashgabat's 12 (12 33 6 …, ru.wikipedia only); a chain's sign may show its Ashgabat head office
-- Sources: en.wikipedia "Telephone numbers in Turkmenistan", section "Area codes", https://en.wikipedia.org/wiki/Telephone_numbers_in_Turkmenistan; ru.wikipedia "Телефонный план нумерации Туркмении", section "Географические коды", https://ru.wikipedia.org/wiki/Телефонный_план_нумерации_Туркмении
+- Counterexamples: most numbers on signs are mobile (61–65, 71, 72) and say nothing about the region; Gypjak, part of Ashgabat since 2013, has numbers under 12 (12 33 6 …, ru.wikipedia only) and scores as Ashgabat; its older code 1392 is not in the lookup, because no dated operator source gives the area it serves; a chain's sign may show its Ashgabat head office
+- Sources: en.wikipedia "Telephone numbers in Turkmenistan", section "Area codes", https://en.wikipedia.org/wiki/Telephone_numbers_in_Turkmenistan; ru.wikipedia "Телефонный план нумерации Туркмении", section "Географические коды", https://ru.wikipedia.org/wiki/Телефонный_план_нумерации_Туркмении; turkmenistan.gov.tm "Ашхабад прирос новыми территориями" (27 May 2013, Gypjak incorporated into Ashgabat), https://turkmenistan.gov.tm/ru/post/19719/ashkhabad-priros-novymi-territoriyami
 
 ## Cities and buildings
 

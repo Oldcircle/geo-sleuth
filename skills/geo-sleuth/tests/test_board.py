@@ -130,6 +130,38 @@ class CorridorPendingTests(unittest.TestCase):
         self.assertNotIn("infrastructure clue", result.stdout)
 
 
+class TmGypjakWeightTests(unittest.TestCase):
+    """Gypjak has been part of Ashgabat since 2013: its 12 33 6x numbers must not count against Ashgabat."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "board.json"
+        self.run_board("init", "--photo", "photo.jpg", "--country", "tm")
+        self.run_board("add", "Aşgabat", "Ahal", "--level", "admin1")
+
+    def run_board(self, *args):
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "board.py"), "--board", str(self.path), *args],
+            cwd=self.tmp.name, capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def lr(self, clue):
+        b = json.loads(self.path.read_text(encoding="utf-8"))
+        return {e["candidate"]: e["lr"] for e in b["evidence"] if e["clue"] == clue}
+
+    def test_gypjak_number_supports_ashgabat(self):
+        self.run_board("apply", "--kind", "area-code", "--value", "+993 12 33 61 23")
+        lr = self.lr("K1")
+        self.assertGreater(lr["Aşgabat"], 1)
+        self.assertLess(lr["Ahal"], 1)
+
+    def test_old_gypjak_code_leaves_weights_alone(self):
+        self.run_board("apply", "--kind", "area-code", "--value", "1392 12 34")
+        self.assertEqual(self.lr("K1"), {})
+
+
 class LevelGapTests(unittest.TestCase):
     """A point added under the city instead of under its road: its evidence never reached the road ranking, and report named another road."""
 
