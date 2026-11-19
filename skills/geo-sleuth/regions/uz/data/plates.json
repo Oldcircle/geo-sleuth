@@ -1,0 +1,518 @@
+{
+ "_meta": {
+  "kind": "plate",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^\\d{2}(?=[A-Z]\\d{3}[A-Z]{2}$|\\d{3}[A-Z]{3}$)|^\\d{2}$",
+  "usage": "current plates (since 2008, 01 A 123 BC or 01 123 ABC, flag and UZ on the right): type the whole plate or only the two digits in the box on the left",
+  "note": "Each region holds a range of codes (Tashkent city 01–09, Tashkent Region 10–19, … Karakalpakstan 95–99). The code is where the vehicle was registered, not where the photo was taken. Plates of the 1998–2008 format (a letter and four digits, or two letters and three digits) use other codes: look them up as plate-1998.",
+  "miss_note": "not a current Uzbek plate: a 1998–2008 plate (A 1234 or AB 123 after the code; use `--kind plate-1998`), a yellow H plate (foreign residents), a green M plate (foreign companies) or a diplomatic plate, a transit plate, or a plate of another country (Kazakhstan, Kyrgyzstan and Tajikistan also use two-digit region codes)",
+  "source": [
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Узбекистана, section 'Таблица кодов регионов' (code ranges since 2008, codes 1998–2008)",
+   "https://uz.wikipedia.org/wiki/Oʻzbekiston_avtomobil_raqamlari_indeksi, section 'Hududlar boʻyicha raqamlar' (same ranges)",
+   "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Uzbekistan (first code of each range, plate formats)"
+  ],
+  "fetched": "2026-11-01",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 99
+ },
+ "entries": {
+  "01": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "02": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "03": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "04": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "05": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "06": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "07": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "08": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "09": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "10": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "11": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "12": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "13": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "14": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "15": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "16": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "17": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "18": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "19": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "20": [
+   {
+    "admin1": "Sirdaryo Viloyati"
+   }
+  ],
+  "21": [
+   {
+    "admin1": "Sirdaryo Viloyati"
+   }
+  ],
+  "22": [
+   {
+    "admin1": "Sirdaryo Viloyati"
+   }
+  ],
+  "23": [
+   {
+    "admin1": "Sirdaryo Viloyati"
+   }
+  ],
+  "24": [
+   {
+    "admin1": "Sirdaryo Viloyati"
+   }
+  ],
+  "25": [
+   {
+    "admin1": "Jizzax Viloyati"
+   }
+  ],
+  "26": [
+   {
+    "admin1": "Jizzax Viloyati"
+   }
+  ],
+  "27": [
+   {
+    "admin1": "Jizzax Viloyati"
+   }
+  ],
+  "28": [
+   {
+    "admin1": "Jizzax Viloyati"
+   }
+  ],
+  "29": [
+   {
+    "admin1": "Jizzax Viloyati"
+   }
+  ],
+  "30": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "31": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "32": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "33": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "34": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "35": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "36": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "37": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "38": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "39": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "40": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "41": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "42": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "43": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "44": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "45": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "46": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "47": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "48": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "49": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "50": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "51": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "52": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "53": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "54": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "55": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "56": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "57": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "58": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "59": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "60": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "61": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "62": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "63": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "64": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "65": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "66": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "67": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "68": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "69": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "70": [
+   {
+    "admin1": "Qashqadaryo Viloyati"
+   }
+  ],
+  "71": [
+   {
+    "admin1": "Qashqadaryo Viloyati"
+   }
+  ],
+  "72": [
+   {
+    "admin1": "Qashqadaryo Viloyati"
+   }
+  ],
+  "73": [
+   {
+    "admin1": "Qashqadaryo Viloyati"
+   }
+  ],
+  "74": [
+   {
+    "admin1": "Qashqadaryo Viloyati"
+   }
+  ],
+  "75": [
+   {
+    "admin1": "Surxondaryo"
+   }
+  ],
+  "76": [
+   {
+    "admin1": "Surxondaryo"
+   }
+  ],
+  "77": [
+   {
+    "admin1": "Surxondaryo"
+   }
+  ],
+  "78": [
+   {
+    "admin1": "Surxondaryo"
+   }
+  ],
+  "79": [
+   {
+    "admin1": "Surxondaryo"
+   }
+  ],
+  "80": [
+   {
+    "admin1": "Buxoro"
+   }
+  ],
+  "81": [
+   {
+    "admin1": "Buxoro"
+   }
+  ],
+  "82": [
+   {
+    "admin1": "Buxoro"
+   }
+  ],
+  "83": [
+   {
+    "admin1": "Buxoro"
+   }
+  ],
+  "84": [
+   {
+    "admin1": "Buxoro"
+   }
+  ],
+  "85": [
+   {
+    "admin1": "Navoiy Viloyati"
+   }
+  ],
+  "86": [
+   {
+    "admin1": "Navoiy Viloyati"
+   }
+  ],
+  "87": [
+   {
+    "admin1": "Navoiy Viloyati"
+   }
+  ],
+  "88": [
+   {
+    "admin1": "Navoiy Viloyati"
+   }
+  ],
+  "89": [
+   {
+    "admin1": "Navoiy Viloyati"
+   }
+  ],
+  "90": [
+   {
+    "admin1": "Xorazm Viloyati"
+   }
+  ],
+  "91": [
+   {
+    "admin1": "Xorazm Viloyati"
+   }
+  ],
+  "92": [
+   {
+    "admin1": "Xorazm Viloyati"
+   }
+  ],
+  "93": [
+   {
+    "admin1": "Xorazm Viloyati"
+   }
+  ],
+  "94": [
+   {
+    "admin1": "Xorazm Viloyati"
+   }
+  ],
+  "95": [
+   {
+    "admin1": "Qaraqalpaqstan"
+   }
+  ],
+  "96": [
+   {
+    "admin1": "Qaraqalpaqstan"
+   }
+  ],
+  "97": [
+   {
+    "admin1": "Qaraqalpaqstan"
+   }
+  ],
+  "98": [
+   {
+    "admin1": "Qaraqalpaqstan"
+   }
+  ],
+  "99": [
+   {
+    "admin1": "Qaraqalpaqstan"
+   }
+  ]
+ }
+}
