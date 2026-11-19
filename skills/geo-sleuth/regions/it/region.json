@@ -1,0 +1,21 @@
+{
+ "code": "IT",
+ "name": "Italy",
+ "names": [
+  "Italy",
+  "Italia",
+  "Italian",
+  "IT"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "it"
+  },
+  "street_view": "gsv.py"
+ }
+}
