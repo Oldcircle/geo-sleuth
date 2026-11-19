@@ -1,0 +1,87 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org (boundary=administrative relations inside Turkmenistan at admin_level 4: five provinces (welaýat) and the city of Ashgabat; name = the OSM name tag as gazetteer.py reads it, so that board candidates and lookups share one spelling)",
+   "https://en.wikipedia.org/wiki/ISO_3166-2:TM"
+  ],
+  "fetched": "2026-11-02",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 6,
+  "note": "Five provinces and the city of Ashgabat, all first-level divisions at OSM admin_level 4; code = ISO 3166-2:TM. gazetteer.py cuts the OSM name tag 'Daşoguz welaýaty' to 'Daşoguz' (the name:* value that is its prefix), so the table uses the short Turkmen names. Arkadag, the capital of Ahal Province and a 'city of state importance' since 2023, is not a separate OSM relation at this level and lies inside Ahal."
+ },
+ "items": [
+  {
+   "name": "Ahal",
+   "code": "TM-A",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ahal Province",
+    "Ahal Region",
+    "Ahal welaýaty",
+    "Ахалский велаят"
+   ]
+  },
+  {
+   "name": "Aşgabat",
+   "code": "TM-S",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ashgabat",
+    "Ashkhabad",
+    "Aşgabat şäheri",
+    "Ашхабад"
+   ]
+  },
+  {
+   "name": "Balkan",
+   "code": "TM-B",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Balkan Province",
+    "Balkan Region",
+    "Balkan welaýaty",
+    "Балканский велаят"
+   ]
+  },
+  {
+   "name": "Daşoguz",
+   "code": "TM-D",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Dashoguz",
+    "Dashoguz Province",
+    "Daşoguz Province",
+    "Daşoguz welaýaty",
+    "Дашогузский велаят"
+   ]
+  },
+  {
+   "name": "Lebap",
+   "code": "TM-L",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Lebap Province",
+    "Lebap Region",
+    "Lebap welaýaty",
+    "Лебапский велаят"
+   ]
+  },
+  {
+   "name": "Mary",
+   "code": "TM-M",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Mary Province",
+    "Mary Region",
+    "Mary welaýaty",
+    "Марыйский велаят"
+   ]
+  }
+ ]
+}
