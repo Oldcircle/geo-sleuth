@@ -1024,7 +1024,8 @@ def cmd_apply(args, p: Path) -> None:
                            "file": args.file or "", "source": d.get("source", ""), "used": False}
     if not matches:
         what = {"unsupported": "Lookup not supported",
-                "not_applicable": "Value doesn't fit the table's format"}.get(d.get("status"), "Lookup returned nothing")
+                "not_applicable": "Value doesn't fit the table's format",
+                "error": "Lookup error"}.get(d.get("status"), "Lookup returned nothing")
         print(f"{what}: {d.get('note', '')}. Clue {kid} recorded, no evidence added.")
         _save(p, b)
         return
