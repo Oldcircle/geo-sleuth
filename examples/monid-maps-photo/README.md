@@ -6,10 +6,17 @@ the skill's existing scripts and defaults stay unchanged.
 
 ## Run
 
+The example runs from the root of a clone of this repository. It is not part
+of the installed skill: it imports `skills/geo-sleuth/scripts/_net.py` (for
+`GEO_PROXY`) by its path in the repository, so a copied skill folder alone
+cannot run it.
+
 Use a photo you took yourself or whose photographer agreed.
 Take its `data_id` from a Google Maps `photo_meta_link`.
 
 ```bash
+git clone https://github.com/Oldcircle/geo-sleuth
+cd geo-sleuth
 export MONID_API_KEY='your-key'
 uv run examples/monid-maps-photo/maps_photo.py "$PHOTO_ID" photo.json
 ```
@@ -32,5 +39,4 @@ uv run examples/monid-maps-photo/test_maps_photo.py
 
 The tests mock HTTP, set a fake key and check the request and output file.
 
-[Monid docs](https://docs.monid.ai?utm_source=github&utm_medium=oss-pr&utm_campaign=oldcircle-geo-sleuth)
-· [Get an API key](https://monid.ai?utm_source=github&utm_medium=oss-pr&utm_campaign=oldcircle-geo-sleuth&aid=OSS-PR)
+[Monid docs](https://docs.monid.ai) · [Get an API key](https://monid.ai)

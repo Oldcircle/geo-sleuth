@@ -56,7 +56,7 @@ In China the same point differs by several hundred meters between WGS84 and GCJ-
 
 ## Street view and ground-level imagery
 
-- Optional example: [Google Maps photo metadata through Monid](../../../examples/monid-maps-photo/README.md), using Litescrape ([Monid docs](https://docs.monid.ai?utm_source=github&utm_medium=oss-pr&utm_campaign=oldcircle-geo-sleuth)).
+- Optional example, not part of the installed skill: [Google Maps photo metadata through Monid](https://github.com/Oldcircle/geo-sleuth/tree/main/examples/monid-maps-photo) (Litescrape, needs `MONID_API_KEY`). It runs from a clone of this repository, not from a copied skill folder.
 
 ### Baidu panoramas (main source in China)
 
