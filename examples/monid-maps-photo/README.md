@@ -39,4 +39,4 @@ uv run examples/monid-maps-photo/test_maps_photo.py
 
 The tests mock HTTP, set a fake key and check the request and output file.
 
-[Monid docs](https://docs.monid.ai) · [Get an API key](https://monid.ai)
+[Monid docs](https://docs.monid.ai)
