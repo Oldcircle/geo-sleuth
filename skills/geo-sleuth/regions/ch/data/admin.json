@@ -1,0 +1,170 @@
+{
+ "_meta": {
+  "source": [
+   "https://en.wikipedia.org/wiki/Cantons_of_Switzerland",
+   "https://www.openstreetmap.org (boundary=administrative, admin_level=4, ISO3166-2=CH-*; code = OSM relation id)"
+  ],
+  "fetched": "2026-10-31",
+  "license": "CC BY-SA 4.0 (Wikipedia) / ODbL (OpenStreetMap)",
+  "count": 26,
+  "note": "The 26 cantons (admin_level=4). Half-cantons are separate rows, as in OSM and ISO 3166-2:CH. OSM spells some cantons with both names (Bern/Berne, Fribourg/Freiburg, Graubünden/Grischun/Grigioni, Valais/Wallis); this table uses the English name that the plate lookup also returns, so a lookup and a children listing land on the same candidate."
+ },
+ "items": [
+  {
+   "name": "Aargau",
+   "code": "1686359",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Appenzell Innerrhoden",
+   "code": "1686666",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Appenzell Ausserrhoden",
+   "code": "1686649",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Bern",
+   "code": "1686344",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Basel-Landschaft",
+   "code": "1686366",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Basel-Stadt",
+   "code": "1699639",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Fribourg",
+   "code": "1698314",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Geneva",
+   "code": "1702419",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Glarus",
+   "code": "1685673",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Graubünden",
+   "code": "1686631",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Jura",
+   "code": "1697347",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Lucerne",
+   "code": "1685677",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Neuchâtel",
+   "code": "1702420",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Nidwalden",
+   "code": "1686449",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Obwalden",
+   "code": "1686448",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "St. Gallen",
+   "code": "1687006",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Schaffhausen",
+   "code": "1696112",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Solothurn",
+   "code": "1701133",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Schwyz",
+   "code": "1688583",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Thurgau",
+   "code": "1693811",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Ticino",
+   "code": "1687730",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Uri",
+   "code": "1693971",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Vaud",
+   "code": "1702421",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Valais",
+   "code": "1686699",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Zug",
+   "code": "1686447",
+   "level": 4,
+   "parent": ""
+  },
+  {
+   "name": "Zürich",
+   "code": "1690227",
+   "level": 4,
+   "parent": ""
+  }
+ ]
+}
