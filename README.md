@@ -43,7 +43,7 @@
 npx skills add Oldcircle/geo-sleuth
 ```
 
-Pick your agents when prompted. Then hand your agent a photo and say:
+Pick your agents when prompted. For DeepSeek Harness, use the [shared-directory install command](#deepseek-harness). Then hand your agent a photo and say:
 
 > find where this photo was taken
 
@@ -208,7 +208,7 @@ A flowering cherry over a sidewalk. The plates and street furniture place it in 
 
 geo-sleuth is a standard [Agent Skill](https://agentskills.io): one folder holding `SKILL.md`, `scripts/`, `references/` and `data/`. Install it with the [`skills`](https://github.com/vercel-labs/skills) CLI, or copy the folder yourself.
 
-**All six agents, user-wide, one command:**
+**Six agents, user-wide, one command:**
 
 ```bash
 npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemini-cli -a opencode -a github-copilot -y
@@ -223,16 +223,26 @@ npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemi
 
 The plugin tracks the latest commit of this repository; pull updates with `/plugin marketplace update geo-sleuth`.
 
-**By hand:**
+### DeepSeek Harness
+
+Run this from the root of the project you open in DeepSeek Harness:
+
+```bash
+npx skills add Oldcircle/geo-sleuth --skill geo-sleuth --agent universal --yes
+```
+
+DeepSeek Harness discovers the installed skill at `.agents/skills/geo-sleuth/`. Add `--global` to install it at `~/.agents/skills/geo-sleuth/` for all projects. In a Harness session, use `/geo-sleuth` to invoke it.
+
+### Manual installation
 
 ```bash
 git clone https://github.com/Oldcircle/geo-sleuth
 mkdir -p ~/.agents/skills ~/.claude/skills
-cp -r geo-sleuth/skills/geo-sleuth ~/.agents/skills/              # Codex, Cursor, Gemini CLI, OpenCode, GitHub Copilot
+cp -r geo-sleuth/skills/geo-sleuth ~/.agents/skills/
 ln -s ~/.agents/skills/geo-sleuth ~/.claude/skills/geo-sleuth     # Claude Code
 ```
 
-`~/.agents/skills/` is read by Codex, Cursor, Gemini CLI, OpenCode and GitHub Copilot, so one copy there covers all five. Each agent's own folders, from its docs:
+Codex, Cursor, Gemini CLI, OpenCode, GitHub Copilot and DeepSeek Harness all read `~/.agents/skills/`. The table lists each agent's supported folders.
 
 | Agent | User-wide | Per project |
 |---|---|---|
@@ -242,6 +252,7 @@ ln -s ~/.agents/skills/geo-sleuth ~/.claude/skills/geo-sleuth     # Claude Code
 | [Gemini CLI](https://geminicli.com/docs/cli/skills/) | `~/.gemini/skills/` or `~/.agents/skills/` | `.gemini/skills/` or `.agents/skills/` |
 | [OpenCode](https://opencode.ai/docs/skills/) | `~/.config/opencode/skills/` or `~/.agents/skills/` | `.opencode/skills/` or `.agents/skills/` |
 | [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | `~/.copilot/skills/` or `~/.agents/skills/` | `.github/skills/` or `.agents/skills/` |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md) | `~/.dsh/skills/` or `~/.agents/skills/` | `.dsh/skills/` or `.agents/skills/` |
 
 Any other agent that reads `SKILL.md` and runs shell commands works the same way: put the folder where it looks for skills.
 
