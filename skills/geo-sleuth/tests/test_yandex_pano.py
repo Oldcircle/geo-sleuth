@@ -4,9 +4,12 @@
 # dependencies = ["pillow", "numpy"]
 # ///
 """Offline regressions for yandex_pano.py: metadata parsing and ray-traced perspective projection."""
+import io
 from pathlib import Path
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 from PIL import Image
@@ -106,6 +109,59 @@ class YandexPanoTests(unittest.TestCase):
     def test_match_overlay_support(self):
         # yandex has no default logo box overlay
         self.assertIsNone(match._overlay("yandex"))
+
+    def test_failure_path_does_not_cache_and_retry_succeeds(self):
+        panoid = "1487010902_804195183_23_1570679630"
+        fake_meta = {
+            "id": panoid,
+            "image_id": "BmtLVZGKdvn1",
+            "lat": 41.311031,
+            "lon": 69.279628,
+            "heading": 0.0,
+            "pitch": 0.0,
+            "tile_width": 256,
+            "tile_height": 256,
+            "zooms": [{"level": 3, "width": 512, "height": 256}],
+        }
+
+        tile_buf = io.BytesIO()
+        Image.new("RGB", (256, 256), (120, 180, 240)).save(tile_buf, format="JPEG")
+        valid_tile_bytes = tile_buf.getvalue()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache_dir = Path(tmpdir)
+
+            with patch.object(yandex_pano, "get_meta_by_id", return_value=fake_meta):
+                # 1. Failure path: network error fetching tiles
+                with patch.object(yandex_pano, "_get", side_effect=OSError("Network error")):
+                    failed_render = yandex_pano.render(panoid, heading=0, cache=cache_dir)
+                    self.assertIsNone(failed_render)
+                    # No corrupted pano or perspective render file should be written to cache
+                    self.assertEqual(list(cache_dir.glob("pano_*")), [])
+                    self.assertEqual(list(cache_dir.glob(f"{panoid}_*")), [])
+
+                    # Matcher also gets None and rejects failure as evidence
+                    matcher_renders = match._render_items(
+                        [{"id": panoid, "heading": 0}], engine="yandex", proxy=None, cache=cache_dir
+                    )
+                    self.assertEqual(matcher_renders, [None])
+
+                # 2. Retry: service recovers and tile fetching succeeds
+                with patch.object(yandex_pano, "_get", return_value=valid_tile_bytes):
+                    ok_render = yandex_pano.render(panoid, heading=0, cache=cache_dir)
+                    self.assertIsNotNone(ok_render)
+                    self.assertIsInstance(ok_render, Image.Image)
+                    # Cache now stores the valid stitched panorama and the render
+                    panos = list(cache_dir.glob("pano_*"))
+                    self.assertEqual(len(panos), 1)
+                    renders = list(cache_dir.glob(f"{panoid}_*"))
+                    self.assertEqual(len(renders), 1)
+
+                # 3. Cache reuse: even if network fails subsequently, cached render is reused
+                with patch.object(yandex_pano, "_get", side_effect=OSError("Network error")):
+                    cached_render = yandex_pano.render(panoid, heading=0, cache=cache_dir)
+                    self.assertIsNotNone(cached_render)
+                    self.assertEqual(cached_render.size, ok_render.size)
 
 
 if __name__ == "__main__":

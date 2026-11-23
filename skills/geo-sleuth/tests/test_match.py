@@ -96,5 +96,68 @@ class DescriptorTests(unittest.TestCase):
         np.testing.assert_allclose(features, np.broadcast_to(features[0, 0], features.shape))
 
 
+class ProviderDefaultsTests(unittest.TestCase):
+    def test_render_items_uses_provider_defaults_without_explicit_flags(self):
+        dummy_img = Image.new("RGB", (10, 10))
+        item = [{"id": "pano_test", "heading": 90.0}]
+
+        import baidu_pano
+        with patch.object(baidu_pano, "render", return_value=dummy_img) as mock_b:
+            match._render_items(item, engine="baidu", proxy=None, cache=Path("/tmp"))
+            mock_b.assert_called_once()
+            _, kwargs = mock_b.call_args if mock_b.call_args.kwargs else (mock_b.call_args[0], {})
+            args = mock_b.call_args[0]
+            # render(pid, heading, pitch, fov, ...)
+            self.assertEqual(args[0], "pano_test")
+            self.assertEqual(args[1], 90.0)
+            self.assertEqual(args[2], 10.0)
+            self.assertEqual(args[3], 80.0)
+
+        import gsv
+        with patch.object(gsv, "render", return_value=dummy_img) as mock_g:
+            match._render_items(item, engine="gsv", proxy=None, cache=Path("/tmp"))
+            mock_g.assert_called_once()
+            args = mock_g.call_args[0]
+            self.assertEqual(args[0], "pano_test")
+            self.assertEqual(args[1], 90.0)
+            self.assertEqual(args[2], 0.0)
+            self.assertEqual(args[3], 90.0)
+
+        import yandex_pano
+        with patch.object(yandex_pano, "render", return_value=dummy_img) as mock_y:
+            match._render_items(item, engine="yandex", proxy=None, cache=Path("/tmp"))
+            mock_y.assert_called_once()
+            args = mock_y.call_args[0]
+            self.assertEqual(args[0], "pano_test")
+            self.assertEqual(args[1], 90.0)
+            self.assertEqual(args[2], -8.0)
+            self.assertEqual(args[3], 90.0)
+
+    def test_explicit_flags_override_provider_defaults(self):
+        dummy_img = Image.new("RGB", (10, 10))
+        item = [{"id": "pano_test", "heading": 120.0, "pitch": -5.0, "fov": 105.0}]
+
+        import baidu_pano
+        with patch.object(baidu_pano, "render", return_value=dummy_img) as mock_b:
+            match._render_items(item, engine="baidu", proxy=None, cache=Path("/tmp"))
+            args = mock_b.call_args[0]
+            self.assertEqual(args[2], -5.0)
+            self.assertEqual(args[3], 105.0)
+
+        import gsv
+        with patch.object(gsv, "render", return_value=dummy_img) as mock_g:
+            match._render_items(item, engine="gsv", proxy=None, cache=Path("/tmp"))
+            args = mock_g.call_args[0]
+            self.assertEqual(args[2], -5.0)
+            self.assertEqual(args[3], 105.0)
+
+        import yandex_pano
+        with patch.object(yandex_pano, "render", return_value=dummy_img) as mock_y:
+            match._render_items(item, engine="yandex", proxy=None, cache=Path("/tmp"))
+            args = mock_y.call_args[0]
+            self.assertEqual(args[2], -5.0)
+            self.assertEqual(args[3], 105.0)
+
+
 if __name__ == "__main__":
     unittest.main()

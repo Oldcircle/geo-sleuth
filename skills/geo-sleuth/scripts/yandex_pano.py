@@ -194,7 +194,7 @@ def scan(lat: float, lon: float, radius: float = 300, max_points: int = 150,
 # ---------------------------------------------------------------- tile fetching & projection
 
 
-def fetch_tile(image_id: str, zoom: int, x: int, y: int, cache: Path, proxy: str | None = None) -> Image.Image:
+def fetch_tile(image_id: str, zoom: int, x: int, y: int, cache: Path, proxy: str | None = None) -> Image.Image | None:
     cache_tile = cache / f"tile_{image_id}_{zoom}_{x}_{y}.jpg"
     if cache_tile.exists() and cache_tile.stat().st_size > 500:
         try:
@@ -210,14 +210,25 @@ def fetch_tile(image_id: str, zoom: int, x: int, y: int, cache: Path, proxy: str
         cache_tile.write_bytes(raw)
         return im
     except (OSError, RuntimeError, ValueError):
-        return Image.new("RGB", (256, 256), "black")
+        return None
 
 
 def get_equirectangular(panoid: str, zoom: int = 3, cache: Path | None = None,
-                        proxy: str | None = None) -> tuple[np.ndarray, dict]:
+                        proxy: str | None = None) -> tuple[np.ndarray, dict] | None:
     """Fetch tiles and stitch into an equirectangular panorama image (numpy array)."""
     cdir = cache or CACHE_DIR
-    meta = get_meta_by_id(panoid, proxy=proxy) or {"id": panoid, "heading": 0.0}
+    cache_pano = cdir / f"pano_{panoid}_z{zoom}.jpg"
+    if cache_pano.exists() and cache_pano.stat().st_size > 5000:
+        try:
+            im = Image.open(cache_pano).convert("RGB")
+            meta = get_meta_by_id(panoid, proxy=proxy) or {"id": panoid, "heading": 0.0}
+            return np.array(im, dtype=np.uint8), meta
+        except (OSError, ValueError):
+            pass
+
+    meta = get_meta_by_id(panoid, proxy=proxy)
+    if not meta:
+        return None
     image_id = meta.get("image_id") or panoid
     tile_w, tile_h = meta.get("tile_width", 256), meta.get("tile_height", 256)
 
@@ -237,17 +248,12 @@ def get_equirectangular(panoid: str, zoom: int = 3, cache: Path | None = None,
         rows = 3
         full_w, full_h = cols * tile_w, rows * tile_h
 
-    cache_pano = cdir / f"pano_{panoid}_z{zoom}.jpg"
-    if cache_pano.exists() and cache_pano.stat().st_size > 5000:
-        try:
-            im = Image.open(cache_pano).convert("RGB")
-            return np.array(im, dtype=np.uint8), meta
-        except (OSError, ValueError):
-            pass
-
     tasks = [(image_id, zoom, x, y) for y in range(rows) for x in range(cols)]
     with ThreadPoolExecutor(8) as ex:
         tiles = list(ex.map(lambda args: fetch_tile(*args, cache=cdir, proxy=proxy), tasks))
+
+    if any(t is None for t in tiles):
+        return None
 
     stitched = Image.new("RGB", (cols * tile_w, rows * tile_h))
     idx = 0
@@ -340,7 +346,7 @@ def project_perspective(pano: np.ndarray, heading_deg: float, pitch_deg: float,
 
 def render(pid: str, heading: float, pitch: float = -8, fov: float = 90,
            w: int = 640, h: int = 480, cache: Path | None = None,
-           proxy: str | None = None) -> Image.Image:
+           proxy: str | None = None) -> Image.Image | None:
     """Render a perspective view at a given compass heading."""
     cdir = cache or CACHE_DIR
     key = f"{pid}_{heading:.0f}_{pitch:.0f}_{fov:.0f}_{w}x{h}.jpg"
@@ -354,13 +360,16 @@ def render(pid: str, heading: float, pitch: float = -8, fov: float = 90,
 
     zoom = 3 if max(w, h) <= 800 else 2
     try:
-        pano, meta = get_equirectangular(pid, zoom=zoom, cache=cdir, proxy=proxy)
+        res = get_equirectangular(pid, zoom=zoom, cache=cdir, proxy=proxy)
+        if res is None:
+            return None
+        pano, meta = res
         im = project_perspective(pano, heading, pitch, fov, w, h, meta.get("heading", 0.0))
         cdir.mkdir(parents=True, exist_ok=True)
         im.save(out_file, quality=88)
         return im
     except (OSError, RuntimeError, ValueError):
-        return Image.new("RGB", (w, h), "gray")
+        return None
 
 
 # ---------------------------------------------------------------- sheets and formatting
@@ -395,7 +404,8 @@ def sheet(items: list[dict], out: Path, cols: int = 3, tw: int = 480, th: int = 
 
     for i, (it, im) in enumerate(zip(items, ims)):
         x, y = (i % cols) * tw, (i // cols) * th
-        S.paste(im.resize((tw, th)), (x, y))
+        tile_im = im.resize((tw, th)) if im is not None else Image.new("RGB", (tw, th), "gray")
+        S.paste(tile_im, (x, y))
         d.rectangle([x, y, x + tw, y + 22], fill="black")
         lbl = it.get("label") or f"#{i}: …{it['id'][-8:]} h{it['heading']:.0f}°"
         d.text((x + 4, y + 3), lbl, fill="yellow", font=f)
@@ -471,6 +481,8 @@ def main() -> None:
     elif args.cmd == "render":
         im = render(args.id, args.heading, pitch=args.pitch, fov=args.fov,
                     cache=args.cache, proxy=args.proxy)
+        if im is None:
+            sys.exit(f"Failed to fetch or render panorama {args.id}")
         im.save(args.out, quality=90)
         print(f"Rendered {args.id} at heading {args.heading}° -> {args.out}")
 
