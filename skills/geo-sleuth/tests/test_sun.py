@@ -84,5 +84,15 @@ class StreetHalves(unittest.TestCase):
             self.assertEqual(half, "morning" if float(az) < 180 else "afternoon", (half, az))
 
 
+class ExifTimeInput(unittest.TestCase):
+    def test_exif_datetime_with_colons_in_the_date_is_accepted(self):
+        # exif.py prints DateTimeOriginal as "2024:06:06 15:39:00"; its docstring says it can be fed to sun.py
+        self.assertEqual(sun._to_utc("2024:06:06 15:39:00", "Asia/Shanghai"), sun._to_utc("2024-06-06T15:39:00", "Asia/Shanghai"))
+        self.assertEqual(sun._to_utc("2024:06:06 15:39:00", None), sun._to_utc("2024-06-06 15:39:00", None))
+
+    def test_iso_forms_are_unchanged(self):
+        self.assertEqual(sun._to_utc("2024-06-06T15:39+08:00", None).hour, 7)
+
+
 if __name__ == "__main__":
     unittest.main()
