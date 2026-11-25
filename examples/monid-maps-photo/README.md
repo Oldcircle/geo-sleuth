@@ -22,7 +22,10 @@ uv run examples/monid-maps-photo/maps_photo.py "$PHOTO_ID" photo.json
 ```
 
 The command prints `photo.json`, which contains the provider's JSON metadata
-(contributor, place, coordinates and date). It does not upload a photo.
+(contributor, place, coordinates and date). Its `location` is the pin of the
+Google Maps listing the photo is attached to, not where the camera stood: use
+it as a lead and verify the camera position independently. It does not upload
+a photo.
 Without `MONID_API_KEY`, it exits with a message before making a request.
 
 The example uses the shared `GEO_PROXY` setting; `--proxy direct` selects a
