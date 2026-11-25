@@ -1,0 +1,21 @@
+{
+ "code": "DE",
+ "name": "Germany",
+ "names": [
+  "Germany",
+  "Deutschland",
+  "German",
+  "DE"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "de"
+  },
+  "street_view": "gsv.py"
+ }
+}
