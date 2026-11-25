@@ -1,0 +1,182 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org (boundary=administrative relations inside Uzbekistan: admin_level 4 regions and the city of Tashkent, admin_level 3 Republic of Karakalpakstan; name = the OSM name tag as gazetteer.py reads it, so that board candidates and lookups share one spelling)",
+   "https://en.wikipedia.org/wiki/ISO_3166-2:UZ"
+  ],
+  "fetched": "2026-11-01",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 14,
+  "note": "12 regions (viloyat) and the city of Tashkent at OSM admin_level 4, and the Republic of Karakalpakstan at admin_level 3, all first-level divisions; code = ISO 3166-2:UZ. OSM names are Uzbek Latin with a straight apostrophe (Farg'ona); aliases add the ʻ spelling, English, Russian and Karakalpak names."
+ },
+ "items": [
+  {
+   "name": "Andijon",
+   "code": "UZ-AN",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "A'ndijan wa'layatı",
+    "Andijan Region",
+    "Andijon Viloyati",
+    "Andijon viloyati",
+    "Андижанская область"
+   ]
+  },
+  {
+   "name": "Buxoro",
+   "code": "UZ-BU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Bukhara Region",
+    "Buxara wálayatı",
+    "Buxoro Viloyati",
+    "Buxoro viloyati",
+    "Бухарская область"
+   ]
+  },
+  {
+   "name": "Farg'ona Viloyati",
+   "code": "UZ-FA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Fargʻona Viloyati",
+    "Ferg'ana wa'layatı",
+    "Fergana Region",
+    "Ферганская область"
+   ]
+  },
+  {
+   "name": "Jizzax Viloyati",
+   "code": "UZ-JI",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jizzakh Region",
+    "Jizzaq wa'layatı",
+    "Jizzax viloyati",
+    "Джизакская область"
+   ]
+  },
+  {
+   "name": "Namangan Viloyati",
+   "code": "UZ-NG",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Namangan Region",
+    "Namangan wa'layatı",
+    "Наманганская область"
+   ]
+  },
+  {
+   "name": "Navoiy Viloyati",
+   "code": "UZ-NW",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Navoiy Region",
+    "Nawayı wálayatı",
+    "Навоийская область"
+   ]
+  },
+  {
+   "name": "Qaraqalpaqstan",
+   "code": "UZ-QR",
+   "level": 3,
+   "parent": "",
+   "aliases": [
+    "Qaraqalpaqstan Respublikası",
+    "Qoraqalpogʻiston Respublikasi",
+    "Republic of Karakalpakstan",
+    "Республика Каракалпакстан"
+   ]
+  },
+  {
+   "name": "Qashqadaryo Viloyati",
+   "code": "UZ-QA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Qashqada'rya wa'layatı",
+    "Qashqadaryo Region",
+    "Qashqadaryo viloyati",
+    "Кашкадарьинская область"
+   ]
+  },
+  {
+   "name": "Samarqand",
+   "code": "UZ-SA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Samarqand Region",
+    "Samarqand Viloyati",
+    "Samarqand viloyati",
+    "Samarqand wa'layatı",
+    "Самаркандская область"
+   ]
+  },
+  {
+   "name": "Sirdaryo Viloyati",
+   "code": "UZ-SI",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Sirdaryo Region",
+    "Sirdaryo viloyati",
+    "Sırda'rya wa'layatı",
+    "Сырдарьинская область"
+   ]
+  },
+  {
+   "name": "Surxondaryo",
+   "code": "UZ-SU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Surqanda'rya wa'layatı",
+    "Surxondaryo Region",
+    "Surxondaryo Viloyati",
+    "Surxondaryo viloyati",
+    "Сурхандарьинская область"
+   ]
+  },
+  {
+   "name": "Toshkent",
+   "code": "UZ-TK",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tashkent",
+    "Ташкент"
+   ]
+  },
+  {
+   "name": "Toshkent Viloyati",
+   "code": "UZ-TO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tashkent Region",
+    "Tashkent wa'layatı",
+    "Toshkent viloyati",
+    "Ташкентская область"
+   ]
+  },
+  {
+   "name": "Xorazm Viloyati",
+   "code": "UZ-XO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Xorazm Region",
+    "Xorazm viloyati",
+    "Xorezm wálayatı",
+    "Хорезмская область"
+   ]
+  }
+ ]
+}

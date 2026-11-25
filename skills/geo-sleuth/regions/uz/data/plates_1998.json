@@ -1,0 +1,97 @@
+{
+ "_meta": {
+  "kind": "plate-1998",
+  "normalize": {
+   "strip": " -·.",
+   "upper": true
+  },
+  "key_pattern": "^\\d{2}(?=[A-Z]\\d{4}$|[A-Z]{2}\\d{3}$)|^\\d{2}$",
+  "usage": "1998–2008 plates (code in a box on the left, blue digits, then A 1234 for private cars or AB 123 for companies): type the whole plate or only the two-digit code",
+  "note": "Codes of the 1998–2008 format; they overlap today's ranges (10 was Tashkent city then, Tashkent Region now), so look a plate up under the format it has. These plates are on old cars and point to the region of registration at the time.",
+  "miss_note": "not a 1998–2008 Uzbek plate: a current plate (letter, three digits, two letters after the code; use `--kind plate`), a foreign-resident or company plate, or a plate of another country",
+  "source": [
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Узбекистана, section 'Таблица кодов регионов' (code ranges since 2008, codes 1998–2008)",
+   "https://uz.wikipedia.org/wiki/Oʻzbekiston_avtomobil_raqamlari_indeksi, section 'Hududlar boʻyicha raqamlar' (same ranges)"
+  ],
+  "fetched": "2026-11-01",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 15
+ },
+ "entries": {
+  "10": [
+   {
+    "admin1": "Toshkent"
+   }
+  ],
+  "11": [
+   {
+    "admin1": "Toshkent Viloyati"
+   }
+  ],
+  "12": [
+   {
+    "admin1": "Sirdaryo Viloyati"
+   }
+  ],
+  "13": [
+   {
+    "admin1": "Jizzax Viloyati"
+   }
+  ],
+  "14": [
+   {
+    "admin1": "Samarqand"
+   }
+  ],
+  "15": [
+   {
+    "admin1": "Farg'ona Viloyati"
+   }
+  ],
+  "16": [
+   {
+    "admin1": "Namangan Viloyati"
+   }
+  ],
+  "17": [
+   {
+    "admin1": "Andijon"
+   }
+  ],
+  "18": [
+   {
+    "admin1": "Qashqadaryo Viloyati"
+   }
+  ],
+  "19": [
+   {
+    "admin1": "Surxondaryo"
+   }
+  ],
+  "20": [
+   {
+    "admin1": "Buxoro"
+   }
+  ],
+  "21": [
+   {
+    "admin1": "Navoiy Viloyati"
+   }
+  ],
+  "22": [
+   {
+    "admin1": "Xorazm Viloyati"
+   }
+  ],
+  "23": [
+   {
+    "admin1": "Qaraqalpaqstan"
+   }
+  ],
+  "30": [
+   {
+    "admin1": "Toshkent"
+   }
+  ]
+ }
+}
