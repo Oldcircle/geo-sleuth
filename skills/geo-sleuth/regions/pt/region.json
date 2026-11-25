@@ -1,0 +1,21 @@
+{
+ "code": "PT",
+ "name": "Portugal",
+ "names": [
+  "Portugal",
+  "Portuguese Republic",
+  "República Portuguesa",
+  "PT"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "pt"
+  },
+  "street_view": "gsv.py"
+ }
+}
