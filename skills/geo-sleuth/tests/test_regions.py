@@ -600,5 +600,22 @@ class SameNamesAndPoi(unittest.TestCase):
             poi.main()
 
 
+class CallingCodeSubOnlyKeys(unittest.TestCase):
+    """599 (Curacao, Bonaire, Saba, Sint Eustatius) and 672 (Norfolk Island) exist in the table only as "599-9" style keys."""
+
+    def lookup(self, number):
+        import clues  # noqa: PLC0415
+        return {m["country"] for m in clues.lookup_calling_code(number)["matches"]}
+
+    def test_codes_listed_only_with_a_sub_prefix_are_found(self):
+        self.assertEqual(self.lookup("+599 9 736 1234"), {"Curaçao"})
+        self.assertIn("Saba", self.lookup("+599 4 416 1234"))
+        self.assertEqual(self.lookup("+672 3 12345"), {"Norfolk Island"})
+
+    def test_shared_codes_still_pick_the_area_code(self):
+        self.assertEqual(self.lookup("+1 242 555 0100"), {"Bahamas"})
+        self.assertEqual(self.lookup("+33 1 23 45 67 89"), {"France"})
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
