@@ -74,12 +74,10 @@ def lookup_calling_code(value: str) -> dict:
         digits = digits[2:]
     for L in (3, 2, 1):
         code = digits[:L]
-        if code in d:
-            hits = d[code]
-            # shared codes like 1 and 7: look at the area code that follows
-            subs = [k for k in d if k.startswith(code + "-") and digits[L:].startswith(k.split("-")[1])]
-            if subs:
-                hits = [h for k in subs for h in d[k]]
+        # shared codes like 1 and 7: look at the area code that follows. Some codes (599, 672) exist only as "599-9" style keys
+        subs = [k for k in d if k.startswith(code + "-") and digits[L:].startswith(k.split("-")[1])]
+        if code in d or subs:
+            hits = [h for k in subs for h in d[k]] if subs else d[code]
             return _result("calling-code", value, [{"country": h["country"], "utc": h.get("utc", ""), "note": ""} for h in hits], src, fetched)
     return _result("calling-code", value, [], src, fetched, "no matching country code")
 
