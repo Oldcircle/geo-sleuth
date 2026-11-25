@@ -43,7 +43,7 @@
 npx skills add Oldcircle/geo-sleuth
 ```
 
-プロンプトが表示されたら、使用するエージェントを選んでください。あとはエージェントに写真を渡して、次のように伝えます。
+プロンプトが表示されたら、使用するエージェントを選んでください。DeepSeek Harness を使う場合は、[共有ディレクトリにインストールするコマンド](#deepseek-harness)を実行してください。あとはエージェントに写真を渡して、次のように伝えます。
 
 > find where this photo was taken
 
@@ -208,7 +208,7 @@ EXIF を削除したスマートフォンの写真です。稲刈りを終えた
 
 geo-sleuth は標準的な [Agent Skill](https://agentskills.io) です。`SKILL.md`、`scripts/`、`references/`、`data/` を含む 1 つのフォルダーで構成されています。[`skills`](https://github.com/vercel-labs/skills) CLI でインストールするか、フォルダーを自分でコピーしてください。
 
-**6 つのエージェントすべてに、ユーザー全体で、1 つのコマンドで：**
+**6 つのエージェントに、ユーザー全体で、1 つのコマンドで：**
 
 ```bash
 npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemini-cli -a opencode -a github-copilot -y
@@ -223,16 +223,26 @@ npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemi
 
 プラグインはこのリポジトリの最新コミットに追従します。更新は `/plugin marketplace update geo-sleuth` で取得します。
 
-**手動で：**
+### DeepSeek Harness
+
+DeepSeek Harness で開くプロジェクトのルートディレクトリで実行します。
+
+```bash
+npx skills add Oldcircle/geo-sleuth --skill geo-sleuth --agent universal --yes
+```
+
+DeepSeek Harness は `.agents/skills/geo-sleuth/` からスキルを検出します。すべてのプロジェクトで使うには `--global` を追加し、`~/.agents/skills/geo-sleuth/` にインストールします。Harness のセッションでは `/geo-sleuth` で呼び出せます。
+
+### 手動インストール
 
 ```bash
 git clone https://github.com/Oldcircle/geo-sleuth
 mkdir -p ~/.agents/skills ~/.claude/skills
-cp -r geo-sleuth/skills/geo-sleuth ~/.agents/skills/              # Codex, Cursor, Gemini CLI, OpenCode, GitHub Copilot
+cp -r geo-sleuth/skills/geo-sleuth ~/.agents/skills/
 ln -s ~/.agents/skills/geo-sleuth ~/.claude/skills/geo-sleuth     # Claude Code
 ```
 
-`~/.agents/skills/` は Codex、Cursor、Gemini CLI、OpenCode、GitHub Copilot が読み込むため、そこにコピーを 1 つ置けば 5 つすべてに対応できます。各エージェント独自のフォルダーは、それぞれのドキュメントによると次のとおりです。
+Codex、Cursor、Gemini CLI、OpenCode、GitHub Copilot、DeepSeek Harness は `~/.agents/skills/` を読み込みます。各エージェントが対応するディレクトリは次のとおりです。
 
 | エージェント | ユーザー全体 | プロジェクト単位 |
 |---|---|---|
@@ -242,6 +252,7 @@ ln -s ~/.agents/skills/geo-sleuth ~/.claude/skills/geo-sleuth     # Claude Code
 | [Gemini CLI](https://geminicli.com/docs/cli/skills/) | `~/.gemini/skills/` または `~/.agents/skills/` | `.gemini/skills/` または `.agents/skills/` |
 | [OpenCode](https://opencode.ai/docs/skills/) | `~/.config/opencode/skills/` または `~/.agents/skills/` | `.opencode/skills/` または `.agents/skills/` |
 | [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | `~/.copilot/skills/` または `~/.agents/skills/` | `.github/skills/` または `.agents/skills/` |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md) | `~/.dsh/skills/` または `~/.agents/skills/` | `.dsh/skills/` または `.agents/skills/` |
 
 `SKILL.md` を読み込み、シェルコマンドを実行できるその他のエージェントでも同じように動作します。そのエージェントがスキルを探す場所にフォルダーを置いてください。
 

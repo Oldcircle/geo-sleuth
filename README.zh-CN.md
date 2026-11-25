@@ -43,7 +43,7 @@
 npx skills add Oldcircle/geo-sleuth
 ```
 
-按提示勾选你用的 agent。然后把一张照片交给你的 agent，说：
+按提示勾选你用的 agent。使用 DeepSeek Harness 时，运行[安装到共享目录的命令](#deepseek-harness)。然后把一张照片交给你的 agent，说：
 
 > 找出这张照片是在哪拍的
 
@@ -208,7 +208,7 @@ npx skills add Oldcircle/geo-sleuth
 
 geo-sleuth 是一个标准的 [Agent Skill](https://agentskills.io)：一个文件夹，里面是 `SKILL.md`、`scripts/`、`references/` 和 `data/`。可以用 [`skills`](https://github.com/vercel-labs/skills) 命令行工具安装，也可以自己复制文件夹。
 
-**一条命令，给全部六个 agent 装到用户级目录：**
+**一条命令，给六个 agent 装到用户级目录：**
 
 ```bash
 npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemini-cli -a opencode -a github-copilot -y
@@ -223,16 +223,26 @@ npx skills add Oldcircle/geo-sleuth -g -a claude-code -a codex -a cursor -a gemi
 
 插件会跟随本仓库的最新提交；用 `/plugin marketplace update geo-sleuth` 拉取更新。
 
-**手动安装：**
+### DeepSeek Harness
+
+在 DeepSeek Harness 打开的项目根目录运行：
+
+```bash
+npx skills add Oldcircle/geo-sleuth --skill geo-sleuth --agent universal --yes
+```
+
+DeepSeek Harness 会从 `.agents/skills/geo-sleuth/` 发现这个技能。加上 `--global` 可安装到 `~/.agents/skills/geo-sleuth/`，供所有项目使用。在 Harness 会话中输入 `/geo-sleuth` 即可调用。
+
+### 手动安装
 
 ```bash
 git clone https://github.com/Oldcircle/geo-sleuth
 mkdir -p ~/.agents/skills ~/.claude/skills
-cp -r geo-sleuth/skills/geo-sleuth ~/.agents/skills/              # Codex, Cursor, Gemini CLI, OpenCode, GitHub Copilot
+cp -r geo-sleuth/skills/geo-sleuth ~/.agents/skills/
 ln -s ~/.agents/skills/geo-sleuth ~/.claude/skills/geo-sleuth     # Claude Code
 ```
 
-Codex、Cursor、Gemini CLI、OpenCode 和 GitHub Copilot 都会读取 `~/.agents/skills/`，所以在这里放一份就能同时覆盖这五个。各 agent 自己的目录如下，均摘自其官方文档：
+Codex、Cursor、Gemini CLI、OpenCode、GitHub Copilot 和 DeepSeek Harness 都会读取 `~/.agents/skills/`。下表列出了各 agent 支持的目录。
 
 | Agent | 用户级 | 项目级 |
 |---|---|---|
@@ -242,6 +252,7 @@ Codex、Cursor、Gemini CLI、OpenCode 和 GitHub Copilot 都会读取 `~/.agent
 | [Gemini CLI](https://geminicli.com/docs/cli/skills/) | `~/.gemini/skills/` 或 `~/.agents/skills/` | `.gemini/skills/` 或 `.agents/skills/` |
 | [OpenCode](https://opencode.ai/docs/skills/) | `~/.config/opencode/skills/` 或 `~/.agents/skills/` | `.opencode/skills/` 或 `.agents/skills/` |
 | [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | `~/.copilot/skills/` 或 `~/.agents/skills/` | `.github/skills/` 或 `.agents/skills/` |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md) | `~/.dsh/skills/` 或 `~/.agents/skills/` | `.dsh/skills/` 或 `.agents/skills/` |
 
 其他任何能读取 `SKILL.md` 并运行 shell 命令的 agent 用法都一样：把文件夹放到它查找 skill 的位置即可。
 
