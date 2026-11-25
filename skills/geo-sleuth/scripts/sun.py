@@ -163,8 +163,12 @@ def _pair(s: str) -> tuple[float, float]:
     return float(a), float(b)
 
 
+_EXIF_DATE = re.compile(r"^(\d{4}):(\d{2}):(\d{2})(?=[ T]|$)")
+
+
 def _to_utc(s: str, tz: str | None) -> datetime:
-    dt = datetime.fromisoformat(s)
+    # exif.py prints DateTimeOriginal as "2024:06:06 15:39:00" (colons in the date): read it as the same date with dashes
+    dt = datetime.fromisoformat(_EXIF_DATE.sub(r"\1-\2-\3", s))
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=ZoneInfo(tz) if tz else timezone.utc)
     return dt.astimezone(timezone.utc)
