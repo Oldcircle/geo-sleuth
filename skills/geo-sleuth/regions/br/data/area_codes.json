@@ -1,0 +1,867 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "0"
+  },
+  "key_pattern": "^0(?:55(?=(?:11|12|13|14|15|16|17|18|19|21|22|24|27|28|31|32|33|34|35|37|38|41|42|43|44|45|46|47|48|49|51|53|54|55|61|62|63|64|65|66|67|68|69|71|73|74|75|77|79|81|82|83|84|85|86|87|88|89|91|92|93|94|95|96|97|98|99)(?:[2-5]\\d{7}|9\\d{8})?$))?[1-9]{2}(?=(?:[2-5]\\d{7}|9\\d{8})?$)",
+  "usage": "DDD alone or a whole number: 21, (21) 2541-1234, (21) 98765-4321, (0xx21) 2541-1234, 021 2541-1234, +55 21 2541-1234 (keys 0DD, and 055DD for the +55 form). A landline has 8 digits starting 2–5 and a mobile 9 starting 9; for an old 8-digit mobile (6xxx- to 9xxx-xxxx, before 2016) pass the DDD alone. A carrier code between the 0 and the DDD (0 15 11 …), a number without its DDD and 0800/0300/4004-xxxx numbers don't fit this table and are not looked up. Without --country, (21) … also matches Shanghai and İstanbul codes and (55) … Chinese and Korean ones: pass --country br when the country is known",
+  "note": "67 DDDs (Anatel 'código nacional', CN). Each match is a state with the municipalities the code covers (count, largest by 2022 census population); four codes cross a state line: 61 (Distrito Federal and 12 municipalities of Goiás), 42 (Porto União, SC), 47 (Rio Negro, PR) and 49 (Barracão, PR). Anatel's file lacks six municipalities: Aroeiras do Itaim and Nazária (Piauí), Figueirão (Mato Grosso do Sul, which has one code, so it is counted there), Ipiranga do Norte, Itanhangá and Boa Esperança do Norte (Mato Grosso); the rows say so. The 2019 file was checked in November 2026 against the current numbers of 26 town halls (border towns and the DF's surroundings) with no change found; Anatel's panel with the current plan was down for maintenance on the fetch date. Since Anatel's 2026 reform every fixed line in a DDD area is in one local area, so a landline places a business somewhere in the DDD area, no closer. A mobile number keeps the DDD where it was registered (portability stays within the DDD), but a phone can be used anywhere.",
+  "miss_note": "not a DDD in use: 23, 25, 26, 29, 36, 39, 52, 56–59, 72, 76 and 78 are unused",
+  "source": [
+   "https://www.anatel.gov.br/dadosabertos/PDA/Codigo_Nacional/PGCN.csv (Anatel, Plano Geral de Códigos Nacionais: CN per municipality with IBGE code; file dated 2019-04-09)",
+   "https://dados.gov.br/dados/conjuntos-dados/codigos-nacionais-cn (dataset page, Anatel)",
+   "https://sistemas.anatel.gov.br/anexar-api/publico/anexos/download/7c51a53e26edf77426cb85e42f1080de (Anatel FAQ on tariff areas, January 2026: 67 numbering areas = DDDs; from 2026 each fixed-line local area equals a DDD area; the Brasília area includes the Goiás towns on 61)",
+   "https://servicodados.ibge.gov.br/api/v3/agregados/4709/periodos/2022/variaveis/93?localidades=N6[all] (2022 census population, used only to order the cities in notes)",
+   "https://servicodados.ibge.gov.br/api/v1/localidades/municipios (municipalities per state, for the counts)"
+  ],
+  "fetched": "2026-11-12",
+  "license": "Anatel open data (dados.gov.br lists it as public domain); IBGE open data, free reuse with attribution",
+  "count": 134
+ },
+ "entries": {
+  "011": [
+   {
+    "admin1": "São Paulo",
+    "note": "64 municipalities of the state's 645; largest: São Paulo, Guarulhos, São Bernardo do Campo, Santo André, Osasco, Mogi das Cruzes"
+   }
+  ],
+  "012": [
+   {
+    "admin1": "São Paulo",
+    "note": "38 municipalities of the state's 645; largest: São José dos Campos, Taubaté, Jacareí, Pindamonhangaba, Caraguatatuba, Guaratinguetá"
+   }
+  ],
+  "013": [
+   {
+    "admin1": "São Paulo",
+    "note": "22 municipalities of the state's 645; largest: Santos, Praia Grande, São Vicente, Guarujá, Cubatão, Itanhaém"
+   }
+  ],
+  "014": [
+   {
+    "admin1": "São Paulo",
+    "note": "100 municipalities of the state's 645; largest: Bauru, Marília, Botucatu, Jaú, Ourinhos, Avaré"
+   }
+  ],
+  "015": [
+   {
+    "admin1": "São Paulo",
+    "note": "49 municipalities of the state's 645; largest: Sorocaba, Itapetininga, Votorantim, Tatuí, Itapeva, Ibiúna"
+   }
+  ],
+  "016": [
+   {
+    "admin1": "São Paulo",
+    "note": "74 municipalities of the state's 645; largest: Ribeirão Preto, Franca, São Carlos, Araraquara, Sertãozinho, Matão"
+   }
+  ],
+  "017": [
+   {
+    "admin1": "São Paulo",
+    "note": "117 municipalities of the state's 645; largest: São José do Rio Preto, Barretos, Catanduva, Votuporanga, Bebedouro, Fernandópolis"
+   }
+  ],
+  "018": [
+   {
+    "admin1": "São Paulo",
+    "note": "108 municipalities of the state's 645; largest: Presidente Prudente, Araçatuba, Birigui, Assis, Penápolis, Andradina"
+   }
+  ],
+  "019": [
+   {
+    "admin1": "São Paulo",
+    "note": "73 municipalities of the state's 645; largest: Campinas, Piracicaba, Limeira, Sumaré, Indaiatuba, Americana"
+   }
+  ],
+  "021": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "23 municipalities of the state's 92; largest: Rio de Janeiro, São Gonçalo, Duque de Caxias, Nova Iguaçu, Belford Roxo, Niterói"
+   }
+  ],
+  "022": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "43 municipalities of the state's 92; largest: Campos dos Goytacazes, Macaé, Cabo Frio, Nova Friburgo, Rio das Ostras, Araruama"
+   }
+  ],
+  "024": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "26 municipalities of the state's 92; largest: Petrópolis, Volta Redonda, Barra Mansa, Angra dos Reis, Resende, Barra do Piraí"
+   }
+  ],
+  "027": [
+   {
+    "admin1": "Espírito Santo",
+    "note": "50 municipalities of the state's 78; largest: Serra, Vila Velha, Cariacica, Vitória, Linhares, Guarapari"
+   }
+  ],
+  "028": [
+   {
+    "admin1": "Espírito Santo",
+    "note": "28 municipalities of the state's 78; largest: Cachoeiro de Itapemirim, Marataízes, Itapemirim, Castelo, Anchieta, Guaçuí"
+   }
+  ],
+  "031": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "139 municipalities of the state's 853; largest: Belo Horizonte, Contagem, Betim, Ribeirão das Neves, Ipatinga, Sete Lagoas"
+   }
+  ],
+  "032": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "122 municipalities of the state's 853; largest: Juiz de Fora, Barbacena, Muriaé, Ubá, São João del-Rei, Cataguases"
+   }
+  ],
+  "033": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "175 municipalities of the state's 853; largest: Governador Valadares, Teófilo Otoni, Manhuaçu, Caratinga, Almenara, Capelinha"
+   }
+  ],
+  "034": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "70 municipalities of the state's 853; largest: Uberlândia, Uberaba, Patos de Minas, Araguari, Araxá, Ituiutaba"
+   }
+  ],
+  "035": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "159 municipalities of the state's 853; largest: Poços de Caldas, Pouso Alegre, Varginha, Passos, Lavras, Itajubá"
+   }
+  ],
+  "037": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "61 municipalities of the state's 853; largest: Divinópolis, Nova Serrana, Itaúna, Pará de Minas, Formiga, Bom Despacho"
+   }
+  ],
+  "038": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "127 municipalities of the state's 853; largest: Montes Claros, Paracatu, Unaí, Curvelo, Janaúba, Januária"
+   }
+  ],
+  "041": [
+   {
+    "admin1": "Paraná",
+    "note": "35 municipalities of the state's 399; largest: Curitiba, São José dos Pinhais, Colombo, Araucária, Fazenda Rio Grande, Paranaguá"
+   }
+  ],
+  "042": [
+   {
+    "admin1": "Paraná",
+    "note": "56 municipalities of the state's 399; largest: Ponta Grossa, Guarapuava, Telêmaco Borba, Castro, Irati, União da Vitória"
+   },
+   {
+    "admin1": "Santa Catarina",
+    "admin2": "Porto União",
+    "note": "the only Santa Catarina municipality on this code (the rest is Paraná)"
+   }
+  ],
+  "043": [
+   {
+    "admin1": "Paraná",
+    "note": "98 municipalities of the state's 399; largest: Londrina, Apucarana, Arapongas, Cambé, Rolândia, Ibiporã"
+   }
+  ],
+  "044": [
+   {
+    "admin1": "Paraná",
+    "note": "124 municipalities of the state's 399; largest: Maringá, Sarandi, Umuarama, Campo Mourão, Paranavaí, Cianorte"
+   }
+  ],
+  "045": [
+   {
+    "admin1": "Paraná",
+    "note": "41 municipalities of the state's 399; largest: Cascavel, Foz do Iguaçu, Toledo, Marechal Cândido Rondon, Medianeira, São Miguel do Iguaçu"
+   }
+  ],
+  "046": [
+   {
+    "admin1": "Paraná",
+    "note": "43 municipalities of the state's 399; largest: Francisco Beltrão, Pato Branco, Palmas, Dois Vizinhos, Quedas do Iguaçu, Santo Antônio do Sudoeste"
+   }
+  ],
+  "047": [
+   {
+    "admin1": "Santa Catarina",
+    "note": "78 municipalities of the state's 295; largest: Joinville, Blumenau, Itajaí, Jaraguá do Sul, Brusque, Balneário Camboriú"
+   },
+   {
+    "admin1": "Paraná",
+    "admin2": "Rio Negro",
+    "note": "the only Paraná municipality on this code (the rest is Santa Catarina)"
+   }
+  ],
+  "048": [
+   {
+    "admin1": "Santa Catarina",
+    "note": "67 municipalities of the state's 295; largest: Florianópolis, São José, Palhoça, Criciúma, Tubarão, Biguaçu"
+   }
+  ],
+  "049": [
+   {
+    "admin1": "Santa Catarina",
+    "note": "149 municipalities of the state's 295; largest: Chapecó, Lages, Concórdia, Caçador, Videira, Xanxerê"
+   },
+   {
+    "admin1": "Paraná",
+    "admin2": "Barracão",
+    "note": "the only Paraná municipality on this code (the rest is Santa Catarina)"
+   }
+  ],
+  "051": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "157 municipalities of the state's 497; largest: Porto Alegre, Canoas, Gravataí, Novo Hamburgo, Viamão, São Leopoldo"
+   }
+  ],
+  "053": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "25 municipalities of the state's 497; largest: Pelotas, Rio Grande, Bagé, Canguçu, São Lourenço do Sul, Dom Pedrito"
+   }
+  ],
+  "054": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "155 municipalities of the state's 497; largest: Caxias do Sul, Passo Fundo, Bento Gonçalves, Erechim, Farroupilha, Vacaria"
+   }
+  ],
+  "055": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "160 municipalities of the state's 497; largest: Santa Maria, Uruguaiana, Ijuí, Sant'Ana do Livramento, Santa Rosa, Santo Ângelo"
+   }
+  ],
+  "061": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "the whole Distrito Federal (Brasília)"
+   },
+   {
+    "admin1": "Goiás",
+    "note": "12 municipalities next to the Distrito Federal: Águas Lindas de Goiás, Luziânia, Valparaíso de Goiás, Formosa, Planaltina, Novo Gama, Cidade Ocidental, Santo Antônio do Descoberto, Cristalina, Padre Bernardo, Cabeceiras, Vila Boa"
+   }
+  ],
+  "062": [
+   {
+    "admin1": "Goiás",
+    "note": "132 municipalities of the state's 246; largest: Goiânia, Aparecida de Goiânia, Anápolis, Senador Canedo, Trindade, Goianésia"
+   }
+  ],
+  "063": [
+   {
+    "admin1": "Tocantins",
+    "note": "139 municipalities (the whole state); largest: Palmas, Araguaína, Gurupi, Porto Nacional, Paraíso do Tocantins, Colinas do Tocantins"
+   }
+  ],
+  "064": [
+   {
+    "admin1": "Goiás",
+    "note": "102 municipalities of the state's 246; largest: Rio Verde, Catalão, Itumbiara, Jataí, Caldas Novas, Mineiros"
+   }
+  ],
+  "065": [
+   {
+    "admin1": "Mato Grosso",
+    "note": "50 municipalities of the state's 142; largest: Cuiabá, Várzea Grande, Tangará da Serra, Cáceres, Lucas do Rio Verde, Nova Mutum; Anatel's file lacks 3 of the state's municipalities (Boa Esperança do Norte, Ipiranga do Norte, Itanhangá)"
+   }
+  ],
+  "066": [
+   {
+    "admin1": "Mato Grosso",
+    "note": "89 municipalities of the state's 142; largest: Rondonópolis, Sinop, Sorriso, Primavera do Leste, Barra do Garças, Alta Floresta; Anatel's file lacks 3 of the state's municipalities (Boa Esperança do Norte, Ipiranga do Norte, Itanhangá)"
+   }
+  ],
+  "067": [
+   {
+    "admin1": "Mato Grosso do Sul",
+    "note": "79 municipalities (the whole state); largest: Campo Grande, Dourados, Três Lagoas, Corumbá, Ponta Porã, Naviraí"
+   }
+  ],
+  "068": [
+   {
+    "admin1": "Acre",
+    "note": "22 municipalities (the whole state); largest: Rio Branco, Cruzeiro do Sul, Tarauacá, Sena Madureira, Feijó, Brasiléia"
+   }
+  ],
+  "069": [
+   {
+    "admin1": "Rondônia",
+    "note": "52 municipalities (the whole state); largest: Porto Velho, Ji-Paraná, Ariquemes, Vilhena, Cacoal, Rolim de Moura"
+   }
+  ],
+  "071": [
+   {
+    "admin1": "Bahia",
+    "note": "15 municipalities of the state's 417; largest: Salvador, Camaçari, Lauro de Freitas, Simões Filho, Candeias, Dias d'Ávila"
+   }
+  ],
+  "073": [
+   {
+    "admin1": "Bahia",
+    "note": "91 municipalities of the state's 417; largest: Itabuna, Ilhéus, Porto Seguro, Jequié, Teixeira de Freitas, Eunápolis"
+   }
+  ],
+  "074": [
+   {
+    "admin1": "Bahia",
+    "note": "60 municipalities of the state's 417; largest: Juazeiro, Jacobina, Senhor do Bonfim, Irecê, Casa Nova, Campo Formoso"
+   }
+  ],
+  "075": [
+   {
+    "admin1": "Bahia",
+    "note": "143 municipalities of the state's 417; largest: Feira de Santana, Alagoinhas, Paulo Afonso, Santo Antônio de Jesus, Valença, Serrinha"
+   }
+  ],
+  "077": [
+   {
+    "admin1": "Bahia",
+    "note": "108 municipalities of the state's 417; largest: Vitória da Conquista, Barreiras, Luís Eduardo Magalhães, Guanambi, Brumado, Itapetinga"
+   }
+  ],
+  "079": [
+   {
+    "admin1": "Sergipe",
+    "note": "75 municipalities (the whole state); largest: Aracaju, Nossa Senhora do Socorro, Itabaiana, Lagarto, São Cristóvão, Estância"
+   }
+  ],
+  "081": [
+   {
+    "admin1": "Pernambuco",
+    "note": "98 municipalities of the state's 185; largest: Recife, Jaboatão dos Guararapes, Caruaru, Olinda, Paulista, Cabo de Santo Agostinho"
+   }
+  ],
+  "082": [
+   {
+    "admin1": "Alagoas",
+    "note": "102 municipalities (the whole state); largest: Maceió, Arapiraca, Rio Largo, Palmeira dos Índios, Marechal Deodoro, União dos Palmares"
+   }
+  ],
+  "083": [
+   {
+    "admin1": "Paraíba",
+    "note": "223 municipalities (the whole state); largest: João Pessoa, Campina Grande, Santa Rita, Patos, Bayeux, Sousa"
+   }
+  ],
+  "084": [
+   {
+    "admin1": "Rio Grande do Norte",
+    "note": "167 municipalities (the whole state); largest: Natal, Mossoró, Parnamirim, São Gonçalo do Amarante, Macaíba, Ceará-Mirim"
+   }
+  ],
+  "085": [
+   {
+    "admin1": "Ceará",
+    "note": "43 municipalities of the state's 184; largest: Fortaleza, Caucaia, Maracanaú, Maranguape, Pacatuba, Aquiraz"
+   }
+  ],
+  "086": [
+   {
+    "admin1": "Piauí",
+    "note": "83 municipalities of the state's 224; largest: Teresina, Parnaíba, Piripiri, Barras, Altos, União; Anatel's file lacks 2 of the state's municipalities (Aroeiras do Itaim, Nazária)"
+   }
+  ],
+  "087": [
+   {
+    "admin1": "Pernambuco",
+    "note": "87 municipalities of the state's 185; largest: Petrolina, Garanhuns, Serra Talhada, Araripina, Arcoverde, Ouricuri"
+   }
+  ],
+  "088": [
+   {
+    "admin1": "Ceará",
+    "note": "141 municipalities of the state's 184; largest: Juazeiro do Norte, Sobral, Itapipoca, Crato, Iguatu, Quixadá"
+   }
+  ],
+  "089": [
+   {
+    "admin1": "Piauí",
+    "note": "139 municipalities of the state's 224; largest: Picos, Floriano, São Raimundo Nonato, Oeiras, Bom Jesus, Corrente; Anatel's file lacks 2 of the state's municipalities (Aroeiras do Itaim, Nazária)"
+   }
+  ],
+  "091": [
+   {
+    "admin1": "Pará",
+    "note": "81 municipalities of the state's 144; largest: Belém, Ananindeua, Castanhal, Abaetetuba, Cametá, Barcarena"
+   }
+  ],
+  "092": [
+   {
+    "admin1": "Amazonas",
+    "note": "24 municipalities of the state's 62; largest: Manaus, Itacoatiara, Manacapuru, Parintins, Maués, Iranduba"
+   }
+  ],
+  "093": [
+   {
+    "admin1": "Pará",
+    "note": "26 municipalities of the state's 144; largest: Santarém, Altamira, Itaituba, Alenquer, Oriximiná, Monte Alegre"
+   }
+  ],
+  "094": [
+   {
+    "admin1": "Pará",
+    "note": "37 municipalities of the state's 144; largest: Parauapebas, Marabá, Tucuruí, Redenção, Canaã dos Carajás, São Félix do Xingu"
+   }
+  ],
+  "095": [
+   {
+    "admin1": "Roraima",
+    "note": "15 municipalities (the whole state); largest: Boa Vista, Rorainópolis, Alto Alegre, Caracaraí, Pacaraima, Cantá"
+   }
+  ],
+  "096": [
+   {
+    "admin1": "Amapá",
+    "note": "16 municipalities (the whole state); largest: Macapá, Santana, Laranjal do Jari, Oiapoque, Mazagão, Porto Grande"
+   }
+  ],
+  "097": [
+   {
+    "admin1": "Amazonas",
+    "note": "38 municipalities of the state's 62; largest: Tefé, Coari, Tabatinga, Humaitá, Manicoré, São Gabriel da Cachoeira"
+   }
+  ],
+  "098": [
+   {
+    "admin1": "Maranhão",
+    "note": "115 municipalities of the state's 217; largest: São Luís, São José de Ribamar, Paço do Lumiar, Santa Inês, Pinheiro, Chapadinha"
+   }
+  ],
+  "099": [
+   {
+    "admin1": "Maranhão",
+    "note": "102 municipalities of the state's 217; largest: Imperatriz, Timon, Caxias, Codó, Açailândia, Bacabal"
+   }
+  ],
+  "05511": [
+   {
+    "admin1": "São Paulo",
+    "note": "64 municipalities of the state's 645; largest: São Paulo, Guarulhos, São Bernardo do Campo, Santo André, Osasco, Mogi das Cruzes"
+   }
+  ],
+  "05512": [
+   {
+    "admin1": "São Paulo",
+    "note": "38 municipalities of the state's 645; largest: São José dos Campos, Taubaté, Jacareí, Pindamonhangaba, Caraguatatuba, Guaratinguetá"
+   }
+  ],
+  "05513": [
+   {
+    "admin1": "São Paulo",
+    "note": "22 municipalities of the state's 645; largest: Santos, Praia Grande, São Vicente, Guarujá, Cubatão, Itanhaém"
+   }
+  ],
+  "05514": [
+   {
+    "admin1": "São Paulo",
+    "note": "100 municipalities of the state's 645; largest: Bauru, Marília, Botucatu, Jaú, Ourinhos, Avaré"
+   }
+  ],
+  "05515": [
+   {
+    "admin1": "São Paulo",
+    "note": "49 municipalities of the state's 645; largest: Sorocaba, Itapetininga, Votorantim, Tatuí, Itapeva, Ibiúna"
+   }
+  ],
+  "05516": [
+   {
+    "admin1": "São Paulo",
+    "note": "74 municipalities of the state's 645; largest: Ribeirão Preto, Franca, São Carlos, Araraquara, Sertãozinho, Matão"
+   }
+  ],
+  "05517": [
+   {
+    "admin1": "São Paulo",
+    "note": "117 municipalities of the state's 645; largest: São José do Rio Preto, Barretos, Catanduva, Votuporanga, Bebedouro, Fernandópolis"
+   }
+  ],
+  "05518": [
+   {
+    "admin1": "São Paulo",
+    "note": "108 municipalities of the state's 645; largest: Presidente Prudente, Araçatuba, Birigui, Assis, Penápolis, Andradina"
+   }
+  ],
+  "05519": [
+   {
+    "admin1": "São Paulo",
+    "note": "73 municipalities of the state's 645; largest: Campinas, Piracicaba, Limeira, Sumaré, Indaiatuba, Americana"
+   }
+  ],
+  "05521": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "23 municipalities of the state's 92; largest: Rio de Janeiro, São Gonçalo, Duque de Caxias, Nova Iguaçu, Belford Roxo, Niterói"
+   }
+  ],
+  "05522": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "43 municipalities of the state's 92; largest: Campos dos Goytacazes, Macaé, Cabo Frio, Nova Friburgo, Rio das Ostras, Araruama"
+   }
+  ],
+  "05524": [
+   {
+    "admin1": "Rio de Janeiro",
+    "note": "26 municipalities of the state's 92; largest: Petrópolis, Volta Redonda, Barra Mansa, Angra dos Reis, Resende, Barra do Piraí"
+   }
+  ],
+  "05527": [
+   {
+    "admin1": "Espírito Santo",
+    "note": "50 municipalities of the state's 78; largest: Serra, Vila Velha, Cariacica, Vitória, Linhares, Guarapari"
+   }
+  ],
+  "05528": [
+   {
+    "admin1": "Espírito Santo",
+    "note": "28 municipalities of the state's 78; largest: Cachoeiro de Itapemirim, Marataízes, Itapemirim, Castelo, Anchieta, Guaçuí"
+   }
+  ],
+  "05531": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "139 municipalities of the state's 853; largest: Belo Horizonte, Contagem, Betim, Ribeirão das Neves, Ipatinga, Sete Lagoas"
+   }
+  ],
+  "05532": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "122 municipalities of the state's 853; largest: Juiz de Fora, Barbacena, Muriaé, Ubá, São João del-Rei, Cataguases"
+   }
+  ],
+  "05533": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "175 municipalities of the state's 853; largest: Governador Valadares, Teófilo Otoni, Manhuaçu, Caratinga, Almenara, Capelinha"
+   }
+  ],
+  "05534": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "70 municipalities of the state's 853; largest: Uberlândia, Uberaba, Patos de Minas, Araguari, Araxá, Ituiutaba"
+   }
+  ],
+  "05535": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "159 municipalities of the state's 853; largest: Poços de Caldas, Pouso Alegre, Varginha, Passos, Lavras, Itajubá"
+   }
+  ],
+  "05537": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "61 municipalities of the state's 853; largest: Divinópolis, Nova Serrana, Itaúna, Pará de Minas, Formiga, Bom Despacho"
+   }
+  ],
+  "05538": [
+   {
+    "admin1": "Minas Gerais",
+    "note": "127 municipalities of the state's 853; largest: Montes Claros, Paracatu, Unaí, Curvelo, Janaúba, Januária"
+   }
+  ],
+  "05541": [
+   {
+    "admin1": "Paraná",
+    "note": "35 municipalities of the state's 399; largest: Curitiba, São José dos Pinhais, Colombo, Araucária, Fazenda Rio Grande, Paranaguá"
+   }
+  ],
+  "05542": [
+   {
+    "admin1": "Paraná",
+    "note": "56 municipalities of the state's 399; largest: Ponta Grossa, Guarapuava, Telêmaco Borba, Castro, Irati, União da Vitória"
+   },
+   {
+    "admin1": "Santa Catarina",
+    "admin2": "Porto União",
+    "note": "the only Santa Catarina municipality on this code (the rest is Paraná)"
+   }
+  ],
+  "05543": [
+   {
+    "admin1": "Paraná",
+    "note": "98 municipalities of the state's 399; largest: Londrina, Apucarana, Arapongas, Cambé, Rolândia, Ibiporã"
+   }
+  ],
+  "05544": [
+   {
+    "admin1": "Paraná",
+    "note": "124 municipalities of the state's 399; largest: Maringá, Sarandi, Umuarama, Campo Mourão, Paranavaí, Cianorte"
+   }
+  ],
+  "05545": [
+   {
+    "admin1": "Paraná",
+    "note": "41 municipalities of the state's 399; largest: Cascavel, Foz do Iguaçu, Toledo, Marechal Cândido Rondon, Medianeira, São Miguel do Iguaçu"
+   }
+  ],
+  "05546": [
+   {
+    "admin1": "Paraná",
+    "note": "43 municipalities of the state's 399; largest: Francisco Beltrão, Pato Branco, Palmas, Dois Vizinhos, Quedas do Iguaçu, Santo Antônio do Sudoeste"
+   }
+  ],
+  "05547": [
+   {
+    "admin1": "Santa Catarina",
+    "note": "78 municipalities of the state's 295; largest: Joinville, Blumenau, Itajaí, Jaraguá do Sul, Brusque, Balneário Camboriú"
+   },
+   {
+    "admin1": "Paraná",
+    "admin2": "Rio Negro",
+    "note": "the only Paraná municipality on this code (the rest is Santa Catarina)"
+   }
+  ],
+  "05548": [
+   {
+    "admin1": "Santa Catarina",
+    "note": "67 municipalities of the state's 295; largest: Florianópolis, São José, Palhoça, Criciúma, Tubarão, Biguaçu"
+   }
+  ],
+  "05549": [
+   {
+    "admin1": "Santa Catarina",
+    "note": "149 municipalities of the state's 295; largest: Chapecó, Lages, Concórdia, Caçador, Videira, Xanxerê"
+   },
+   {
+    "admin1": "Paraná",
+    "admin2": "Barracão",
+    "note": "the only Paraná municipality on this code (the rest is Santa Catarina)"
+   }
+  ],
+  "05551": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "157 municipalities of the state's 497; largest: Porto Alegre, Canoas, Gravataí, Novo Hamburgo, Viamão, São Leopoldo"
+   }
+  ],
+  "05553": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "25 municipalities of the state's 497; largest: Pelotas, Rio Grande, Bagé, Canguçu, São Lourenço do Sul, Dom Pedrito"
+   }
+  ],
+  "05554": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "155 municipalities of the state's 497; largest: Caxias do Sul, Passo Fundo, Bento Gonçalves, Erechim, Farroupilha, Vacaria"
+   }
+  ],
+  "05555": [
+   {
+    "admin1": "Rio Grande do Sul",
+    "note": "160 municipalities of the state's 497; largest: Santa Maria, Uruguaiana, Ijuí, Sant'Ana do Livramento, Santa Rosa, Santo Ângelo"
+   }
+  ],
+  "05561": [
+   {
+    "admin1": "Distrito Federal",
+    "note": "the whole Distrito Federal (Brasília)"
+   },
+   {
+    "admin1": "Goiás",
+    "note": "12 municipalities next to the Distrito Federal: Águas Lindas de Goiás, Luziânia, Valparaíso de Goiás, Formosa, Planaltina, Novo Gama, Cidade Ocidental, Santo Antônio do Descoberto, Cristalina, Padre Bernardo, Cabeceiras, Vila Boa"
+   }
+  ],
+  "05562": [
+   {
+    "admin1": "Goiás",
+    "note": "132 municipalities of the state's 246; largest: Goiânia, Aparecida de Goiânia, Anápolis, Senador Canedo, Trindade, Goianésia"
+   }
+  ],
+  "05563": [
+   {
+    "admin1": "Tocantins",
+    "note": "139 municipalities (the whole state); largest: Palmas, Araguaína, Gurupi, Porto Nacional, Paraíso do Tocantins, Colinas do Tocantins"
+   }
+  ],
+  "05564": [
+   {
+    "admin1": "Goiás",
+    "note": "102 municipalities of the state's 246; largest: Rio Verde, Catalão, Itumbiara, Jataí, Caldas Novas, Mineiros"
+   }
+  ],
+  "05565": [
+   {
+    "admin1": "Mato Grosso",
+    "note": "50 municipalities of the state's 142; largest: Cuiabá, Várzea Grande, Tangará da Serra, Cáceres, Lucas do Rio Verde, Nova Mutum; Anatel's file lacks 3 of the state's municipalities (Boa Esperança do Norte, Ipiranga do Norte, Itanhangá)"
+   }
+  ],
+  "05566": [
+   {
+    "admin1": "Mato Grosso",
+    "note": "89 municipalities of the state's 142; largest: Rondonópolis, Sinop, Sorriso, Primavera do Leste, Barra do Garças, Alta Floresta; Anatel's file lacks 3 of the state's municipalities (Boa Esperança do Norte, Ipiranga do Norte, Itanhangá)"
+   }
+  ],
+  "05567": [
+   {
+    "admin1": "Mato Grosso do Sul",
+    "note": "79 municipalities (the whole state); largest: Campo Grande, Dourados, Três Lagoas, Corumbá, Ponta Porã, Naviraí"
+   }
+  ],
+  "05568": [
+   {
+    "admin1": "Acre",
+    "note": "22 municipalities (the whole state); largest: Rio Branco, Cruzeiro do Sul, Tarauacá, Sena Madureira, Feijó, Brasiléia"
+   }
+  ],
+  "05569": [
+   {
+    "admin1": "Rondônia",
+    "note": "52 municipalities (the whole state); largest: Porto Velho, Ji-Paraná, Ariquemes, Vilhena, Cacoal, Rolim de Moura"
+   }
+  ],
+  "05571": [
+   {
+    "admin1": "Bahia",
+    "note": "15 municipalities of the state's 417; largest: Salvador, Camaçari, Lauro de Freitas, Simões Filho, Candeias, Dias d'Ávila"
+   }
+  ],
+  "05573": [
+   {
+    "admin1": "Bahia",
+    "note": "91 municipalities of the state's 417; largest: Itabuna, Ilhéus, Porto Seguro, Jequié, Teixeira de Freitas, Eunápolis"
+   }
+  ],
+  "05574": [
+   {
+    "admin1": "Bahia",
+    "note": "60 municipalities of the state's 417; largest: Juazeiro, Jacobina, Senhor do Bonfim, Irecê, Casa Nova, Campo Formoso"
+   }
+  ],
+  "05575": [
+   {
+    "admin1": "Bahia",
+    "note": "143 municipalities of the state's 417; largest: Feira de Santana, Alagoinhas, Paulo Afonso, Santo Antônio de Jesus, Valença, Serrinha"
+   }
+  ],
+  "05577": [
+   {
+    "admin1": "Bahia",
+    "note": "108 municipalities of the state's 417; largest: Vitória da Conquista, Barreiras, Luís Eduardo Magalhães, Guanambi, Brumado, Itapetinga"
+   }
+  ],
+  "05579": [
+   {
+    "admin1": "Sergipe",
+    "note": "75 municipalities (the whole state); largest: Aracaju, Nossa Senhora do Socorro, Itabaiana, Lagarto, São Cristóvão, Estância"
+   }
+  ],
+  "05581": [
+   {
+    "admin1": "Pernambuco",
+    "note": "98 municipalities of the state's 185; largest: Recife, Jaboatão dos Guararapes, Caruaru, Olinda, Paulista, Cabo de Santo Agostinho"
+   }
+  ],
+  "05582": [
+   {
+    "admin1": "Alagoas",
+    "note": "102 municipalities (the whole state); largest: Maceió, Arapiraca, Rio Largo, Palmeira dos Índios, Marechal Deodoro, União dos Palmares"
+   }
+  ],
+  "05583": [
+   {
+    "admin1": "Paraíba",
+    "note": "223 municipalities (the whole state); largest: João Pessoa, Campina Grande, Santa Rita, Patos, Bayeux, Sousa"
+   }
+  ],
+  "05584": [
+   {
+    "admin1": "Rio Grande do Norte",
+    "note": "167 municipalities (the whole state); largest: Natal, Mossoró, Parnamirim, São Gonçalo do Amarante, Macaíba, Ceará-Mirim"
+   }
+  ],
+  "05585": [
+   {
+    "admin1": "Ceará",
+    "note": "43 municipalities of the state's 184; largest: Fortaleza, Caucaia, Maracanaú, Maranguape, Pacatuba, Aquiraz"
+   }
+  ],
+  "05586": [
+   {
+    "admin1": "Piauí",
+    "note": "83 municipalities of the state's 224; largest: Teresina, Parnaíba, Piripiri, Barras, Altos, União; Anatel's file lacks 2 of the state's municipalities (Aroeiras do Itaim, Nazária)"
+   }
+  ],
+  "05587": [
+   {
+    "admin1": "Pernambuco",
+    "note": "87 municipalities of the state's 185; largest: Petrolina, Garanhuns, Serra Talhada, Araripina, Arcoverde, Ouricuri"
+   }
+  ],
+  "05588": [
+   {
+    "admin1": "Ceará",
+    "note": "141 municipalities of the state's 184; largest: Juazeiro do Norte, Sobral, Itapipoca, Crato, Iguatu, Quixadá"
+   }
+  ],
+  "05589": [
+   {
+    "admin1": "Piauí",
+    "note": "139 municipalities of the state's 224; largest: Picos, Floriano, São Raimundo Nonato, Oeiras, Bom Jesus, Corrente; Anatel's file lacks 2 of the state's municipalities (Aroeiras do Itaim, Nazária)"
+   }
+  ],
+  "05591": [
+   {
+    "admin1": "Pará",
+    "note": "81 municipalities of the state's 144; largest: Belém, Ananindeua, Castanhal, Abaetetuba, Cametá, Barcarena"
+   }
+  ],
+  "05592": [
+   {
+    "admin1": "Amazonas",
+    "note": "24 municipalities of the state's 62; largest: Manaus, Itacoatiara, Manacapuru, Parintins, Maués, Iranduba"
+   }
+  ],
+  "05593": [
+   {
+    "admin1": "Pará",
+    "note": "26 municipalities of the state's 144; largest: Santarém, Altamira, Itaituba, Alenquer, Oriximiná, Monte Alegre"
+   }
+  ],
+  "05594": [
+   {
+    "admin1": "Pará",
+    "note": "37 municipalities of the state's 144; largest: Parauapebas, Marabá, Tucuruí, Redenção, Canaã dos Carajás, São Félix do Xingu"
+   }
+  ],
+  "05595": [
+   {
+    "admin1": "Roraima",
+    "note": "15 municipalities (the whole state); largest: Boa Vista, Rorainópolis, Alto Alegre, Caracaraí, Pacaraima, Cantá"
+   }
+  ],
+  "05596": [
+   {
+    "admin1": "Amapá",
+    "note": "16 municipalities (the whole state); largest: Macapá, Santana, Laranjal do Jari, Oiapoque, Mazagão, Porto Grande"
+   }
+  ],
+  "05597": [
+   {
+    "admin1": "Amazonas",
+    "note": "38 municipalities of the state's 62; largest: Tefé, Coari, Tabatinga, Humaitá, Manicoré, São Gabriel da Cachoeira"
+   }
+  ],
+  "05598": [
+   {
+    "admin1": "Maranhão",
+    "note": "115 municipalities of the state's 217; largest: São Luís, São José de Ribamar, Paço do Lumiar, Santa Inês, Pinheiro, Chapadinha"
+   }
+  ],
+  "05599": [
+   {
+    "admin1": "Maranhão",
+    "note": "102 municipalities of the state's 217; largest: Imperatriz, Timon, Caxias, Codó, Açailândia, Bacabal"
+   }
+  ]
+ }
+}

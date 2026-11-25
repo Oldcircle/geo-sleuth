@@ -1,0 +1,30 @@
+{
+ "code": "BR",
+ "name": "Brazil",
+ "names": ["Brazil", "Brasil", "BR", "Federative Republic of Brazil", "República Federativa do Brasil"],
+ "status": "community",
+ "maintainers": ["@eduardoelhage-eng"],
+ "docs": ["clues.md", "clues-landscape.md"],
+ "admin_levels": {"4": "admin1", "8": "admin2"},
+ "level_names": {
+  "admin1": "estado (state) or the Distrito Federal: OSM admin_level 4 (level 3 holds the five macro-regions)",
+  "admin2": "município (municipality): OSM admin_level 8; in the Distrito Federal level 8 holds its 35 regiões administrativas (IBGE's one municipality there, Brasília, is the whole DF and an alias of it); level 6 holds metropolitan regions only"
+ },
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {"file": "data/plates.json"},
+  "area-code": {"file": "data/area_codes.json"},
+  "postal-code": {"file": "data/postal_codes.json"}
+ },
+ "services": {
+  "poi": {"sources": "osm", "country": "br"},
+  "street_view": "gsv.py"
+ },
+ "tips": {
+  "plate/area-code/calling-code": "plate letters (ABC-1234 grey, ABC1D23 Mercosul), a phone number with its DDD ((21) 2541-1234 or +55 21 …) or a CEP (22041-001) readable → `clues.py lookup plate|area-code|postal-code <value> --country br`, then `board.py apply` with `--lr 2` for plates and mobile numbers (the default 20 treats them as strong); an old grey plate's metal strip names the UF and town of registration, read it directly; near Uruguay, check a plate for a URUGUAY band before looking it up",
+  "municipal": "street-name plates, the electricity distributor's name on poles and meter boxes, sidewalk paving, highway shields (BR-xxx vs a state prefix such as SP-, MG-, RS-) → `gsv.py sheet --points` on each candidate's centre; clues.md lists what each points to",
+  "livery": "city bus livery → image search \"ônibus <cidade>\" or \"<cidade> ônibus cores\"; intercity coaches travel across states and are weak evidence",
+  "phenology": "vegetation + month: Cerrado and Caatinga look brown or grey in the dry season, araucárias mark the southern highlands; weak alone: it boosts, and excludes only where an entry says so (buriti in a vereda makes the South unlikely)",
+  "children": "`board.py children Brasil --level 4` for the UFs (if Bolivia's Beni department appears among them, ignore it: it is not a UF); without --level the auto pick takes OSM level 3, the five macro-regions; a state's municipalities: `board.py children \"<state>\" --level 8`"
+ }
+}
