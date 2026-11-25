@@ -1,0 +1,21 @@
+{
+ "code": "AT",
+ "name": "Austria",
+ "names": [
+  "Austria",
+  "Österreich",
+  "Oesterreich",
+  "AT"
+ ],
+ "status": "stub",
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "at"
+  },
+  "street_view": "gsv.py"
+ }
+}
