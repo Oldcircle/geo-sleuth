@@ -1,0 +1,285 @@
+[
+ {
+  "kind": "plate",
+  "value": "01",
+  "expect": [
+   {
+    "admin1": "Երևան"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "01 LL 123",
+  "expect": [
+   {
+    "admin1": "Երևան"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "68",
+  "expect": [
+   {
+    "admin1": "Երևան"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "12",
+  "expect": [
+   {
+    "admin1": "Արմավիրի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "14",
+  "expect": [
+   {
+    "admin1": "Շիրակի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "15 LL 345",
+  "expect": [
+   {
+    "admin1": "Արագածոտնի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "31",
+  "expect": [
+   {
+    "admin1": "Գեղարքունիքի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "17",
+  "expect": [
+   {
+    "admin1": "Կոտայքի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "18",
+  "expect": [
+   {
+    "admin1": "Վայոց Ձորի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "25",
+  "expect": [
+   {
+    "admin1": "Արարատի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "36",
+  "expect": [
+   {
+    "admin1": "Լոռու մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "51",
+  "expect": [
+   {
+    "admin1": "Սյունիքի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "57",
+  "expect": [
+   {
+    "admin1": "Տավուշի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "plate",
+  "value": "00",
+  "expect": []
+ },
+ {
+  "kind": "plate",
+  "value": "99",
+  "expect": []
+ },
+ {
+  "kind": "plate",
+  "value": "20",
+  "expect": []
+ },
+ {
+  "kind": "plate",
+  "value": "AB 1234 CD",
+  "expect": []
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 10 123456",
+  "expect": [
+   {
+    "admin1": "Երևան"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "010 123456",
+  "expect": [
+   {
+    "admin1": "Երևան"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "(010) 12-34-56",
+  "expect": [
+   {
+    "admin1": "Երևան"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "10 123456",
+  "expect": [
+   {
+    "admin1": "Երևան"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 312 12345",
+  "expect": [
+   {
+    "admin1": "Շիրակի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "0312 12345",
+  "expect": [
+   {
+    "admin1": "Շիրակի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "(0232) 12-345",
+  "expect": [
+   {
+    "admin1": "Արագածոտնի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 231 12345",
+  "expect": [
+   {
+    "admin1": "Արմավիրի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 261 12345",
+  "expect": [
+   {
+    "admin1": "Գեղարքունիքի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 222 12345",
+  "expect": [
+   {
+    "admin1": "Կոտայքի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 322 12345",
+  "expect": [
+   {
+    "admin1": "Լոռու մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 285 12345",
+  "expect": [
+   {
+    "admin1": "Սյունիքի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 268 12345",
+  "expect": [
+   {
+    "admin1": "Տավուշի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "+374 281 12345",
+  "expect": [
+   {
+    "admin1": "Վայոց Ձորի մարզ"
+   }
+  ]
+ },
+ {
+  "kind": "area-code",
+  "value": "093 123456",
+  "expect": []
+ },
+ {
+  "kind": "area-code",
+  "value": "10",
+  "expect": []
+ },
+ {
+  "kind": "area-code",
+  "value": "12345",
+  "expect": []
+ },
+ {
+  "kind": "area-code",
+  "value": "+7 495 1234567",
+  "expect": []
+ }
+]

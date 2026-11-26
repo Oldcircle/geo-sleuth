@@ -1,0 +1,292 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "strip": " ()-./",
+   "drop_prefix": [
+    "+374",
+    "374",
+    "0"
+   ],
+   "digits_only": true,
+   "ensure_prefix": "374"
+  },
+  "key_pattern": "^(?=\\d{11}$)374(?:1[0-2]|2\\d{2}|3[12]\\d)",
+  "usage": "eight-digit number (or international with +374): 10 123456, +374 312 12345, or (0232) 12-345 with trunk 0 dropped. Type the whole number: a code on its own does not match, so that it can't collide with other countries' codes",
+  "note": "Armenia uses an 8-digit closed national numbering plan. Yerevan uses 2-digit NDC codes (10, 11, 12); other regional cities use 3-digit NDC codes (312 Gyumri, 322 Vanadzor, 2xx other marz settlements).",
+  "miss_note": "not a geographic Armenian landline: mobile numbers (prefixes 33, 41, 43, 44, 55, 77, 91, 93, 94, 95, 96, 98, 99), non-geographic or toll-free numbers (800, 900), short local numbers written without the area code, or numbers from another country",
+  "source": [
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Armenia, section 'Geographic codes'",
+   "https://www.itu.int/dms_pub/itu-t/oth/02/02/T020200000A0002PDFE.pdf (ITU National Numbering Plan of the Republic of Armenia)"
+  ],
+  "fetched": "2026-11-26",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0; ITU facts (numbering plan) only",
+  "count": 44
+ },
+ "entries": {
+  "37410": [
+   {
+    "admin1": "Երևան",
+    "note": "Yerevan (primary fixed-line NDC)"
+   }
+  ],
+  "37411": [
+   {
+    "admin1": "Երևան",
+    "note": "Yerevan (Telecom Armenia / Ucom fixed network)"
+   }
+  ],
+  "37412": [
+   {
+    "admin1": "Երևան",
+    "note": "Yerevan (Ucom / GNC-Alfa fixed network)"
+   }
+  ],
+  "374222": [
+   {
+    "admin1": "Կոտայքի մարզ",
+    "note": "Abovyan"
+   }
+  ],
+  "374223": [
+   {
+    "admin1": "Կոտայքի մարզ",
+    "note": "Hrazdan and Tsaghkadzor"
+   }
+  ],
+  "374224": [
+   {
+    "admin1": "Կոտայքի մարզ",
+    "note": "Yeghvard, Nor Hachn and Nor Geghi"
+   }
+  ],
+  "374226": [
+   {
+    "admin1": "Կոտայքի մարզ",
+    "note": "Charentsavan"
+   }
+  ],
+  "374231": [
+   {
+    "admin1": "Արմավիրի մարզ",
+    "note": "Vagharshapat / Etchmiadzin"
+   }
+  ],
+  "374232": [
+   {
+    "admin1": "Արագածոտնի մարզ",
+    "note": "Ashtarak"
+   }
+  ],
+  "374233": [
+   {
+    "admin1": "Արմավիրի մարզ",
+    "note": "Baghramyan"
+   }
+  ],
+  "374234": [
+   {
+    "admin1": "Արարատի մարզ",
+    "note": "Vedi"
+   }
+  ],
+  "374235": [
+   {
+    "admin1": "Արարատի մարզ",
+    "note": "Artashat"
+   }
+  ],
+  "374236": [
+   {
+    "admin1": "Արարատի մարզ",
+    "note": "Masis"
+   }
+  ],
+  "374237": [
+   {
+    "admin1": "Արմավիրի մարզ",
+    "note": "Armavir and Metsamor"
+   }
+  ],
+  "374238": [
+   {
+    "admin1": "Արարատի մարզ",
+    "note": "Ararat"
+   }
+  ],
+  "374242": [
+   {
+    "admin1": "Շիրակի մարզ",
+    "note": "Maralik"
+   }
+  ],
+  "374244": [
+   {
+    "admin1": "Շիրակի մարզ",
+    "note": "Artik"
+   }
+  ],
+  "374245": [
+   {
+    "admin1": "Շիրակի մարզ",
+    "note": "Ashotsk"
+   }
+  ],
+  "374246": [
+   {
+    "admin1": "Շիրակի մարզ",
+    "note": "Amasia"
+   }
+  ],
+  "374249": [
+   {
+    "admin1": "Արագածոտնի մարզ",
+    "note": "Talin"
+   }
+  ],
+  "374252": [
+   {
+    "admin1": "Արագածոտնի մարզ",
+    "note": "Aparan"
+   }
+  ],
+  "374253": [
+   {
+    "admin1": "Լոռու մարզ",
+    "note": "Alaverdi"
+   }
+  ],
+  "374254": [
+   {
+    "admin1": "Լոռու մարզ",
+    "note": "Tashir"
+   }
+  ],
+  "374255": [
+   {
+    "admin1": "Լոռու մարզ",
+    "note": "Spitak"
+   }
+  ],
+  "374256": [
+   {
+    "admin1": "Լոռու մարզ",
+    "note": "Stepanavan"
+   }
+  ],
+  "374257": [
+   {
+    "admin1": "Արագածոտնի մարզ",
+    "note": "Tsaghkahovit"
+   }
+  ],
+  "374261": [
+   {
+    "admin1": "Գեղարքունիքի մարզ",
+    "note": "Sevan"
+   }
+  ],
+  "374262": [
+   {
+    "admin1": "Գեղարքունիքի մարզ",
+    "note": "Martuni"
+   }
+  ],
+  "374263": [
+   {
+    "admin1": "Տավուշի մարզ",
+    "note": "Ijevan"
+   }
+  ],
+  "374264": [
+   {
+    "admin1": "Գեղարքունիքի մարզ",
+    "note": "Gavar"
+   }
+  ],
+  "374265": [
+   {
+    "admin1": "Գեղարքունիքի մարզ",
+    "note": "Chambarak"
+   }
+  ],
+  "374266": [
+   {
+    "admin1": "Տավուշի մարզ",
+    "note": "Noyemberyan and Koghb"
+   }
+  ],
+  "374267": [
+   {
+    "admin1": "Տավուշի մարզ",
+    "note": "Berd"
+   }
+  ],
+  "374268": [
+   {
+    "admin1": "Տավուշի մարզ",
+    "note": "Dilijan"
+   }
+  ],
+  "374269": [
+   {
+    "admin1": "Գեղարքունիքի մարզ",
+    "note": "Vardenis"
+   }
+  ],
+  "374281": [
+   {
+    "admin1": "Վայոց Ձորի մարզ",
+    "note": "Yeghegnadzor"
+   }
+  ],
+  "374282": [
+   {
+    "admin1": "Վայոց Ձորի մարզ",
+    "note": "Vayk"
+   }
+  ],
+  "374283": [
+   {
+    "admin1": "Սյունիքի մարզ",
+    "note": "Sisian"
+   }
+  ],
+  "374284": [
+   {
+    "admin1": "Սյունիքի մարզ",
+    "note": "Goris"
+   }
+  ],
+  "374285": [
+   {
+    "admin1": "Սյունիքի մարզ",
+    "note": "Kapan and Kajaran"
+   }
+  ],
+  "374286": [
+   {
+    "admin1": "Սյունիքի մարզ",
+    "note": "Meghri and Agarak"
+   }
+  ],
+  "374287": [
+   {
+    "admin1": "Վայոց Ձորի մարզ",
+    "note": "Jermuk"
+   }
+  ],
+  "374312": [
+   {
+    "admin1": "Շիրակի մարզ",
+    "note": "Gyumri"
+   }
+  ],
+  "374322": [
+   {
+    "admin1": "Լոռու մարզ",
+    "note": "Vanadzor"
+   }
+  ]
+ }
+}

@@ -1,0 +1,175 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org (boundary=administrative relations inside Armenia at admin_level 4; name = the OSM name tag as gazetteer.py reads it)",
+   "https://en.wikipedia.org/wiki/ISO_3166-2:AM"
+  ],
+  "fetched": "2026-11-26",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 11,
+  "note": "The 10 provinces (marzer) and the special administrative capital city of Yerevan, all first-level divisions at OSM admin_level 4; code = ISO 3166-2:AM. OSM names use Armenian script (Արագածոտնի մարզ, Երևան); aliases add English, Russian, and Armenian base forms."
+ },
+ "items": [
+  {
+   "name": "Երևան",
+   "code": "AM-ER",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "City of Yerevan",
+    "Erevan",
+    "Yerevan",
+    "Yerevan City",
+    "Ереван",
+    "город Ереван"
+   ]
+  },
+  {
+   "name": "Արագածոտնի մարզ",
+   "code": "AM-AG",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Aragatsotn",
+    "Aragatsotn Province",
+    "Aragatsotn Region",
+    "Արագածոտն",
+    "Арагацотн",
+    "Арагацотнская область"
+   ]
+  },
+  {
+   "name": "Արարատի մարզ",
+   "code": "AM-AR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ararat",
+    "Ararat Province",
+    "Ararat Region",
+    "Արարատ",
+    "Арарат",
+    "Араратская область"
+   ]
+  },
+  {
+   "name": "Արմավիրի մարզ",
+   "code": "AM-AV",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Armavir",
+    "Armavir Province",
+    "Armavir Region",
+    "Արմավիր",
+    "Армавир",
+    "Армавирская область"
+   ]
+  },
+  {
+   "name": "Գեղարքունիքի մարզ",
+   "code": "AM-GR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Gegarkunik",
+    "Gegharkunik",
+    "Gegharkunik Province",
+    "Gegharkunik Region",
+    "Գեղարքունիք",
+    "Гегаркуник",
+    "Гегаркуникская область",
+    "Гехаркуник"
+   ]
+  },
+  {
+   "name": "Կոտայքի մարզ",
+   "code": "AM-KT",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kotayk",
+    "Kotayk Province",
+    "Kotayk Region",
+    "Կոտայք",
+    "Котайк",
+    "Котайкская область"
+   ]
+  },
+  {
+   "name": "Լոռու մարզ",
+   "code": "AM-LO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Lori",
+    "Lori Province",
+    "Lori Region",
+    "Լոռի",
+    "Лори",
+    "Лорийская область"
+   ]
+  },
+  {
+   "name": "Շիրակի մարզ",
+   "code": "AM-SH",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Shirak",
+    "Shirak Province",
+    "Shirak Region",
+    "Շիրակ",
+    "Ширак",
+    "Ширакская область"
+   ]
+  },
+  {
+   "name": "Սյունիքի մարզ",
+   "code": "AM-SU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Siunik",
+    "Syunik",
+    "Syunik Province",
+    "Syunik Region",
+    "Սյունիք",
+    "Сюник",
+    "Сюникская область"
+   ]
+  },
+  {
+   "name": "Տավուշի մարզ",
+   "code": "AM-TV",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tavush",
+    "Tavush Province",
+    "Tavush Region",
+    "Տավուշ",
+    "Тавуш",
+    "Тавушская область"
+   ]
+  },
+  {
+   "name": "Վայոց Ձորի մարզ",
+   "code": "AM-VD",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Vayots Dzor",
+    "Vayots Dzor Province",
+    "Vayots Dzor Region",
+    "Vayots-Dzor",
+    "Վայոց Ձոր",
+    "Վայոց ձոր",
+    "Վայոց ձորի մարզ",
+    "Вайоц Дзор",
+    "Вайоц-Дзор",
+    "Вайоцдзорская область"
+   ]
+  }
+ ]
+}

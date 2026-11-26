@@ -1,0 +1,46 @@
+{
+ "code": "AM",
+ "name": "Armenia",
+ "names": [
+  "Armenia",
+  "Հայաստան",
+  "Hayastan",
+  "Армения",
+  "Republic of Armenia",
+  "Հայաստանի Հանրապետություն",
+  "Республика Армения",
+  "AM"
+ ],
+ "status": "community",
+ "maintainers": [
+  "@Lama189"
+ ],
+ "admin_levels": {
+  "4": "admin1"
+ },
+ "level_names": {
+  "admin1": "province (մարզ / marz) or the special administrative capital city of Yerevan (OSM admin_level 4)"
+ },
+ "admin_table": "data/admin.json",
+ "lookups": {
+  "plate": {
+   "file": "data/plates.json"
+  },
+  "area-code": {
+   "file": "data/area_codes.json"
+  }
+ },
+ "docs": [
+  "clues.md"
+ ],
+ "services": {
+  "poi": {
+   "sources": "osm",
+   "country": "am"
+  },
+  "street_view": "gsv.py"
+ },
+ "tips": {
+  "plate/area-code/calling-code": "plate region code (two digits at the left: 01–11, 13, 19, 61–68 Yerevan … 57–59 Tavush) or a whole landline number (code 10, 11, 12 Yerevan, 312 Gyumri, 322 Vanadzor, or three digits elsewhere, after +374 or domestic trunk 0) readable → clues.py lookup plate|area-code <value> --country am + board.py apply"
+ }
+}
