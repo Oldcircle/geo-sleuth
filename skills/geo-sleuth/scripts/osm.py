@@ -504,10 +504,13 @@ def cmd_buildings(args) -> dict:
     big = [r for r in rows if r["area"] >= args.min_area]
     cells: dict[tuple[int, int], list] = {}
     cs = args.within / 111000
+    # A degree of longitude is shorter than a degree of latitude away from the equator: widen the cell so one ring of cells still reaches `within`
+    lat_max = max((abs(r["c"][0]) for r in rows), default=0.0)
+    cs_lon = cs / max(math.cos(math.radians(min(89.0, lat_max + cs))), 0.01)
     for r in rows:
-        cells.setdefault((int(r["c"][0] / cs), int(r["c"][1] / cs)), []).append(r)
+        cells.setdefault((int(r["c"][0] / cs), int(r["c"][1] / cs_lon)), []).append(r)
     for r in big:
-        ci, cj = int(r["c"][0] / cs), int(r["c"][1] / cs)
+        ci, cj = int(r["c"][0] / cs), int(r["c"][1] / cs_lon)
         r["neighbors"] = sum(1 for di in (-1, 0, 1) for dj in (-1, 0, 1) for o in cells.get((ci + di, cj + dj), [])
                              if o is not r and _dist(r["c"], o["c"]) <= args.within)
     big.sort(key=(lambda r: (r["neighbors"], -r["area"])) if args.sort == "sparse" else (lambda r: -r["area"]))
