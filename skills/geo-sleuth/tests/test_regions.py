@@ -114,6 +114,18 @@ class BundledPacks(unittest.TestCase):
         self.assertIn(("北京市", "朝阳区"), chains)
         self.assertIn(("吉林省", "长春市", "朝阳区"), chains)
 
+    def test_uz_non_geographic_area_code_gives_tashkent_no_preference_over_samarkand(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            board = Path(tmpdir) / "board.json"
+            run("board.py", "--board", str(board), "init", "--photo", "x.jpg", "--country", "uz")
+            run("board.py", "--board", str(board), "add", "Toshkent", "Samarqand", "--level", "admin1")
+            r = run("board.py", "--board", str(board), "apply", "--kind", "area-code", "--value", "+998 78 123 45 67", "--country", "uz")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            b = json.loads(board.read_text(encoding="utf-8"))
+            lr = {e["candidate"]: e["lr"] for e in b.get("evidence", [])}
+            self.assertNotIn("Toshkent", lr)
+            self.assertNotIn("Samarqand", lr)
+
 
 class MixedFormatPacks(unittest.TestCase):
     """Status when an installed pack couldn't be searched: that is a lookup error, not a format verdict about the value."""

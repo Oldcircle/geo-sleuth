@@ -41,6 +41,27 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 - Counterexamples: the same letters are Turkish and Azerbaijani, so a Turkish shop or brand name is not an Uzbek sign; a 2021 draft already proposed Ŏ, Ğ, Ş and Ç, so a few signs may use them earlier
 - Sources: en.wikipedia "Uzbek alphabet", sections on the 1995 alphabet and the 2026 reform, https://en.wikipedia.org/wiki/Uzbek_alphabet; The Times of Central Asia, "Uzbekistan alphabet reform" (old signs stay until they wear out), https://timesca.com/uzbekistan-alphabet-reform-latin-cyrillic/
 
+### Public facility and civic service signage (institutions, utilities, and POIs)
+- Look for: standard Uzbek institutional terms, numbered prefixes, and acronyms on entrance archways, facade plaques, and public signs:
+  - Education: `X-sonli maktab` (or `X-maktab`, `umumiy o'rta ta'lim maktabi` — public school №X); `X-sonli bog'cha` (or `maktabgacha ta'lim tashkiloti` — kindergarten №X); `akademik litsey` (academic lyceum); `kasb-hunar maktabi` / `kollej` (vocational college); `universitet` / `institut` (higher education)
+  - Healthcare: `shifoxona` (hospital / inpatient clinic); `X-sonli oilaviy poliklinika` (family outpatient clinic №X); `QVP` (`Qishloq vrachlik punkti` — rural medical post); `dorixona` (pharmacy); `tez tibbiy yordam` (ambulance service / 103)
+  - Civic administration and community: `MFY` (`Mahalla fuqarolar yig'ini` — mahalla citizens' assembly/committee office, present in every neighborhood); `DXM` (`Davlat xizmatlari markazi` — public service center / one-stop government office); `hokimiyat` (`shahar/tuman hokimiyati` — city/district administration); `pochta` (`O'zbekiston pochtasi` — post office)
+  - Law enforcement and emergency: `IIB` / `IIV` (`Ichki ishlar bo'limi` — police precinct / interior affairs); `YHXBB` / `YPX` (traffic police post); `FVB` / `yong'in xavfsizligi` (fire and rescue / 101)
+  - Markets and transit: `dehqon bozori` (farmers' agricultural market); `buyum bozori` (clothing/goods bazaar); `avtovokzal` / `avtostansiya` (bus terminal); `temir yo'l vokzali` (railway station); `bekat` (public transit stop)
+- Points to: formulating queries for OpenStreetMap (Nominatim/Overpass), search engines, or local gazetteers using the exact Uzbek naming patterns (`89-sonli maktab`, `3-sonli oilaviy poliklinika`, `Chorsu bozori`, `Rakat MFY`). Russian searches (`Школа №89`, `Поликлиника 3`, `Рынок Чорсу`) routinely yield 0 results in Uzbek OSM due to absence of Cyrillic `name:ru` tags, leading agents to falsely discard valid spatial evidence
+- Strength: medium (resolves facility identification and prevents false negative query discarding; numbers require city or district context as numbers 1–50+ repeat across provinces)
+- Counterexamples: private international schools or clinics may use branded English or Russian names (`Cambridge`, `Akfa Medline`); Russian signage remains in older Tashkent commercial districts, but municipal databases still index under the official Uzbek state title
+- Sources: Lex.uz "O‘zbekiston Respublikasining davlat tili haqida" (State Language Law on official signage), https://lex.uz/docs/108915; OpenStreetMap Wiki "Uzbekistan/Tagging guidelines for public facilities and education", https://wiki.openstreetmap.org/wiki/Uzbekistan; Lex.uz "Mahalla fuqarolar yig'inlari to'g'risidagi qonun", https://lex.uz/docs/2154477
+
+## Roads and transport
+
+### Kamchik Pass corridor (A373)
+- Look for: an electrified railway line with tunnels or a double-lane mountain highway winding through steep, arid rocky gorges with concrete avalanche galleries, snow sheds, retaining walls, heavy truck traffic, or police checkpoint gates with barrier gantries
+- Points to: the Kamchik Pass (A373 highway and Angren–Pap railway line), linking Tashkent Region (Ohangaron/Angren) with Namangan and the Fergana Valley through the Qurama and Chatkal ranges
+- Strength: strong (the only direct overland road corridor between the Fergana Valley and the rest of Uzbekistan)
+- Counterexamples: other mountain roads exist in Surxondaryo (Baysun/Derbent canyon) or Jizzax/Samarqand (Takhtakaracha pass on M39 between Samarqand and Shahrisabz), but Takhtakaracha has narrower roads and no heavy transit freight or snow galleries comparable to A373; border checkpoints with Kyrgyzstan or Tajikistan also have inspection gantries
+- Sources: en.wikipedia "Kamchik Pass", https://en.wikipedia.org/wiki/Kamchik_Pass; en.wikipedia "Angren–Pap railway line", https://en.wikipedia.org/wiki/Angren–Pap_railway_line; en.wikipedia "A373 road (Uzbekistan)", https://en.wikipedia.org/wiki/A373_road_(Uzbekistan)
+
 ## Public transport
 
 ### Metro stations
@@ -49,6 +70,15 @@ Entries use the shared format (`references/clues/README.md`). Only clues whose "
 - Strength: medium for a station interior (single source)
 - Counterexamples: Almaty (Kazakhstan) also has a metro; a station sign in Uzbek Latin or Cyrillic separates them
 - Sources: en.wikipedia "Tashkent Metro" (lines, stations, opening dates, Circle line overpasses), https://en.wikipedia.org/wiki/Tashkent_Metro
+
+## Landscape and architecture
+
+### Traditional earthen duval walls in historic mahallas
+- Look for: tall, continuous windowless perimeter walls made of dried mud brick or packed clay (pakhsa/duval), wooden carved entry gates (darvoza), narrow winding unpaved or cobblestone alleys between blank earthen facades, with flat roofs and poplars behind the walls
+- Points to: historical mahallas in ancient oasis cities: Bukhara, Khiva (Ichan Kala and surrounding Ditshan Kala), Samarqand, Shahrisabz, or older traditional parts of Fergana Valley towns
+- Strength: medium (points to an oasis historic settlement in Central Asia)
+- Counterexamples: modern suburban mahallas across all regions use fired red brick or cinderblocks and corrugated metal roofs; rural adobe compounds also exist across southern Kazakhstan, southern Kyrgyzstan and Tajikistan
+- Sources: en.wikipedia "Mahalla", https://en.wikipedia.org/wiki/Mahalla; en.wikipedia "Itchan Kala", https://en.wikipedia.org/wiki/Itchan_Kala; en.wikipedia "Historic Centre of Bukhara", https://en.wikipedia.org/wiki/Historic_Centre_of_Bukhara
 
 ## Time and sun
 
