@@ -55,6 +55,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 import geo  # noqa: E402
 
 MODELS = {"dino": "facebook/dinov2-small", "clip": "openai/clip-vit-base-patch32"}
+PANOS_DEFAULTS = {
+    "baidu": {"pitch": 10.0, "fov": 80.0},
+    "gsv": {"pitch": 10.0, "fov": 80.0},
+    "yandex": {"pitch": -8.0, "fov": 90.0},
+}
 PROVIDER_DEFAULTS = {
     "baidu": {"pitch": 10.0, "fov": 80.0},
     "gsv": {"pitch": 0.0, "fov": 90.0},
@@ -198,24 +203,42 @@ def _items_from_panos(args) -> list[dict]:
         panos = {p["id"]: {"wgs": (p["lat"], p["lon"]), "road": p.get("name", ""), "date": p.get("date", "")} for p in panos_data}
     else:
         panos = panos_data
-    if args.within:
+    if getattr(args, "within", None):
         wl, wo, wr = (float(v) for v in args.within.split(","))
         panos = {k: v for k, v in panos.items() if geo.distance((wl, wo), tuple(v["wgs"])) <= wr}
-    if args.spread:
+    if getattr(args, "spread", None):
         panos = bp.thin(panos, args.spread)
-    target = tuple(float(v) for v in args.toward.split(",")) if args.toward else None
+
+    engine = getattr(args, "render", None)
+    if not engine:
+        first_id = str(next(iter(panos.keys()))) if panos else ""
+        if first_id.startswith(("CAoS", "CIHM")) or len(first_id) == 22:
+            engine = "gsv"
+        elif "_" in first_id:
+            engine = "yandex"
+        else:
+            engine = "baidu"
+
+    target = tuple(float(v) for v in args.toward.split(",")) if getattr(args, "toward", None) else None
+    if getattr(args, "headings", None):
+        heads = [float(x) for x in args.headings.split(",")]
+    elif target:
+        heads = None
+    elif engine == "yandex":
+        heads = [0, 60, 120, 180, 240, 300]
+    else:
+        sys.exit("--panos needs --toward or --headings")
+
+    pdefs = PANOS_DEFAULTS.get(engine, PANOS_DEFAULTS["baidu"])
+    pitch = args.pitch if getattr(args, "pitch", None) is not None else pdefs["pitch"]
+    fov = args.fov if getattr(args, "fov", None) is not None else pdefs["fov"]
+
     items = []
     for pid, v in panos.items():
-        heads = [float(x) for x in args.headings.split(",")] if args.headings else (
-            [geo.bearing(tuple(v["wgs"]), target) + args.offset] if target else [0, 60, 120, 180, 240, 300])
-        for hd in heads:
-            it = {"id": pid, "heading": hd % 360, "wgs": v["wgs"],
-                  "road": v.get("road", ""), "date": v.get("date", "")}
-            if args.pitch is not None:
-                it["pitch"] = args.pitch
-            if args.fov is not None:
-                it["fov"] = args.fov
-            items.append(it)
+        hds = heads if heads is not None else [geo.bearing(tuple(v["wgs"]), target) + getattr(args, "offset", 0)]
+        for hd in hds:
+            items.append({"id": pid, "heading": hd % 360, "pitch": pitch, "fov": fov, "wgs": v["wgs"],
+                          "road": v.get("road", ""), "date": v.get("date", "")})
     return items
 
 
