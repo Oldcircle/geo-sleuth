@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.10, <3.14"
 # dependencies = ["pillow", "pillow-heif", "numpy", "torch", "transformers", "opencv-python-headless", "socksio", "pysocks", "requests"]
 # ///
 """Similarity ranking of a photo against a batch of candidate real-scene images (street-view renders, satellite thumbnails, reference images): the machine ranks first, you look only at the top few.
@@ -55,6 +55,16 @@ sys.path.insert(0, str(Path(__file__).parent))
 import geo  # noqa: E402
 
 MODELS = {"dino": "facebook/dinov2-small", "clip": "openai/clip-vit-base-patch32"}
+PANOS_DEFAULTS = {
+    "baidu": {"pitch": 10.0, "fov": 80.0},
+    "gsv": {"pitch": 10.0, "fov": 80.0},
+    "yandex": {"pitch": -8.0, "fov": 90.0},
+}
+PROVIDER_DEFAULTS = {
+    "baidu": {"pitch": 10.0, "fov": 80.0},
+    "gsv": {"pitch": 0.0, "fov": 90.0},
+    "yandex": {"pitch": -8.0, "fov": 90.0},
+}
 
 
 def _proxy_env(proxy: str | None) -> None:
@@ -185,21 +195,49 @@ def sift_inliers(a: Image.Image, b: Image.Image, max_side: int = 1024,
 
 def _items_from_panos(args) -> list[dict]:
     import baidu_pano as bp
-    panos = json.loads(Path(args.panos).read_text(encoding="utf-8"))
-    if args.within:
+    panos_data = json.loads(Path(args.panos).read_text(encoding="utf-8"))
+    if isinstance(panos_data, dict) and "panos" in panos_data and isinstance(panos_data["panos"], list):
+        pts = panos_data["panos"]
+        panos = {p["id"]: {"wgs": (p["lat"], p["lon"]), "road": p.get("name", ""), "date": p.get("date", "")} for p in pts}
+    elif isinstance(panos_data, list):
+        panos = {p["id"]: {"wgs": (p["lat"], p["lon"]), "road": p.get("name", ""), "date": p.get("date", "")} for p in panos_data}
+    else:
+        panos = panos_data
+    if getattr(args, "within", None):
         wl, wo, wr = (float(v) for v in args.within.split(","))
         panos = {k: v for k, v in panos.items() if geo.distance((wl, wo), tuple(v["wgs"])) <= wr}
-    if args.spread:
+    if getattr(args, "spread", None):
         panos = bp.thin(panos, args.spread)
-    target = tuple(float(v) for v in args.toward.split(",")) if args.toward else None
+
+    engine = getattr(args, "render", None)
+    if not engine:
+        first_id = str(next(iter(panos.keys()))) if panos else ""
+        if first_id.startswith(("CAoS", "CIHM")) or len(first_id) == 22:
+            engine = "gsv"
+        elif "_" in first_id:
+            engine = "yandex"
+        else:
+            engine = "baidu"
+
+    target = tuple(float(v) for v in args.toward.split(",")) if getattr(args, "toward", None) else None
+    if getattr(args, "headings", None):
+        heads = [float(x) for x in args.headings.split(",")]
+    elif target:
+        heads = None
+    elif engine == "yandex":
+        heads = [0, 60, 120, 180, 240, 300]
+    else:
+        sys.exit("--panos needs --toward or --headings")
+
+    pdefs = PANOS_DEFAULTS.get(engine, PANOS_DEFAULTS["baidu"])
+    pitch = args.pitch if getattr(args, "pitch", None) is not None else pdefs["pitch"]
+    fov = args.fov if getattr(args, "fov", None) is not None else pdefs["fov"]
+
     items = []
     for pid, v in panos.items():
-        heads = [float(x) for x in args.headings.split(",")] if args.headings else (
-            [geo.bearing(tuple(v["wgs"]), target) + args.offset] if target else None)
-        if heads is None:
-            sys.exit("--panos needs --toward or --headings")
-        for hd in heads:
-            items.append({"id": pid, "heading": hd % 360, "pitch": args.pitch, "fov": args.fov, "wgs": v["wgs"],
+        hds = heads if heads is not None else [geo.bearing(tuple(v["wgs"]), target) + getattr(args, "offset", 0)]
+        for hd in hds:
+            items.append({"id": pid, "heading": hd % 360, "pitch": pitch, "fov": fov, "wgs": v["wgs"],
                           "road": v.get("road", ""), "date": v.get("date", "")})
     return items
 
@@ -208,22 +246,37 @@ def _overlay(engine: str | None) -> tuple | None:
     """The box a street-view renderer bakes into every view (its LOGO_BOX), to keep out of SIFT; None for plain images."""
     if not engine:
         return None
-    return getattr(__import__("baidu_pano" if engine == "baidu" else "gsv"), "LOGO_BOX", None)
+    mod = "baidu_pano" if engine == "baidu" else ("yandex_pano" if engine == "yandex" else "gsv")
+    return getattr(__import__(mod), "LOGO_BOX", None)
 
 
 def _render_items(items: list[dict], engine: str, proxy: str | None, cache: Path) -> list[Image.Image | None]:
+    defs = PROVIDER_DEFAULTS.get(engine, PROVIDER_DEFAULTS["baidu"])
     if engine == "gsv":
         import gsv
         def one(it):
+            p = it.get("pitch") if it.get("pitch") is not None else defs["pitch"]
+            f = it.get("fov") if it.get("fov") is not None else defs["fov"]
             try:
-                return gsv.render(it["id"], it["heading"], it.get("pitch", 0), it.get("fov", 90), 640, 480, proxy, cache / "gsv")
+                return gsv.render(it["id"], it["heading"], p, f, 640, 480, proxy, cache / "gsv")
             except Exception:  # noqa: BLE001
+                return None
+    elif engine == "yandex":
+        import yandex_pano as yp
+        def one(it):
+            p = it.get("pitch") if it.get("pitch") is not None else defs["pitch"]
+            f = it.get("fov") if it.get("fov") is not None else defs["fov"]
+            try:
+                return yp.render(it["id"], it["heading"], p, f, 640, 480, cache=cache / "yandex", proxy=proxy)
+            except (OSError, RuntimeError, ValueError):
                 return None
     else:
         import baidu_pano as bp
         def one(it):
+            p = it.get("pitch") if it.get("pitch") is not None else defs["pitch"]
+            f = it.get("fov") if it.get("fov") is not None else defs["fov"]
             try:
-                return bp.render(it["id"], it["heading"], it.get("pitch", 10), it.get("fov", 80), cache=cache / "pano", proxy=proxy)
+                return bp.render(it["id"], it["heading"], p, f, cache=cache / "pano", proxy=proxy)
             except Exception:  # noqa: BLE001
                 return None
     with ThreadPoolExecutor(12) as ex:
@@ -267,6 +320,10 @@ def _load_candidates(args) -> tuple[list[dict], list[Image.Image]]:
         if args.spread_headings:
             ds = [float(x) for x in args.spread_headings.split(",")]
             items = [dict(it, heading=(it["heading"] + d) % 360) for it in items for d in ds]
+        if args.pitch is not None:
+            items = [dict(it, pitch=args.pitch) for it in items]
+        if args.fov is not None:
+            items = [dict(it, fov=args.fov) for it in items]
     elif args.panos:
         items = _items_from_panos(args)
     else:
@@ -280,7 +337,14 @@ def _load_candidates(args) -> tuple[list[dict], list[Image.Image]]:
             how = "in list order"
         print(f"{len(items)} candidates, more than --max-candidates {args.max_candidates}; taking {args.max_candidates} {how} (narrow first with --within/--spread)", file=sys.stderr)
         items = items[: args.max_candidates]
-    engine = args.render or ("gsv" if items and str(items[0].get("id", "")).startswith(("CAoS", "CIHM")) or len(str(items[0].get("id", ""))) == 22 else "baidu")
+    if args.render:
+        engine = args.render
+    elif items and (str(items[0].get("id", "")).startswith(("CAoS", "CIHM")) or len(str(items[0].get("id", ""))) == 22):
+        engine = "gsv"
+    elif items and "_" in str(items[0].get("id", "")):
+        engine = "yandex"
+    else:
+        engine = "baidu"
     ims = _render_items(items, engine, args.proxy, cache)
     ok_items, ok_ims = [], []
     for it, im in zip(items, ims):
@@ -396,8 +460,8 @@ def main() -> None:
     r.add_argument("--query", required=True)
     r.add_argument("--query-box", help="x0,y0,x1,y1: compare only this region")
     r.add_argument("--images")
-    r.add_argument("--items", help=".index.json from baidu_pano.py / gsv.py")
-    r.add_argument("--render", choices=["baidu", "gsv"], help="which engine renders --items; if omitted, guessed from the id format")
+    r.add_argument("--items", help=".index.json from baidu_pano.py / gsv.py / yandex_pano.py")
+    r.add_argument("--render", choices=["baidu", "gsv", "yandex"], help="which engine renders --items; if omitted, guessed from the id format")
     r.add_argument("--spread-headings", help="extra heading offsets for each --items entry, e.g. -30,0,30")
     r.add_argument("--panos", help="output of baidu_pano.py scan")
     r.add_argument("--toward", help="lat,lon")
@@ -405,8 +469,8 @@ def main() -> None:
     r.add_argument("--offset", type=float, default=0)
     r.add_argument("--within", help="lat,lon,radius in meters")
     r.add_argument("--spread", type=float, help="thinning spacing in meters")
-    r.add_argument("--pitch", type=float, default=10)
-    r.add_argument("--fov", type=float, default=80)
+    r.add_argument("--pitch", type=float, default=None, help="pitch angle (defaults: Baidu 10, GSV 0, Yandex -8)")
+    r.add_argument("--fov", type=float, default=None, help="horizontal field of view (defaults: Baidu 80, GSV 90, Yandex 90)")
     r.add_argument("--max-candidates", type=int, default=400)
     r.add_argument("--method", choices=["dino", "clip", "both"], default="dino")
     r.add_argument("--refine", choices=["none", "sift"], default="sift")

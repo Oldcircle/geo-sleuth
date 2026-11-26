@@ -4,9 +4,11 @@
 # dependencies = ["pillow", "numpy", "opencv-python-headless", "torch"]
 # ///
 """Offline descriptor and geometric verification regressions; no model download."""
+import json
 from pathlib import Path
-from types import SimpleNamespace
 import sys
+import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -94,6 +96,165 @@ class DescriptorTests(unittest.TestCase):
         np.testing.assert_allclose(np.linalg.norm(features, axis=-1), 1, atol=1e-6)
         np.testing.assert_allclose(features[0, 0], np.array([.6, .8, 0, 1]) / np.sqrt(2), atol=1e-6)
         np.testing.assert_allclose(features, np.broadcast_to(features[0, 0], features.shape))
+
+
+class ProviderDefaultsTests(unittest.TestCase):
+    def test_render_items_uses_provider_defaults_without_explicit_flags(self):
+        dummy_img = Image.new("RGB", (10, 10))
+        item = [{"id": "pano_test", "heading": 90.0}]
+
+        import baidu_pano
+        with patch.object(baidu_pano, "render", return_value=dummy_img) as mock_b:
+            match._render_items(item, engine="baidu", proxy=None, cache=Path("/tmp"))
+            mock_b.assert_called_once()
+            _, kwargs = mock_b.call_args if mock_b.call_args.kwargs else (mock_b.call_args[0], {})
+            args = mock_b.call_args[0]
+            # render(pid, heading, pitch, fov, ...)
+            self.assertEqual(args[0], "pano_test")
+            self.assertEqual(args[1], 90.0)
+            self.assertEqual(args[2], 10.0)
+            self.assertEqual(args[3], 80.0)
+
+        import gsv
+        with patch.object(gsv, "render", return_value=dummy_img) as mock_g:
+            match._render_items(item, engine="gsv", proxy=None, cache=Path("/tmp"))
+            mock_g.assert_called_once()
+            args = mock_g.call_args[0]
+            self.assertEqual(args[0], "pano_test")
+            self.assertEqual(args[1], 90.0)
+            self.assertEqual(args[2], 0.0)
+            self.assertEqual(args[3], 90.0)
+
+        import yandex_pano
+        with patch.object(yandex_pano, "render", return_value=dummy_img) as mock_y:
+            match._render_items(item, engine="yandex", proxy=None, cache=Path("/tmp"))
+            mock_y.assert_called_once()
+            args = mock_y.call_args[0]
+            self.assertEqual(args[0], "pano_test")
+            self.assertEqual(args[1], 90.0)
+            self.assertEqual(args[2], -8.0)
+            self.assertEqual(args[3], 90.0)
+
+    def test_explicit_flags_override_provider_defaults(self):
+        dummy_img = Image.new("RGB", (10, 10))
+        item = [{"id": "pano_test", "heading": 120.0, "pitch": -5.0, "fov": 105.0}]
+
+        import baidu_pano
+        with patch.object(baidu_pano, "render", return_value=dummy_img) as mock_b:
+            match._render_items(item, engine="baidu", proxy=None, cache=Path("/tmp"))
+            args = mock_b.call_args[0]
+            self.assertEqual(args[2], -5.0)
+            self.assertEqual(args[3], 105.0)
+
+        import gsv
+        with patch.object(gsv, "render", return_value=dummy_img) as mock_g:
+            match._render_items(item, engine="gsv", proxy=None, cache=Path("/tmp"))
+            args = mock_g.call_args[0]
+            self.assertEqual(args[2], -5.0)
+            self.assertEqual(args[3], 105.0)
+
+        import yandex_pano
+        with patch.object(yandex_pano, "render", return_value=dummy_img) as mock_y:
+            match._render_items(item, engine="yandex", proxy=None, cache=Path("/tmp"))
+            args = mock_y.call_args[0]
+            self.assertEqual(args[2], -5.0)
+            self.assertEqual(args[3], 105.0)
+
+    def test_load_candidates_panos_preserves_main_defaults_for_gsv_and_baidu(self):
+        dummy_img = Image.new("RGB", (10, 10))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            p_file = Path(tmpdir) / "panos.json"
+            p_file.write_text(json.dumps({"panos": [{"id": "CAoSLEFGMVFpcE1hYmMx", "lat": 10.0, "lon": 20.0}]}), encoding="utf-8")
+
+            args_gsv = SimpleNamespace(
+                images=None, items=None, panos=str(p_file), within=None, spread=None,
+                toward=None, headings="90", offset=0, pitch=None, fov=None,
+                max_candidates=100, render="gsv", proxy=None, cache=tmpdir
+            )
+            import gsv
+            with patch.object(gsv, "render", return_value=dummy_img) as mock_g:
+                items, ims = match._load_candidates(args_gsv)
+                mock_g.assert_called_once()
+                args = mock_g.call_args[0]
+                self.assertEqual(args[0], "CAoSLEFGMVFpcE1hYmMx")
+                self.assertEqual(args[1], 90.0)
+                self.assertEqual(args[2], 10.0)
+                self.assertEqual(args[3], 80.0)
+                self.assertEqual(items[0]["pitch"], 10.0)
+                self.assertEqual(items[0]["fov"], 80.0)
+
+            p_baidu = Path(tmpdir) / "baidu.json"
+            p_baidu.write_text(json.dumps({"panos": [{"id": "0100220000131210134437255IN", "lat": 10.0, "lon": 20.0}]}), encoding="utf-8")
+            args_baidu = SimpleNamespace(
+                images=None, items=None, panos=str(p_baidu), within=None, spread=None,
+                toward=None, headings="90", offset=0, pitch=None, fov=None,
+                max_candidates=100, render="baidu", proxy=None, cache=tmpdir
+            )
+            import baidu_pano
+            with patch.object(baidu_pano, "render", return_value=dummy_img) as mock_b:
+                items, ims = match._load_candidates(args_baidu)
+                mock_b.assert_called_once()
+                args = mock_b.call_args[0]
+                self.assertEqual(args[2], 10.0)
+                self.assertEqual(args[3], 80.0)
+
+    def test_load_candidates_panos_scopes_yandex_defaults(self):
+        dummy_img = Image.new("RGB", (10, 10))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            p_yandex = Path(tmpdir) / "yandex.json"
+            p_yandex.write_text(json.dumps({"panos": [{"id": "1342674921_672349120_23_1623838291", "lat": 10.0, "lon": 20.0}]}), encoding="utf-8")
+            args_yandex = SimpleNamespace(
+                images=None, items=None, panos=str(p_yandex), within=None, spread=None,
+                toward=None, headings="90", offset=0, pitch=None, fov=None,
+                max_candidates=100, render="yandex", proxy=None, cache=tmpdir
+            )
+            import yandex_pano
+            with patch.object(yandex_pano, "render", return_value=dummy_img) as mock_y:
+                items, ims = match._load_candidates(args_yandex)
+                mock_y.assert_called_once()
+                args = mock_y.call_args[0]
+                self.assertEqual(args[2], -8.0)
+                self.assertEqual(args[3], 90.0)
+                self.assertEqual(items[0]["pitch"], -8.0)
+                self.assertEqual(items[0]["fov"], 90.0)
+
+    def test_load_candidates_panos_headings_omitted_scoped_to_yandex(self):
+        dummy_img = Image.new("RGB", (10, 10))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            p_gsv = Path(tmpdir) / "gsv.json"
+            p_gsv.write_text(json.dumps({"panos": [{"id": "CAoSLEFGMVFpcE1hYmMx", "lat": 10.0, "lon": 20.0}]}), encoding="utf-8")
+            args_gsv = SimpleNamespace(
+                images=None, items=None, panos=str(p_gsv), within=None, spread=None,
+                toward=None, headings=None, offset=0, pitch=None, fov=None,
+                max_candidates=100, render="gsv", proxy=None, cache=tmpdir
+            )
+            with self.assertRaises(SystemExit) as cm_gsv:
+                match._load_candidates(args_gsv)
+            self.assertIn("--panos needs --toward or --headings", str(cm_gsv.exception))
+
+            p_baidu = Path(tmpdir) / "baidu.json"
+            p_baidu.write_text(json.dumps({"panos": [{"id": "0100220000131210134437255IN", "lat": 10.0, "lon": 20.0}]}), encoding="utf-8")
+            args_baidu = SimpleNamespace(
+                images=None, items=None, panos=str(p_baidu), within=None, spread=None,
+                toward=None, headings=None, offset=0, pitch=None, fov=None,
+                max_candidates=100, render="baidu", proxy=None, cache=tmpdir
+            )
+            with self.assertRaises(SystemExit) as cm_baidu:
+                match._load_candidates(args_baidu)
+            self.assertIn("--panos needs --toward or --headings", str(cm_baidu.exception))
+
+            p_yandex = Path(tmpdir) / "yandex.json"
+            p_yandex.write_text(json.dumps({"panos": [{"id": "1342674921_672349120_23_1623838291", "lat": 10.0, "lon": 20.0}]}), encoding="utf-8")
+            args_yandex = SimpleNamespace(
+                images=None, items=None, panos=str(p_yandex), within=None, spread=None,
+                toward=None, headings=None, offset=0, pitch=None, fov=None,
+                max_candidates=100, render="yandex", proxy=None, cache=tmpdir
+            )
+            import yandex_pano
+            with patch.object(yandex_pano, "render", return_value=dummy_img):
+                items, ims = match._load_candidates(args_yandex)
+                self.assertEqual(len(items), 6)
+                self.assertEqual([it["heading"] for it in items], [0.0, 60.0, 120.0, 180.0, 240.0, 300.0])
 
 
 if __name__ == "__main__":
