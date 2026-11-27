@@ -1,0 +1,802 @@
+{
+ "_meta": {
+  "source": [
+   "https://www.openstreetmap.org (boundary=administrative, admin_level=4 relations inside Russia's admin_level=2 area; name = OSM name tag)",
+   "https://ru.wikipedia.org/wiki/Коды_субъектов_Российской_Федерации (ISO 3166-2 codes, subject names used as aliases)"
+  ],
+  "fetched": "2026-11-01",
+  "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
+  "count": 85,
+  "note": "83 federal subjects with an ISO3166-2 RU-* code, plus Республика Крым and Севастополь, which OSM maps inside Russia's boundary as admin_level 4 relations without an ISO code (code left empty; ISO 3166-2 lists them as UA-43 and UA-40, and OSM keeps separate Ukrainian relations for both). The four regions annexed in 2022 are not inside Russia in OSM and are not in this table. OSM's admin_level 3 holds the eight federal districts, which are not listed here."
+ },
+ "items": [
+  {
+   "name": "Адыгея",
+   "code": "RU-AD",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Republic of Adygea",
+    "Республика Адыгея",
+    "Республика Адыгея (Адыгея)"
+   ]
+  },
+  {
+   "name": "Алтайский край",
+   "code": "RU-ALT",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Altai Krai"
+   ]
+  },
+  {
+   "name": "Амурская область",
+   "code": "RU-AMU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Amur Oblast"
+   ]
+  },
+  {
+   "name": "Архангельская область",
+   "code": "RU-ARK",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Arkhangelsk Oblast"
+   ]
+  },
+  {
+   "name": "Астраханская область",
+   "code": "RU-AST",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Astrakhan Oblast"
+   ]
+  },
+  {
+   "name": "Башкортостан",
+   "code": "RU-BA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Bashkortostan",
+    "Республика Башкортостан"
+   ]
+  },
+  {
+   "name": "Белгородская область",
+   "code": "RU-BEL",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Belgorod Oblast"
+   ]
+  },
+  {
+   "name": "Брянская область",
+   "code": "RU-BRY",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Bryansk Oblast"
+   ]
+  },
+  {
+   "name": "Владимирская область",
+   "code": "RU-VLA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Vladimir Oblast"
+   ]
+  },
+  {
+   "name": "Волгоградская область",
+   "code": "RU-VGG",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Volgograd Oblast"
+   ]
+  },
+  {
+   "name": "Вологодская область",
+   "code": "RU-VLG",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Vologda Oblast"
+   ]
+  },
+  {
+   "name": "Воронежская область",
+   "code": "RU-VOR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Voronezh Oblast"
+   ]
+  },
+  {
+   "name": "Дагестан",
+   "code": "RU-DA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Dagestan",
+    "Республика Дагестан"
+   ]
+  },
+  {
+   "name": "Еврейская автономная область",
+   "code": "RU-YEV",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Jewish Autonomous Oblast"
+   ]
+  },
+  {
+   "name": "Забайкальский край",
+   "code": "RU-ZAB",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Zabaykalsky Krai"
+   ]
+  },
+  {
+   "name": "Ивановская область",
+   "code": "RU-IVA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ivanovo Oblast"
+   ]
+  },
+  {
+   "name": "Ингушетия",
+   "code": "RU-IN",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ingushetia",
+    "Республика Ингушетия"
+   ]
+  },
+  {
+   "name": "Иркутская область",
+   "code": "RU-IRK",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Irkutsk Oblast"
+   ]
+  },
+  {
+   "name": "Кабардино-Балкария",
+   "code": "RU-KB",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kabardino-Balkaria",
+    "Кабардино-Балкарская Республика"
+   ]
+  },
+  {
+   "name": "Калининградская область",
+   "code": "RU-KGD",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kaliningrad"
+   ]
+  },
+  {
+   "name": "Калмыкия",
+   "code": "RU-KL",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Republic of Kalmykia",
+    "Республика Калмыкия"
+   ]
+  },
+  {
+   "name": "Калужская область",
+   "code": "RU-KLU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kaluga Oblast"
+   ]
+  },
+  {
+   "name": "Камчатский край",
+   "code": "RU-KAM",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kamchatka Krai"
+   ]
+  },
+  {
+   "name": "Карачаево-Черкесия",
+   "code": "RU-KC",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Karachay-Cherkessia",
+    "Карачаево-Черкесская Республика",
+    "Карачаево-Черкесская республика"
+   ]
+  },
+  {
+   "name": "Карелия",
+   "code": "RU-KR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Karelia",
+    "Республика Карелия"
+   ]
+  },
+  {
+   "name": "Кемеровская область",
+   "code": "RU-KEM",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kemerovo Oblast–Kuzbass",
+    "Кемеровская область — Кузбасс"
+   ]
+  },
+  {
+   "name": "Кировская область",
+   "code": "RU-KIR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kirov Oblast"
+   ]
+  },
+  {
+   "name": "Костромская область",
+   "code": "RU-KOS",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kostroma Oblast"
+   ]
+  },
+  {
+   "name": "Краснодарский край",
+   "code": "RU-KDA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Krasnodar Krai"
+   ]
+  },
+  {
+   "name": "Красноярский край",
+   "code": "RU-KYA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Krasnoyarsk Krai"
+   ]
+  },
+  {
+   "name": "Курганская область",
+   "code": "RU-KGN",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kurgan Oblast"
+   ]
+  },
+  {
+   "name": "Курская область",
+   "code": "RU-KRS",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Kursk Oblast"
+   ]
+  },
+  {
+   "name": "Ленинградская область",
+   "code": "RU-LEN",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Leningrad Oblast"
+   ]
+  },
+  {
+   "name": "Липецкая область",
+   "code": "RU-LIP",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Lipetsk Oblast"
+   ]
+  },
+  {
+   "name": "Магаданская область",
+   "code": "RU-MAG",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Magadan Oblast"
+   ]
+  },
+  {
+   "name": "Марий Эл",
+   "code": "RU-ME",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Mari El Republic",
+    "Республика Марий Эл"
+   ]
+  },
+  {
+   "name": "Мордовия",
+   "code": "RU-MO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Republic of Mordovia",
+    "Республика Мордовия"
+   ]
+  },
+  {
+   "name": "Москва",
+   "code": "RU-MOW",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Moscow"
+   ]
+  },
+  {
+   "name": "Московская область",
+   "code": "RU-MOS",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Moscow Oblast"
+   ]
+  },
+  {
+   "name": "Мурманская область",
+   "code": "RU-MUR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Murmansk Oblast"
+   ]
+  },
+  {
+   "name": "Ненецкий автономный округ",
+   "code": "RU-NEN",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Nenets Autonomous Okrug"
+   ]
+  },
+  {
+   "name": "Нижегородская область",
+   "code": "RU-NIZ",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Nizhny Novgorod Oblast"
+   ]
+  },
+  {
+   "name": "Новгородская область",
+   "code": "RU-NGR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Novgorod Oblast"
+   ]
+  },
+  {
+   "name": "Новосибирская область",
+   "code": "RU-NVS",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Novosibirsk Oblast"
+   ]
+  },
+  {
+   "name": "Омская область",
+   "code": "RU-OMS",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Omsk Oblast"
+   ]
+  },
+  {
+   "name": "Оренбургская область",
+   "code": "RU-ORE",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Orenburg Oblast"
+   ]
+  },
+  {
+   "name": "Орловская область",
+   "code": "RU-ORL",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Oryol Oblast"
+   ]
+  },
+  {
+   "name": "Пензенская область",
+   "code": "RU-PNZ",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Penza Oblast"
+   ]
+  },
+  {
+   "name": "Пермский край",
+   "code": "RU-PER",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Perm Krai"
+   ]
+  },
+  {
+   "name": "Приморский край",
+   "code": "RU-PRI",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Primorsky Krai"
+   ]
+  },
+  {
+   "name": "Псковская область",
+   "code": "RU-PSK",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Pskov Oblast"
+   ]
+  },
+  {
+   "name": "Республика Алтай",
+   "code": "RU-AL",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Altai Republic"
+   ]
+  },
+  {
+   "name": "Республика Бурятия",
+   "code": "RU-BU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Buryatia",
+    "Бурятия"
+   ]
+  },
+  {
+   "name": "Республика Коми",
+   "code": "RU-KO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Komi Republic"
+   ]
+  },
+  {
+   "name": "Республика Крым",
+   "code": "",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Republic of Crimea"
+   ]
+  },
+  {
+   "name": "Республика Саха (Якутия)",
+   "code": "RU-SA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Sakha Republic",
+    "Республика Саха"
+   ]
+  },
+  {
+   "name": "Республика Тыва",
+   "code": "RU-TY",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tuva Republic",
+    "Тыва"
+   ]
+  },
+  {
+   "name": "Республика Хакасия",
+   "code": "RU-KK",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Khakassia",
+    "Хакасия"
+   ]
+  },
+  {
+   "name": "Ростовская область",
+   "code": "RU-ROS",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Rostov Oblast"
+   ]
+  },
+  {
+   "name": "Рязанская область",
+   "code": "RU-RYA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ryazan Oblast"
+   ]
+  },
+  {
+   "name": "Самарская область",
+   "code": "RU-SAM",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Samara Oblast"
+   ]
+  },
+  {
+   "name": "Санкт-Петербург",
+   "code": "RU-SPE",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Saint Petersburg"
+   ]
+  },
+  {
+   "name": "Саратовская область",
+   "code": "RU-SAR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Saratov Oblast"
+   ]
+  },
+  {
+   "name": "Сахалинская область",
+   "code": "RU-SAK",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Sakhalin Oblast"
+   ]
+  },
+  {
+   "name": "Свердловская область",
+   "code": "RU-SVE",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Sverdlovsk Oblast"
+   ]
+  },
+  {
+   "name": "Севастополь",
+   "code": "",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Sevastopol"
+   ]
+  },
+  {
+   "name": "Северная Осетия — Алания",
+   "code": "RU-SE",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Republic of North Ossetia – Alania",
+    "Республика Северная Осетия — Алания"
+   ]
+  },
+  {
+   "name": "Смоленская область",
+   "code": "RU-SMO",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Smolensk Oblast"
+   ]
+  },
+  {
+   "name": "Ставропольский край",
+   "code": "RU-STA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Stavropol Krai"
+   ]
+  },
+  {
+   "name": "Тамбовская область",
+   "code": "RU-TAM",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tambov Oblast"
+   ]
+  },
+  {
+   "name": "Татарстан",
+   "code": "RU-TA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tatarstan",
+    "Республика Татарстан",
+    "Республика Татарстан (Татарстан)"
+   ]
+  },
+  {
+   "name": "Тверская область",
+   "code": "RU-TVE",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tver Oblast"
+   ]
+  },
+  {
+   "name": "Томская область",
+   "code": "RU-TOM",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tomsk Oblast"
+   ]
+  },
+  {
+   "name": "Тульская область",
+   "code": "RU-TUL",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tula Oblast"
+   ]
+  },
+  {
+   "name": "Тюменская область",
+   "code": "RU-TYU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Tyumen Oblast"
+   ]
+  },
+  {
+   "name": "Удмуртия",
+   "code": "RU-UD",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Udmurtia",
+    "Удмуртская Республика"
+   ]
+  },
+  {
+   "name": "Ульяновская область",
+   "code": "RU-ULY",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Ulyanovsk Oblast"
+   ]
+  },
+  {
+   "name": "Хабаровский край",
+   "code": "RU-KHA",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Khabarovsk Krai"
+   ]
+  },
+  {
+   "name": "Ханты-Мансийский автономный округ — Югра",
+   "code": "RU-KHM",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Khanty-Mansiysk Autonomous Okrug – Ugra"
+   ]
+  },
+  {
+   "name": "Челябинская область",
+   "code": "RU-CHE",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Chelyabinsk Oblast"
+   ]
+  },
+  {
+   "name": "Чечня",
+   "code": "RU-CE",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Chechnya",
+    "Чеченская Республика"
+   ]
+  },
+  {
+   "name": "Чувашия",
+   "code": "RU-CU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Chuvashia",
+    "Чувашская Республика —  Чувашия"
+   ]
+  },
+  {
+   "name": "Чукотский автономный округ",
+   "code": "RU-CHU",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Chukotka Autonomous Okrug"
+   ]
+  },
+  {
+   "name": "Ямало-Ненецкий автономный округ",
+   "code": "RU-YAN",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Yamalo-Nenets Autonomous Okrug"
+   ]
+  },
+  {
+   "name": "Ярославская область",
+   "code": "RU-YAR",
+   "level": 4,
+   "parent": "",
+   "aliases": [
+    "Yaroslavl Oblast"
+   ]
+  }
+ ]
+}
