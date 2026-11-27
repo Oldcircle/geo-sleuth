@@ -161,6 +161,13 @@ class TmGypjakWeightTests(unittest.TestCase):
         self.run_board("apply", "--kind", "area-code", "--value", "1392 12 34")
         self.assertEqual(self.lr("K1"), {})
 
+    def test_arkadag_codes_leave_weights_alone(self):
+        for kind, value in (("plate", "AK"), ("area-code", "+993 12 57 12 34")):
+            with self.subTest(kind=kind, value=value):
+                self.run_board("apply", "--kind", kind, "--value", value)
+                b = json.loads(self.path.read_text(encoding="utf-8"))
+                self.assertEqual(b["evidence"], [])
+
 
 class LevelGapTests(unittest.TestCase):
     """A point added under the city instead of under its road: its evidence never reached the road ranking, and report named another road."""

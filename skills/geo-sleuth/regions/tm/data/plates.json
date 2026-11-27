@@ -7,15 +7,17 @@
   },
   "key_pattern": "^[A-Z]{2}$",
   "usage": "plates since 1994 (flag and TM at the left, then AB 1234 AG for private cars, 1234 AGA on green company and government plates): type only the two region letters (the last two letters of a white plate, the first two of the three letters on a green one)",
-  "note": "Region letters: AG Ashgabat, AH Ahal, AK Arkadag (in Ahal), BN Balkan, DZ Daşoguz, LB Lebap, MR Mary. They are where the vehicle was registered, not where the photo was taken. The letters are at the end of a white plate, so a whole plate does not work here: type the two letters only.",
-  "miss_note": "not a Turkmen region code: the serial letters at the start of a white plate instead of the two at the end, a yellow foreign-resident plate (2H 50035), a blue diplomatic plate (12 CD 345), an export plate (TDG), or a plate of another country",
+  "note": "Region letters: AG Ashgabat, AH Ahal, BN Balkan, DZ Daşoguz, LB Lebap, MR Mary. They are where the vehicle was registered, not where the photo was taken. The letters are at the end of a white plate, so a whole plate does not work here: type the two letters only. AK (Arkadag) is left out of the lookup: Arkadag has been a city of state significance with its own administrative territory since 2023 (turkmenistan.gov.tm, 30 March 2023), and on 8 November 2023 the Mejlis moved 102 ha of Ahal's Gökdepe etrap and 17 ha of Ashgabat into it; the pack's admin table has no Arkadag unit, so neither Ahal nor Ashgabat can stand in for it.",
+  "miss_note": "not a Turkmen region code in this table: AK (Arkadag, left out on purpose, see note), the serial letters at the start of a white plate instead of the two at the end, a yellow foreign-resident plate (2H 50035), a blue diplomatic plate (12 CD 345), an export plate (TDG), or a plate of another country",
   "source": [
    "https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Turkmenistan, sections 'Current series' and 'Province identifiers'",
-   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Туркмении, sections 'Типы выдаваемых регистрационных знаков' and 'Коды регионов'"
+   "https://ru.wikipedia.org/wiki/Индекс_автомобильных_номеров_Туркмении, sections 'Типы выдаваемых регистрационных знаков' and 'Коды регионов'",
+   "https://www.turkmenistan.gov.tm/index.php/en/post/71147/president-turkmenistan-signed-decree-renaming-hakimlik-city-arkadag (30 March 2023: Arkadag a city of state significance)",
+   "https://www.turkmenistan.gov.tm/en/post/77468/resolution-mejlis-turkmenistan-amendments-administrative-territory-arkadag-city (8 November 2023: land from Ahal and Ashgabat added to Arkadag)"
   ],
   "fetched": "2026-11-02",
   "license": "Derived from Wikipedia, CC BY-SA 4.0",
-  "count": 7
+  "count": 6
  },
  "entries": {
   "AG": [
@@ -26,12 +28,6 @@
   "AH": [
    {
     "admin1": "Ahal"
-   }
-  ],
-  "AK": [
-   {
-    "admin1": "Ahal",
-    "note": "AK is the city of Arkadag, the capital of Ahal Province (since 2022); on the OSM map it lies inside Ahal"
    }
   ],
   "BN": [

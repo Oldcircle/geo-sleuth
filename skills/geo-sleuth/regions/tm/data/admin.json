@@ -7,7 +7,7 @@
   "fetched": "2026-11-02",
   "license": "ODbL (OpenStreetMap) / CC BY-SA 4.0 (Wikipedia)",
   "count": 6,
-  "note": "Five provinces and the city of Ashgabat, all first-level divisions at OSM admin_level 4; code = ISO 3166-2:TM. gazetteer.py cuts the OSM name tag 'Daşoguz welaýaty' to 'Daşoguz' (the name:* value that is its prefix), so the table uses the short Turkmen names. Arkadag, the capital of Ahal Province and a 'city of state importance' since 2023, is not a separate OSM relation at this level and lies inside Ahal."
+  "note": "Five provinces and the city of Ashgabat, all first-level divisions at OSM admin_level 4; code = ISO 3166-2:TM. gazetteer.py cuts the OSM name tag 'Daşoguz welaýaty' to 'Daşoguz' (the name:* value that is its prefix), so the table uses the short Turkmen names. Arkadag, a city of state significance with its own administrative territory since 2023 (land from Ahal and Ashgabat), is not a separate OSM relation at this level, so the plate and phone lookups leave its AK and 12 57 codes out."
  },
  "items": [
   {
