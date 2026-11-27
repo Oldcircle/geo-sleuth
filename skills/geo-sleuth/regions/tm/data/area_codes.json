@@ -1,0 +1,317 @@
+{
+ "_meta": {
+  "kind": "area-code",
+  "normalize": {
+   "digits_only": true,
+   "ensure_prefix": "993"
+  },
+  "key_pattern": "^(?=\\d{11}$)993(?!1257)(?:12|1354|2444|\\d{3})",
+  "usage": "eight-digit number: 12 34-56-78 in Ashgabat, (322) 5-12-34 or +993 422 6 12 34 elsewhere. Inside the country a long-distance number starts with the trunk 8 (8 322 …): drop that 8. Type the whole number: a code on its own does not match, so that it can't collide with other countries' codes",
+  "note": "Eight-digit national numbers. Ashgabat has the two-digit code 12, other places three- or four-digit codes, in the alphabetical order of the provinces: 1xx Ahal, 2xx Balkan, 3xx Daşoguz, 4xx Lebap, 5xx Mary. Arkadag numbers are 12 57 xx xx (en.wikipedia); key_pattern refuses them, so they neither match Arkadag nor fall back to Ashgabat's 12: Arkadag has been a city of state significance with its own administrative territory since 2023 (turkmenistan.gov.tm, 30 March 2023), and on 8 November 2023 the Mejlis moved 102 ha of Ahal's Gökdepe etrap and 17 ha of Ashgabat into it; the pack's admin table has no Arkadag unit, so neither Ahal nor Ashgabat can stand in for it. Gypjak, incorporated into Ashgabat in 2013, has numbers under 12 (12 33 6x xx, ru.wikipedia only), which score as Ashgabat. Its older code 1392 is left out: the directories that list it name the village, but no dated operator source gives the area it serves.",
+  "miss_note": "not a geographic Turkmen landline: a number written with the trunk 8 (drop it and look it up again), a mobile number (61–65, 71, 72; 66–69 were the closed MTS network), 6020 (Ashgabat CDMA), a code missing from the list (12 57, Arkadag, and 1392, Gypjak, are left out on purpose, see note), or a number of another country",
+  "source": [
+   "https://en.wikipedia.org/wiki/Telephone_numbers_in_Turkmenistan, section 'Area codes'",
+   "https://ru.wikipedia.org/wiki/Телефонный_план_нумерации_Туркмении, section 'Географические коды'",
+   "https://turkmenistan.gov.tm/ru/post/19719/ashkhabad-priros-novymi-territoriyami (27 May 2013: Gypjak among the settlements incorporated into Ashgabat)",
+   "https://www.turkmenistan.gov.tm/index.php/en/post/71147/president-turkmenistan-signed-decree-renaming-hakimlik-city-arkadag (30 March 2023)",
+   "https://www.turkmenistan.gov.tm/en/post/77468/resolution-mejlis-turkmenistan-amendments-administrative-territory-arkadag-city (8 November 2023)"
+  ],
+  "fetched": "2026-11-02",
+  "license": "Derived from Wikipedia, CC BY-SA 4.0",
+  "count": 58
+ },
+ "entries": {
+  "99312": [
+   {
+    "admin1": "Aşgabat",
+    "note": "Ashgabat city, including Gypjak (incorporated into Ashgabat on 27 May 2013), whose 12 33 6x xx numbers fall here; 12 57 xx xx (Arkadag) is not matched at all"
+   }
+  ],
+  "993131": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993132": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993133": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993134": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993135": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "9931354": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993136": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993137": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993138": [
+   {
+    "admin1": "Ahal"
+   }
+  ],
+  "993222": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993240": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993241": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993242": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993243": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "9932444": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993245": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993246": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993247": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993248": [
+   {
+    "admin1": "Balkan"
+   }
+  ],
+  "993322": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993340": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993343": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993344": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993345": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993346": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993347": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993348": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993349": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993360": [
+   {
+    "admin1": "Daşoguz"
+   }
+  ],
+  "993422": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993431": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993432": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993433": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993438": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993440": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993441": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993442": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993443": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993444": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993445": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993446": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993447": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993448": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993449": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993461": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993465": [
+   {
+    "admin1": "Lebap"
+   }
+  ],
+  "993522": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993557": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993558": [
+   {
+    "admin1": "Mary",
+    "note": "en.wikipedia: Mollanepes; ru.wikipedia: Vekilbazar; both in Mary Province"
+   }
+  ],
+  "993559": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993560": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993561": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993564": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993565": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993566": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993568": [
+   {
+    "admin1": "Mary"
+   }
+  ],
+  "993569": [
+   {
+    "admin1": "Mary"
+   }
+  ]
+ }
+}
